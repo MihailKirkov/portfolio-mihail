@@ -1,0 +1,56 @@
+[
+    {
+        "title": "AI Content Platform",
+        "summary": "A platform for generating and managing AI-powered content with advanced analytics.",
+        "description": "A platform for generating and managing AI-powered content with advanced analytics.",
+        "tags": ["React", "Node.js", "TensorFlow", "AWS"],
+        "image": "/placeholder.svg?height=600&width=800",
+        "link_code": "#",
+        "link_preview": "#"
+    },
+    {
+        "title": "E-Commerce Solution",
+        "summary": "A scalable e-commerce platform with real-time inventory management and payment processing.",
+        "description": "A scalable e-commerce platform with real-time inventory management and payment processing.",
+        "tags": ["Next.js", "Stripe", "MongoDB", "Redux"],
+        "image": "/placeholder.svg?height=600&width=800",
+        "link_code": "#",
+        "link_preview": "#"
+    },
+    {
+        "title": "Health Tracking App",
+        "summary": "A mobile-first application for tracking health metrics with visualization and insights.",
+        "description": "A mobile-first application for tracking health metrics with visualization and insights.",
+        "tags": ["React Native", "GraphQL", "Firebase", "D3.js"],
+        "image": "/placeholder.svg?height=600&width=800",
+        "link_code": "#",
+        "link_preview": "#"
+    },
+    {
+        "title": "Smart Home Dashboard",
+        "summary": "An IoT dashboard for monitoring and controlling smart home devices with automation rules.",
+        "description": "An IoT dashboard for monitoring and controlling smart home devices with automation rules.",
+        "tags": ["Vue.js", "MQTT", "Node.js", "WebSockets"],
+        "image": "/placeholder.svg?height=600&width=800",
+        "link_code": "#",
+        "link_preview": "#"
+    },
+    {
+        "title": "Financial Analytics Tool",
+        "summary": "A comprehensive tool for financial data analysis with predictive modeling capabilities.",
+        "description": "A comprehensive tool for financial data analysis with predictive modeling capabilities.",
+        "tags": ["Python", "Django", "Pandas", "Chart.js"],
+        "image": "/placeholder.svg?height=600&width=800",
+        "link_code": "#",
+        "link_preview": "#" 
+    },
+    {
+        "title": "Social Media Platform",
+        "summary": "A niche social platform with real-time messaging and content sharing features.",
+        "description": "A niche social platform with real-time messaging and content sharing features.",
+        "tags": ["React", "Socket.io", "Express", "PostgreSQL"],
+        "image": "/placeholder.svg?height=600&width=800",
+        "link_code": "#",
+        "link_preview": "#"
+    }
+]
