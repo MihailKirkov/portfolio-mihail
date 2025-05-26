@@ -10,12 +10,17 @@ export function useProjects() {
     const loadProjects = async () => {
         setLoading(true);
         try {
-            const fallbackProjects = fetchProjectsFromJSON();
-            setProjects(fallbackProjects);
+            const projects: Project[] = await fetchProjectsFromFirestore();
+            if (!projects || projects.length == 0) {
+                const fallbackProjects = fetchProjectsFromJSON();
+                setProjects(fallbackProjects);
+            } else {
+                setProjects(projects);
+            }
         } catch (err) {
             console.error("Erorr fetching projects from JSON: ", err)
             setError("No projects found.")
-            setProjects([]);
+            setProjects(fetchProjectsFromJSON());
         } finally {
             setLoading(false);
         }

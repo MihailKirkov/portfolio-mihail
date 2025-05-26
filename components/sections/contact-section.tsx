@@ -17,21 +17,21 @@ const ContactSection = () => {
                     <Mail className="h-6 w-6 text-purple-500" />
                     </div>
                     <h3 className="mb-2 text-lg font-medium">Email</h3>
-                    <p className="text-sm text-white/70">hello@example.com</p>
+                    <p className="text-sm text-white/70">mihailkirkov04@gmail.com</p>
                 </div>
                 <div className="flex flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
                     <div className="mb-4 rounded-full bg-cyan-500/20 p-3">
                     <Github className="h-6 w-6 text-cyan-500" />
                     </div>
                     <h3 className="mb-2 text-lg font-medium">GitHub</h3>
-                    <p className="text-sm text-white/70">@developer</p>
+                    <p className="text-sm text-white/70">@MihailKirkov</p>
                 </div>
                 <div className="flex flex-col items-center rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
                     <div className="mb-4 rounded-full bg-purple-500/20 p-3">
                     <Linkedin className="h-6 w-6 text-purple-500" />
                     </div>
                     <h3 className="mb-2 text-lg font-medium">LinkedIn</h3>
-                    <p className="text-sm text-white/70">@developer</p>
+                    <p className="text-sm text-white/70">@Mihail-Kirkov</p>
                 </div>
                 </div>
                 <form className="space-y-6">
