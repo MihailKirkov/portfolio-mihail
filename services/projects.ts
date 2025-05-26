@@ -1,9 +1,10 @@
 // services/projects.ts
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../lib/firebase";
 import projectsJSON from "@/data/projects.json";
 
 export interface Project {
+    id: string;
     title: string;
     summary: string;
     description: string;

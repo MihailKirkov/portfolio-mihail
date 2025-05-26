@@ -2,7 +2,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Project } from "@/services/projects";
-import { X } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +17,7 @@ const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProps) => {
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl p-6 sm:p-8 bg-white dark:bg-zinc-900 text-black dark:text-white">
+            <DialogContent className="lg:max-w-3xl p-2 sm:p-8 bg-white dark:bg-zinc-900 text-black dark:text-white max-h-[95dvh] overflow-y-auto overflow-x-hidden max-w-[90dvw]">
                 <DialogHeader className="flex flex-row justify-between items-start gap-4">
                 <DialogTitle className="text-2xl font-bold">{title}</DialogTitle>
                 <DialogClose>
@@ -42,22 +41,22 @@ const ProjectDialog = ({ open, onOpenChange, project }: ProjectDialogProps) => {
                 </DialogDescription>
 
                 <div className="mt-6 flex flex-wrap gap-2">
-                {tags.map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs font-light border-zinc-300 dark:border-zinc-600">
+                {tags.map((tag, index) => (
+                    <Badge key={`${tag}-${index}`} variant="outline" className="text-xs font-light border-zinc-300 dark:border-zinc-600">
                     {tag}
                     </Badge>
                 ))}
                 </div>
 
-                <DialogFooter className="mt-6 flex justify-end gap-3">
+                <DialogFooter className="mt-6 flex justify-end gap-1 flex-row">
                 {link_code && (
                     <a href={link_code} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline">Source Code</Button>
+                    <Button variant="outline" size="sm">Source Code</Button>
                     </a>
                 )}
                 {link_preview && (
                     <a href={link_preview} target="_blank" rel="noopener noreferrer">
-                    <Button>Live Preview</Button>
+                    <Button size="sm">Live Preview</Button>
                     </a>
                 )}
                 </DialogFooter>
