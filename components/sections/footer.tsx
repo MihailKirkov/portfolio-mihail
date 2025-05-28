@@ -14,23 +14,17 @@ const Footer = () => {
                 </p>
             </div>
             <div className="flex gap-4">
-                <Link href="https://github.com" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                    <Github className="h-4 w-4" />
-                    <span className="sr-only">GitHub</span>
-                </Button>
+                <Link href="https://github.com/MihailKirkov" target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                        <Github className="h-4 w-4" />
+                        <span className="sr-only">GitHub</span>
+                    </Button>
                 </Link>
-                <Link href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                    <Linkedin className="h-4 w-4" />
-                    <span className="sr-only">LinkedIn</span>
-                </Button>
-                </Link>
-                <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer">
-                <Button variant="ghost" size="icon" className="rounded-full">
-                    <Twitter className="h-4 w-4" />
-                    <span className="sr-only">Twitter</span>
-                </Button>
+                <Link href="https://www.linkedin.com/in/mihail-kirkov-b65b36262/" target="_blank" rel="noopener noreferrer">
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                        <Linkedin className="h-4 w-4" />
+                        <span className="sr-only">LinkedIn</span>
+                    </Button>
                 </Link>
             </div>
             </div>

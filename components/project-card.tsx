@@ -13,7 +13,7 @@ import ProjectDialog from "./dialogs/project-dialog"
 
 
 
-export function ProjectCard(project: Project) {
+export function ProjectCard(project: Project, key: string) {
   const { title, summary, description, tags, image, link_code, link_preview } = project;
   const [isHovered, setIsHovered] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,6 +26,7 @@ export function ProjectCard(project: Project) {
       transition={{ duration: 0.3 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      key={key}
     >
       
       <div className="relative aspect-video overflow-hidden">
@@ -41,8 +42,8 @@ export function ProjectCard(project: Project) {
         <h3 className="mb-2 text-xl font-bold">{title}</h3>
         <p className="mb-4 text-sm font-light text-white/70">{summary}</p>
         <div className="mb-6 flex flex-wrap gap-2">
-          {tags.map((tag) => (
-            <Badge key={tag} variant="outline" className="border-white/20 text-xs font-light">
+          {tags.map((tag, index) => (
+            <Badge key={`${key}-${index}-${tag}`} variant="outline" className="border-white/20 text-xs font-light">
               {tag}
             </Badge>
           ))}

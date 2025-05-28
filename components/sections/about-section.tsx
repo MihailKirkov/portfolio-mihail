@@ -24,22 +24,16 @@ const AboutSection = () => {
                     are not only functional but also intuitive and engaging.
                     </p>
                     <div className="flex gap-4">
-                    <Link href="https://github.com" target="_blank" rel="noopener noreferrer">
+                    <Link href="https://github.com/MihailKirkov" target="_blank" rel="noopener noreferrer">
                         <Button variant="ghost" size="icon" className="rounded-full border border-white/20">
                         <Github className="h-5 w-5" />
                         <span className="sr-only">GitHub</span>
                         </Button>
                     </Link>
-                    <Link href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+                    <Link href="https://www.linkedin.com/in/mihail-kirkov-b65b36262/" target="_blank" rel="noopener noreferrer">
                         <Button variant="ghost" size="icon" className="rounded-full border border-white/20">
                         <Linkedin className="h-5 w-5" />
                         <span className="sr-only">LinkedIn</span>
-                        </Button>
-                    </Link>
-                    <Link href="https://twitter.com" target="_blank" rel="noopener noreferrer">
-                        <Button variant="ghost" size="icon" className="rounded-full border border-white/20">
-                        <Twitter className="h-5 w-5" />
-                        <span className="sr-only">Twitter</span>
                         </Button>
                     </Link>
                     </div>

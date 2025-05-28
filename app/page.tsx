@@ -1,7 +1,3 @@
-import Link from "next/link"
-import { Code2, Github, Linkedin, Mail, Twitter } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ExperienceTimeline } from "@/components/experience-timeline"
 import Navbar from "@/components/sections/navbar"
 import HeroSection from "@/components/sections/hero-section"
 import AboutSection from "@/components/sections/about-section"

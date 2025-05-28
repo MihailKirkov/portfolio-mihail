@@ -1,0 +1,26 @@
+[
+    {
+        "id" : "1",
+        "role" : "Full Stack Developer",
+        "company" : "Gutes-Set GmbH",
+        "period" : "Feb 2024 - current",
+        "description": "Developed responsive web applications with modern JavaScript frameworks. Collaborated with UX designers to implement pixel-perfect interfaces and animations.",
+        "technologies" : ["React", "TypeScript", "SCSS", "Jest", "Webpack"]
+    },
+    {
+        "id" : "2",
+        "role" : "Full Stack Developer",
+        "company" : "Gutes-Set GmbH",
+        "period" : "Feb 2024 - current",
+        "description": "Developed responsive web applications with modern JavaScript frameworks. Collaborated with UX designers to implement pixel-perfect interfaces and animations.",
+        "technologies" : ["React", "TypeScript", "SCSS", "Jest", "Webpack"]
+    },
+    {
+        "id" : "3",
+        "role" : "Full Stack Developer",
+        "company" : "Gutes-Set GmbH",
+        "period" : "Feb 2024 - current",
+        "description": "Developed responsive web applications with modern JavaScript frameworks. Collaborated with UX designers to implement pixel-perfect interfaces and animations.",
+        "technologies" : ["React", "TypeScript", "SCSS", "Jest", "Webpack"]
+    }
+]

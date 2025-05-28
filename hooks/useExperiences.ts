@@ -1,26 +1,26 @@
 import { useState, useEffect } from "react";
-import type { Project } from "../services/projects";
 import { fetchProjectsFromFirestore, fetchProjectsFromJSON } from "../services/projects";
+import { Experience, fetchExperienceFromJSON, fetchExperiencesFromFirestore } from "@/services/experience";
 
-export function useProjects() {
-    const [projects, setProjects] = useState<Project[]>([]);
+export function useExperiences() {
+    const [experiences, setExperiences] = useState<Experience[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const loadProjects = async () => {
         setLoading(true);
         try {
-            const projects: Project[] = await fetchProjectsFromFirestore();
-            if (!projects || projects.length == 0) {
-                const fallbackProjects = fetchProjectsFromJSON();
-                setProjects(fallbackProjects);
+            const experiences: Experience[] = await fetchExperiencesFromFirestore();
+            if (!experiences || experiences.length == 0) {
+                const fallbackExperiences = fetchExperienceFromJSON();
+                setExperiences(fallbackExperiences);
             } else {
-                setProjects(projects);
+                setExperiences(experiences);
             }
         } catch (err) {
             console.error("Erorr fetching projects from JSON: ", err)
             setError("No projects found.")
-            setProjects(fetchProjectsFromJSON());
+            setExperiences(fetchExperienceFromJSON());
         } finally {
             setLoading(false);
         }
@@ -30,5 +30,5 @@ export function useProjects() {
         loadProjects();
     }, []);
 
-    return { projects, loading, error };
+    return { experiences, loading, error };
 }
