@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { Experience } from "@/services/experience";
+import { Experience } from "@/types/experience";
 
 interface Props {
   open: boolean;
@@ -30,6 +30,7 @@ export default function ExperienceEditDialog({ open, onOpenChange, experience, o
   const [period, setPeriod] = useState(experience.period);
   const [description, setDescription] = useState(experience.description);
   const [techInput, setTechInput] = useState(experience.technologies.join(", "));
+  const [order, setOrder] = useState(experience.order || 0);
   const [loading, setLoading] = useState(false);
 
   const technologies = techInput.split(",").map(t => t.trim()).filter(Boolean);
@@ -44,6 +45,7 @@ export default function ExperienceEditDialog({ open, onOpenChange, experience, o
         period,
         description,
         technologies,
+        order
       });
       onSaved();
       onOpenChange(false);
@@ -69,7 +71,7 @@ export default function ExperienceEditDialog({ open, onOpenChange, experience, o
         <div className="flex flex-wrap gap-2 mt-2">
           {technologies.map((t) => <Badge key={t}>{t}</Badge>)}
         </div>
-
+        <Input placeholder="Order" type='number' value={order} onChange={e => setOrder(parseInt(e.target.value, 10) || 0)}/>
         <DialogFooter className="mt-4">
           <DialogClose asChild>
             <Button variant="outline">Cancel</Button>

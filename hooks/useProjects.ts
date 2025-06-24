@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import type { Project } from "../services/projects";
 import { fetchProjectsFromFirestore, fetchProjectsFromJSON } from "../services/projects";
+import { Project } from "@/types/project";
 
 export function useProjects() {
     const [projects, setProjects] = useState<Project[]>([]);

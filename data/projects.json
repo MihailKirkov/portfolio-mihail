@@ -1,62 +1,110 @@
 [
     {
-        "id" : "1",
-        "title": "AI Content Platform",
-        "summary": "A platform for generating and managing AI-powered content with advanced analytics.",
-        "description": "A platform for generating and managing AI-powered content with advanced analytics.",
-        "tags": ["React", "Node.js", "TensorFlow", "AWS"],
-        "image": "/placeholder.svg?height=600&width=800",
-        "link_code": "#",
-        "link_preview": "#"
+        "id": "wGfR8mIbk4wjflUYgwI3",
+        "summary": "Real Time Online Games website built with React TS and NodeJS",
+        "description": "Me and a colleague are currently developing this website for friends to join in lobbies and play different games together",
+        "tags": [
+            "React",
+            "TypeScript",
+            "Node JS",
+            "Express",
+            "Tailwind CSS",
+            "Docker",
+            "WebSocket"
+        ],
+        "thumbnail": "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/thumbnails%2F1750796221942-ChatGPT%20Image%20Jun%2012%2C%202025%2C%2008_07_41%20PM.png?alt=media&token=3996be49-387b-4a56-a1ed-cea1c9b4cd60",
+        "link_preview": "",
+        "images": [
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2FwGfR8mIbk4wjflUYgwI3%2F1750796791677_ignight-1.png?alt=media&token=3da7d2cb-470b-4390-99e1-d65e5b7b9d25",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2FwGfR8mIbk4wjflUYgwI3%2F1750796791678_ignight-2-word-impostor.png?alt=media&token=2bddecff-79b0-44fa-9d23-eb3fe908fa4b",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2FwGfR8mIbk4wjflUYgwI3%2F1750796791679_ignight-3-word-impostor-word-reveal.png?alt=media&token=bac8efa3-d009-49bd-afa3-dabfbc638883",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2FwGfR8mIbk4wjflUYgwI3%2F1750796791679_ignight-4-discussion-phase.png?alt=media&token=5518512d-4576-41f2-af69-3a409744bb50",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2FwGfR8mIbk4wjflUYgwI3%2F1750796791680_ignight-5-voting-phase.png?alt=media&token=e632344a-e46e-4e0e-9153-b342978a0417"
+        ],
+        "link_code": "https://github.com/aSujal/Ignight",
+        "order": 0,
+        "title": "Ignight - Real Time Games"
     },
     {
-        "id" : "2",
-        "title": "E-Commerce Solution",
-        "summary": "A scalable e-commerce platform with real-time inventory management and payment processing.",
-        "description": "A scalable e-commerce platform with real-time inventory management and payment processing.",
-        "tags": ["Next.js", "Stripe", "MongoDB", "Redux"],
-        "image": "/placeholder.svg?height=600&width=800",
-        "link_code": "#",
-        "link_preview": "#"
+        "id": "roPwXND3vsLvZ9M3eZY0",
+        "description": "A simple agency website, showcasing what services the agency offers, review, portfolio, pricing and a form for contact / booking a meeting.",
+        "images": [
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/project-images%2F1750792545771-ignis-aboutus.png?alt=media&token=d1010324-8d5b-4a43-99a7-8360bf748a91",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/project-images%2F1750792546588-ignis-getintouch.png?alt=media&token=003dda09-7644-42e4-9916-ccac7908462b",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/project-images%2F1750792547160-ignis-mobile.png?alt=media&token=2c9f5582-0d35-4775-b525-6cd5d9a0f189",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/project-images%2F1750792547853-ignis-services.png?alt=media&token=7506ccf5-3097-4fd6-b915-c685d1ff77f8"
+        ],
+        "link_preview": "https://ignis-smm.vercel.app/",
+        "link_code": "https://github.com/MihailKirkov/ignis-smm",
+        "thumbnail": "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/thumbnails%2F1750792544796-ignis-thumbnail.png?alt=media&token=1378f4be-0f8d-40a7-a4c1-efc592cb88bb",
+        "title": "Ignis - Agency Website",
+        "summary": "A website I built to showcase my Video Editing / SMM agency. Built with NextJS",
+        "tags": [
+            "NextJS",
+            "TypeScript",
+            "Tailwind CSS"
+        ],
+        "order": 1
     },
     {
-        "id" : "3",
-        "title": "Health Tracking App",
-        "summary": "A mobile-first application for tracking health metrics with visualization and insights.",
-        "description": "A mobile-first application for tracking health metrics with visualization and insights.",
-        "tags": ["React Native", "GraphQL", "Firebase", "D3.js"],
-        "image": "/placeholder.svg?height=600&width=800",
-        "link_code": "#",
-        "link_preview": "#"
+        "id": "MyFGJwMqGaT9yepdkf08",
+        "images": [
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/project-images%2F1750795838031-mihailkirkov_2.png?alt=media&token=d813b51c-319d-4762-96e2-79b75d8e94a4",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/project-images%2F1750795838781-mihailkirkov_3.png?alt=media&token=26facaeb-2566-4842-94c6-3df49bc3c5e5",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/project-images%2F1750795839714-mihailkirkov_4.png?alt=media&token=7a3192eb-a578-4e7c-a1b3-bbc80327141b"
+        ],
+        "link_code": "https://github.com/MihailKirkov/my-cv-website",
+        "description": "I built this portfolio website in October 2023 using React JS",
+        "thumbnail": "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/thumbnails%2F1750795837194-mihailkirkov_1.png?alt=media&token=716b9388-6d7d-4748-ad0f-4164fd7b58b7",
+        "order": 2,
+        "summary": "My old portfolio website",
+        "link_preview": "",
+        "title": "Developer Portfolio ",
+        "tags": [
+            "React",
+            "Javascript",
+            "Tailwind CSS"
+        ]
     },
     {
-        "id" : "4",
-        "title": "Smart Home Dashboard",
-        "summary": "An IoT dashboard for monitoring and controlling smart home devices with automation rules.",
-        "description": "An IoT dashboard for monitoring and controlling smart home devices with automation rules.",
-        "tags": ["Vue.js", "MQTT", "Node.js", "WebSockets"],
-        "image": "/placeholder.svg?height=600&width=800",
-        "link_code": "#",
-        "link_preview": "#"
+        "id": "z6sWyOPkZ2iRklyInCN4",
+        "title": "Izlei – Anonymous Posting Platform",
+        "description": "A freelance project developed in collaboration with a colleague for a Bulgarian client using Next.js. Izlei is a web application where users can create and read anonymous posts. We implemented a custom admin dashboard that allows moderators to approve, deny, edit, or delete posts, ensuring content moderation and platform integrity.",
+        "images": [
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2Fz6sWyOPkZ2iRklyInCN4%2F1750785559391_izlei.com_admin.png?alt=media&token=3fd9a2f0-1c26-43a0-9471-d03ae711eb1f",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2Fz6sWyOPkZ2iRklyInCN4%2F1750785559392_izlei.com_home.png?alt=media&token=2097346b-89a2-4523-9c97-7a7ad2493623",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2Fz6sWyOPkZ2iRklyInCN4%2F1750785559392_izlei.com_write.png?alt=media&token=66906ea1-8603-48d2-8ba2-87f3f848330d",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2Fz6sWyOPkZ2iRklyInCN4%2F1750785559392_Landing_Page.jpg?alt=media&token=55c5d3cd-20fd-4176-9b15-b8f66d6ed71d",
+            "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2Fz6sWyOPkZ2iRklyInCN4%2F1750785559392_Message_Page.jpg?alt=media&token=7007679f-a2a9-413e-9dea-b847c7348ce1"
+        ],
+        "order": 3,
+        "summary": "Izlei is an anonymous posting web app built with Next.js for a Bulgarian client. It features user-submitted posts and a custom admin panel for managing content through approval, editing, and deletion.",
+        "link_code": "https://github.com/MihailKirkov/ignis-blog",
+        "thumbnail": "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/projects%2Fz6sWyOPkZ2iRklyInCN4%2Fthumbnail_1750785370209_izlei.png?alt=media&token=1a38bc64-5ade-4fd0-a9a5-b58ed5ef7936",
+        "link_preview": "https://ignis-blog.vercel.app/",
+        "tags": [
+            "NextJS",
+            "TypeScript",
+            "PrismaORM",
+            "PostgreSQL"
+        ]
     },
     {
-        "id" : "5",
-        "title": "Financial Analytics Tool",
-        "summary": "A comprehensive tool for financial data analysis with predictive modeling capabilities.",
-        "description": "A comprehensive tool for financial data analysis with predictive modeling capabilities.",
-        "tags": ["Python", "Django", "Pandas", "Chart.js"],
-        "image": "/placeholder.svg?height=600&width=800",
-        "link_code": "#",
-        "link_preview": "#" 
-    },
-    {
-        "id" : "6",
-        "title": "Social Media Platform",
-        "summary": "A niche social platform with real-time messaging and content sharing features.",
-        "description": "A niche social platform with real-time messaging and content sharing features.",
-        "tags": ["React", "Socket.io", "Express", "PostgreSQL"],
-        "image": "/placeholder.svg?height=600&width=800",
-        "link_code": "#",
-        "link_preview": "#"
+        "id": "vKTPldea00ncv5DKHs7F",
+        "images": [],
+        "link_code": "https://github.com/MihailKirkov/blog-django-new",
+        "description": "I built this website while i was learning Python Backend technologies. It is a fully functional website where users can interact with any blog posts and connect their social media accounts, such as FaceBook, Instagram, LinkedIn, etc.",
+        "order": 5,
+        "thumbnail": "https://firebasestorage.googleapis.com/v0/b/portfolio-mihail.firebasestorage.app/o/thumbnails%2F1750798275728-blog-post-1.png?alt=media&token=1ea7ced9-bf8c-4d74-b956-b974196c4409",
+        "title": "Blog Posting App",
+        "summary": "A website where users can create accounts, create and like posts as well as connect social media accounts to their profile.",
+        "tags": [
+            "Python",
+            "Django",
+            "Javascript",
+            "HTML",
+            "CSS"
+        ],
+        "link_preview": ""
     }
 ]

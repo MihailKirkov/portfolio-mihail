@@ -1,26 +1,49 @@
 [
     {
-        "id" : "1",
-        "role" : "Full Stack Developer",
-        "company" : "Gutes-Set GmbH",
-        "period" : "Feb 2024 - current",
-        "description": "Developed responsive web applications with modern JavaScript frameworks. Collaborated with UX designers to implement pixel-perfect interfaces and animations.",
-        "technologies" : ["React", "TypeScript", "SCSS", "Jest", "Webpack"]
+        "id": "7fLNMFTeeRFAXzPAkdvM",
+        "role": "Full Stack Developer",
+        "period": "Feb 2024 - current",
+        "description": "description",
+        "company": "Gutes-Set GmbH",
+        "order": 0,
+        "technologies": [
+            "React",
+            "Typescript",
+            "PHP",
+            "Python",
+            "Linux",
+            "Git"
+        ]
     },
     {
-        "id" : "2",
-        "role" : "Full Stack Developer",
-        "company" : "Gutes-Set GmbH",
-        "period" : "Feb 2024 - current",
-        "description": "Developed responsive web applications with modern JavaScript frameworks. Collaborated with UX designers to implement pixel-perfect interfaces and animations.",
-        "technologies" : ["React", "TypeScript", "SCSS", "Jest", "Webpack"]
+        "id": "jRjIHakGBr8UzpTEoker",
+        "period": "June 2023 - Feb 2024",
+        "description": "In this job I was teaching teenagers the basics of C#.",
+        "technologies": [
+            "C#"
+        ],
+        "company": "Coding Giants Bulgaria",
+        "role": "C# Teacher",
+        "order": 1
     },
     {
-        "id" : "3",
-        "role" : "Full Stack Developer",
-        "company" : "Gutes-Set GmbH",
-        "period" : "Feb 2024 - current",
-        "description": "Developed responsive web applications with modern JavaScript frameworks. Collaborated with UX designers to implement pixel-perfect interfaces and animations.",
-        "technologies" : ["React", "TypeScript", "SCSS", "Jest", "Webpack"]
+        "id": "lvFU2scIS2xQZpuKsdMv",
+        "company": "Telerik Academy",
+        "order": 2,
+        "description": "In this summer course I was 1 of the 3 tutors, teaching people of all ages the basics and some advanced algorithms with C#.",
+        "technologies": [
+            "C#"
+        ],
+        "period": "May 2018 - August 2019",
+        "role": "C# Teacher"
+    },
+    {
+        "id": "NIO2JMeWgYVqd1K2Yzsj",
+        "description": "Throughout the years I've had 3 other summer jobs in a hotel, in a fish spa and in a bar.",
+        "order": 3,
+        "technologies": [],
+        "company": "Multiple",
+        "period": "2018 - 2021",
+        "role": "Other Jobs"
     }
 ]

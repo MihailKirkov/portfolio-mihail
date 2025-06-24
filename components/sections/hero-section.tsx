@@ -14,18 +14,21 @@ const HeroSection = () => {
             <h1 className="max-w-4xl bg-gradient-to-br from-white to-white/60 bg-clip-text text-6xl font-bold tracking-tighter text-transparent sm:text-7xl md:text-8xl">
                 Mihail Kirkov
             </h1>
-            <p className="max-w-xl text-lg font-light leading-relaxed text-white/70">
-                I build innovative web applications with cutting-edge technologies, focusing on performance, accessibility,
-                and user experience.
+            <p className="max-w-xl text-md md:text-lg font-light leading-relaxed text-white/70">
+                Full-stack web developer specializing in building performant and scalable applications using React, TypeScript, and modern JavaScript backends. Also experienced with PHP and Python for robust API and backend development.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <a href="#projects">
                 <Button className="group rounded-full bg-white px-6 text-black hover:bg-white/90">
-                View Projects
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    View Projects
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-                <Button variant="outline" className="rounded-full border-white/20 px-6">
-                Contact Me
-                </Button>
+                </a>
+                <a href="#contact">
+                    <Button variant="outline" className="rounded-full border-white/20 px-6">
+                    Contact Me
+                    </Button>
+                </a>
             </div>
             </div>
             <div className="absolute bottom-10 left-0 right-0 flex justify-center">
