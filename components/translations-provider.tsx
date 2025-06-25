@@ -1,4 +1,3 @@
-// components/translations-provider.tsx
 'use client';
 
 import { createContext, useContext, useState, ReactNode } from 'react';
@@ -6,11 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import en from '@/messages/en.json';
 import de from '@/messages/de.json';
 
-const messagesMap = {
-    en,
-    de
-};
-
+const messagesMap = { en, de };
 type Locale = 'en' | 'de';
 
 interface I18nContext {
@@ -31,9 +26,13 @@ export function TranslationsProvider({ children }: { children: ReactNode }) {
 
     return (
         <I18nContext.Provider value={{ locale, setLocale }}>
-        <NextIntlClientProvider locale={locale} messages={messagesMap[locale]}>
-            {children}
-        </NextIntlClientProvider>
+            <NextIntlClientProvider
+                locale={locale}
+                messages={messagesMap[locale]}
+                timeZone="Europe/Vienna" // Hardcoded default
+            >
+                {children}
+            </NextIntlClientProvider>
         </I18nContext.Provider>
     );
 }

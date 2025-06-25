@@ -65,28 +65,51 @@ export function ProjectCard({ project }: ProjectCardProps) {
           </div>
 
           <div className="flex flex-wrap gap-2 justify-start items-center">
-            <Link href={link_code} onClick={stopPropagation} target="_blank" legacyBehavior>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-full border border-white/20 px-4"
-                disabled={!link_code}
-              >
-                <Github className="mr-2 h-4 w-4" />
-                {t("code")}
-              </Button>
-            </Link>
+{link_code ? (
+  <Link href={link_code} onClick={stopPropagation} target="_blank" rel="noopener noreferrer">
+    <Button
+      variant="ghost"
+      size="sm"
+      className="rounded-full border border-white/20 px-4"
+    >
+      <Github className="mr-2 h-4 w-4" />
+      {t("code")}
+    </Button>
+  </Link>
+) : (
+  <Button
+    variant="ghost"
+    size="sm"
+    className="rounded-full border border-white/20 px-4"
+    disabled
+  >
+    <Github className="mr-2 h-4 w-4" />
+    {t("code")}
+  </Button>
+)}
 
-            <Link href={link_preview} onClick={stopPropagation} target="_blank" legacyBehavior>
-              <Button
-                size="sm"
-                className="rounded-full bg-white text-black hover:bg-white/90 px-4"
-                disabled={!link_preview || link_preview.length < 0}
-              >
-                <ArrowUpRight className="mr-2 h-4 w-4" />
-                {t("preview")}
-              </Button>
-            </Link>
+
+ {link_preview ? (
+  <Link href={link_preview} onClick={stopPropagation} target="_blank" rel="noopener noreferrer">
+    <Button
+      size="sm"
+      className="rounded-full bg-white text-black hover:bg-white/90 px-4"
+    >
+      <ArrowUpRight className="mr-2 h-4 w-4" />
+      {t("preview")}
+    </Button>
+  </Link>
+) : (
+  <Button
+    size="sm"
+    className="rounded-full bg-white text-black px-4"
+    disabled
+  >
+    <ArrowUpRight className="mr-2 h-4 w-4" />
+    {t("preview")}
+  </Button>
+)}
+
 
             <Button
               size="sm"
