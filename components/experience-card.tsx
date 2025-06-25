@@ -1,8 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Experience } from "@/services/experience";
+import { Experience } from "@/types/experience";
 
-export default function ExperienceCard(exp: Experience) {
+interface ExperienceCardProps {
+    exp: Experience;
+}
+
+export default function ExperienceCard({ exp }: ExperienceCardProps) {
+    if (!exp) return null;
     return (
         <Card className="max-w-md bg-white dark:bg-zinc-900 border border-white/10 rounded-2xl">
         <CardHeader>

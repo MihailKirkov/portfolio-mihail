@@ -24,7 +24,6 @@ export function SkillGridItem({ skill, index }: { skill: any; index: number }) {
           className="group relative flex items-center justify-center overflow-hidden rounded-sm p-4 transition duration-300"
           onMouseEnter={handleMouseEnter}
           onAnimationEnd={handleAnimationEnd}
-          // style={{ gridColumn: `span ${skill.gridSpan?.col || 1}`, gridRow: `span ${skill.gridSpan?.row || 1}` }}
           style={{
             gridColumn: `span ${span.col}`,
             gridRow: `span ${span.row}`,
@@ -43,7 +42,6 @@ export function SkillGridItem({ skill, index }: { skill: any; index: number }) {
               isAnimating ? "animate-light-sweep-diagonal opacity-100" : "opacity-0"
             } [mask-image:linear-gradient(to_right,transparent,white,transparent)] transition-opacity duration-300`}
           />
-
 
           {/* Icon */}
           <div className="relative z-20 text-5xl transition-transform duration-500 group-hover:scale-125" style={{ color: skill.color }}>
