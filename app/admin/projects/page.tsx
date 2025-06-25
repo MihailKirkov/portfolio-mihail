@@ -4,10 +4,10 @@ import React, { useEffect, useState } from "react";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
-import { Project } from "@/services/projects";
 import { ProjectCard } from "@/components/project-card";
 import ProjectEditDialog from "@/components/dialogs/project-edit-dialog";
 import ProjectCreateDialog from "@/components/dialogs/project-create-dialog";
+import { Project } from "@/types/project";
 
 export default function ProjectsPage() {
     const [projects, setProjects] = useState<Project[]>([]);
@@ -55,14 +55,14 @@ export default function ProjectsPage() {
             Loading...
             </div>
         ) : (
-            <div className="flex flex-wrap gap-8">
+            <div className="grid gap-2 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project: Project, index) => (
-                <div key={project.id} className="relative">
-                <ProjectCard {...project} key={index}/>
-                <div className="absolute top-2 right-2 flex gap-2">
-                    <Button variant="outline" onClick={() => setEditingProject(project)}>Edit</Button>
-                    <Button variant="destructive" onClick={() => handleDelete(project.id)}>Delete</Button>
-                </div>
+                <div key={project.id} className="relative max-w-lg w-lg h-full">
+                    <ProjectCard project={project} key={String(index)}/>
+                    <div className="absolute top-2 right-2 flex gap-2">
+                        <Button variant="outline" onClick={() => setEditingProject(project)}>Edit</Button>
+                        <Button variant="destructive" onClick={() => handleDelete(project.id)}>Delete</Button>
+                    </div>
                 </div>
             ))}
             </div>

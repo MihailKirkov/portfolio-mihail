@@ -1,26 +1,21 @@
-// services/projects.ts
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import projectsJSON from "@/data/projects.json";
-
-export interface Project {
-    id: string;
-    title: string;
-    summary: string;
-    description: string;
-    tags: string[];
-    image: string;
-    link_code: string;
-    link_preview: string;
-}
+import { Project } from "@/types/project";
 
 export async function fetchProjectsFromFirestore(): Promise<Project[]> {
     const projectsCol = collection(db, "projects");
-    const projectSnapshot = await getDocs(projectsCol);
+    const projectsQuery = query(projectsCol, orderBy("order", "asc"));
+    const projectSnapshot = await getDocs(projectsQuery);
+
     if (projectSnapshot.empty) {
         throw new Error("No projects found in Firestore");
     }
-    return projectSnapshot.docs.map(doc => doc.data() as Project);
+
+    return projectSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...(doc.data() as Omit<Project, "id">)
+    }));
 }
 
 export function fetchProjectsFromJSON(): Project[] {

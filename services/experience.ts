@@ -1,24 +1,22 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import experienceJSON from '@/data/experience.json';
-
-export interface Experience {
-    id?: string; // Firestore doc ID
-    role: string;
-    company: string;
-    period: string;
-    description: string;
-    technologies: string[];
-}
+import { Experience } from "@/types/experience";
 
 export async function fetchExperiencesFromFirestore(): Promise<Experience[]> {
-    const experienceCol = collection(db, "experience");
-    const experienceSnapshot = await getDocs(experienceCol);
+    const experienceQuery = query(collection(db, "experience"), orderBy("order"));
+    const experienceSnapshot = await getDocs(experienceQuery);
+
     if (experienceSnapshot.empty) {
         throw new Error("No experiences found in Firestore");
     }
-    return experienceSnapshot.docs.map(doc => doc.data() as Experience);
+
+    return experienceSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    } as Experience));
 }
+
 
 export function fetchExperienceFromJSON(): Experience[] {
     return experienceJSON;

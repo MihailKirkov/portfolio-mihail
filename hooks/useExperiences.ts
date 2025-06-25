@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { fetchProjectsFromFirestore, fetchProjectsFromJSON } from "../services/projects";
-import { Experience, fetchExperienceFromJSON, fetchExperiencesFromFirestore } from "@/services/experience";
+import { fetchExperienceFromJSON, fetchExperiencesFromFirestore } from "@/services/experience";
+import { Experience } from "@/types/experience";
 
 export function useExperiences() {
     const [experiences, setExperiences] = useState<Experience[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const loadProjects = async () => {
+
+    const fetchExperiences = async () => {
         setLoading(true);
         try {
             const experiences: Experience[] = await fetchExperiencesFromFirestore();
@@ -27,8 +28,8 @@ export function useExperiences() {
     }
 
     useEffect(() => {
-        loadProjects();
+        fetchExperiences();
     }, []);
 
-    return { experiences, loading, error };
+    return { experiences, loading, error, fetchExperiences };
 }

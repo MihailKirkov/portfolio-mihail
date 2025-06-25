@@ -12,6 +12,8 @@ export default function MySidebar() {
                 <li><Link href="/admin/projects">Projects</Link></li>
                 <SidebarGroup />
                 <li><Link href="/admin/experience">Experience</Link></li>
+                <SidebarGroup />
+                <li><Link href="/admin/other">Other</Link></li>
             </SidebarContent>
             <SidebarFooter />
         </Sidebar>
