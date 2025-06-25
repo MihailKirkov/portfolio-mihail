@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 @keyframes lightSweepDiagonal {
   0% {
     transform: translate(-150%, -150%) rotate(45deg) scale(10);

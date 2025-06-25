@@ -1,0 +1,79 @@
+{
+    "hero": {
+
+        "title": "Mihail Kirkov",
+        "role": "Fullstack-Entwickler",
+        "description": "Fullstack-Webentwickler mit Spezialisierung auf leistungsstarke und skalierbare Anwendungen mit React, TypeScript und modernen JavaScript-Backends. Ebenfalls erfahren mit PHP und Python für robuste API- und Backend-Entwicklung.",
+        "viewProjects": "Projekte ansehen",
+        "contact": "Kontakt aufnehmen",
+        "scroll": "Scrollen zum Erkunden"
+    },
+    "navbar": {
+        "about": "Über mich",
+        "projects": "Projekte",
+        "experience": "Erfahrung",
+        "contact": "Kontakt",
+        "resume": "Lebenslauf",
+        "download_docx": ".docx herunterladen",
+        "download_pdf": ".pdf herunterladen",
+        "preview_pdf": ".pdf Vorschau",
+        "resume_preview_title": "Lebenslauf-Vorschau"
+    },
+    "about": {
+        "title": "Über mich",
+        "paragraph1": "Ich arbeite gerne mit React und TypeScript im Frontend und bin ebenso vertraut mit Backend-Technologien wie Node.js, PHP oder Python. Mir ist es wichtig, sauberen, wartbaren Code zu schreiben und reibungslose Benutzererfahrungen zu gestalten.",
+        "paragraph2": "Ich begann mit dem Programmieren im Alter von 10 Jahren und besuchte etwa fünf Jahre lang C++-Kurse. In dieser Zeit habe ich meinem Lehrer sogar beim Unterrichten eines C#-Sommerkurses geholfen. Danach absolvierte ich Kurse in Python und Full-Stack-Webentwicklung, was meine Leidenschaft für das Erstellen kompletter Anwendungen – vom Backend bis zum Frontend – weiter verstärkte.",
+        "github": "GitHub",
+        "linkedin": "LinkedIn"
+    },
+    "skillsShowcase": {
+        "title": "Technische Fähigkeiten",
+        "loading": "Fähigkeiten werden geladen...",
+        "view": {
+        "grid": "Rasteransicht",
+        "progress": "Fortschrittsansicht"
+        },
+        "levels": {
+        "expert": "Experte",
+        "advanced": "Fortgeschritten",
+        "intermediate": "Mittelstufe"
+        }
+    },
+    "projectSection": {
+        "title": "Ausgewählte Projekte",
+        "loading": "Projekte werden geladen...",
+        "viewAll": "Alle Projekte anzeigen"
+    },
+    "projectCard": {
+        "code": "Code",
+        "preview": "Vorschau",
+        "readMore": "Mehr lesen"
+    },
+    "experience": {
+        "heading": "Berufserfahrung"
+    },
+    "contact": {
+        "heading": "Kontakt aufnehmen",
+        "email": "E-Mail",
+        "github": "GitHub",
+        "linkedin": "LinkedIn",
+        "form": {
+        "name": "Name",
+        "email": "E-Mail",
+        "subject": "Betreff",
+        "message": "Nachricht",
+        "placeholder": {
+            "name": "Dein Name",
+            "email": "Deine E-Mail",
+            "subject": "Betreff",
+            "message": "Deine Nachricht"
+        },
+        "send": "Nachricht senden",
+        "sending": "Senden..."
+        },
+        "toast": {
+        "success": "Nachricht erfolgreich gesendet!",
+        "error": "Etwas ist schiefgelaufen. Bitte versuche es später erneut."
+        }
+    }
+}

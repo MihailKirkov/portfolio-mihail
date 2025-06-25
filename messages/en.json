@@ -1,0 +1,78 @@
+{
+    "hero": {
+        "title": "Mihail Kirkov",
+        "role": "Full Stack Developer",
+        "description": "Full-stack web developer specializing in building performant and scalable applications using React, TypeScript, and modern JavaScript backends. Also experienced with PHP and Python for robust API and backend development.",
+        "viewProjects": "View Projects",
+        "contact": "Contact Me",
+        "scroll": "Scroll to explore"
+    },
+    "navbar": {
+        "about": "About",
+        "projects": "Projects",
+        "experience": "Experience",
+        "contact": "Contact",
+        "resume": "Resume",
+        "download_docx": "Download .docx",
+        "download_pdf": "Download .pdf",
+        "preview_pdf": "Preview .pdf",
+        "resume_preview_title": "Resume Preview"
+    },
+    "about": {
+        "title": "About Me",
+        "paragraph1": "I love working with React and TypeScript on the frontend, and I’m just as comfortable on the backend with tools like Node.js, PHP, or Python. I care about writing clean, maintainable code and designing smooth experiences that people actually enjoy using.",
+        "paragraph2": "I started coding when I was 10, attending C++ classes for about five years. During that time, I even assisted my teacher in running a C# summer course. Afterward, I completed courses in Python and full-stack web development, which solidified my passion for building complete applications—from backend to frontend.",
+        "github": "GitHub",
+        "linkedin": "LinkedIn"
+    },
+    "skillsShowcase": {
+        "title": "Technical Skills",
+        "loading": "Loading skills...",
+        "view": {
+        "grid": "Grid View",
+        "progress": "Progress View"
+        },
+        "levels": {
+        "expert": "Expert",
+        "advanced": "Advanced",
+        "intermediate": "Intermediate"
+        }
+    },
+    "projectSection": {
+        "title": "Featured Projects",
+        "loading": "Loading projects...",
+        "viewAll": "View All Projects"
+    },
+    "projectCard": {
+        "code": "Code",
+        "preview": "Preview",
+        "readMore": "Read more"
+    },
+    "experience": {
+        "heading": "Work Experience"
+    },
+    "contact": {
+        "heading": "Get In Touch",
+        "email": "Email",
+        "github": "GitHub",
+        "linkedin": "LinkedIn",
+        "form": {
+        "name": "Name",
+        "email": "Email",
+        "subject": "Subject",
+        "message": "Message",
+        "placeholder": {
+            "name": "Your name",
+            "email": "Your email",
+            "subject": "Subject",
+            "message": "Your message"
+        },
+        "send": "Send Message",
+        "sending": "Sending..."
+        },
+        "toast": {
+        "success": "Message sent successfully!",
+        "error": "Something went wrong. Please try again later."
+        }
+    }
+}

@@ -9,15 +9,19 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Project } from "@/types/project"
 import ProjectDialog from "./dialogs/project-dialog"
+import { useTranslations } from "next-intl"
+import { useBreakpoint } from "@/hooks/useBreakpoint"
 
 interface ProjectCardProps {
   project: Project;
 }
 
-export function ProjectCard({project} : ProjectCardProps) {
+export function ProjectCard({ project }: ProjectCardProps) {
   const { title, summary, tags, thumbnail, link_code, link_preview } = project;
   const [isHovered, setIsHovered] = useState(false)
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const breakpoint = useBreakpoint();
+  const t = useTranslations("projectCard");
 
   const stopPropagation = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -25,7 +29,7 @@ export function ProjectCard({project} : ProjectCardProps) {
 
   return (
     <motion.div
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm h-full"
+      className="group relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-sm h-full w-full max-w-md"
       whileHover={{ y: -5 }}
       transition={{ duration: 0.3 }}
       onMouseEnter={() => setIsHovered(true)}
@@ -44,7 +48,7 @@ export function ProjectCard({project} : ProjectCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
       </div>
 
-      {/*  CONTENT SECTION */}
+      {/* CONTENT SECTION */}
       <div className="relative z-10 flex flex-col flex-1 p-6" onClick={stopPropagation}>
         <h3 className="mb-2 text-xl font-bold">{title}</h3>
         <p className="mb-4 text-sm font-light text-white/70">{summary}</p>
@@ -60,23 +64,23 @@ export function ProjectCard({project} : ProjectCardProps) {
           </div>
 
           <div className="flex gap-3 md:gap-2 lg:gap-3">
-            <Link href={link_code} onClick={stopPropagation} target="_blank">
+            <Link href={link_code} onClick={stopPropagation} target="_blank" legacyBehavior>
               <Button variant="ghost" size="sm" className="rounded-full border border-white/20 px-4 md:px-2 lg:px-4" disabled={!link_code}>
                 <Github className="mr-2 h-4 w-4" />
-                Code
+                {t("code")}
               </Button>
             </Link>
 
-            <Link href={link_preview} onClick={stopPropagation} target="_blank">
+            <Link href={link_preview} onClick={stopPropagation} target="_blank" legacyBehavior>
               <Button size="sm" className="rounded-full bg-white text-black hover:bg-white/90 px-4 md:px-2 lg:px-4">
                 <ArrowUpRight className="mr-2 h-4 w-4" />
-                Preview
+                {t("preview")}
               </Button>
             </Link>
 
             <Button size="sm" variant="link" className="text-xs ml-auto" onClick={(e) => { stopPropagation(e); setIsDialogOpen(true); }}>
-              <Eye />
-              Read more
+              {breakpoint == "sm" && <Eye />}
+              {t("readMore")}
             </Button>
           </div>
         </div>
