@@ -42,7 +42,7 @@ export default function ExperiencePage() {
           <div className="flex flex-wrap gap-8">
             {experiences.map((exp) => (
               <div key={exp.id} className="relative">
-                <ExperienceCard {...exp} />
+                <ExperienceCard exp={exp} />
                 <div className="absolute top-2 right-2 flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => setEditData(exp)}>Edit</Button>
                   <Button size="sm" variant="destructive" onClick={() => handleDelete(exp.id!)}>Delete</Button>

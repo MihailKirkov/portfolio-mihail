@@ -17,7 +17,8 @@
         "download_docx": ".docx herunterladen",
         "download_pdf": ".pdf herunterladen",
         "preview_pdf": ".pdf Vorschau",
-        "resume_preview_title": "Lebenslauf-Vorschau"
+        "resume_preview_title": "Lebenslauf-Vorschau",
+        "menu": "Menu"
     },
     "about": {
         "title": "Über mich",

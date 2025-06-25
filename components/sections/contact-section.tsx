@@ -35,11 +35,12 @@ const ContactSection = () => {
         <section id="contact" className="bg-gradient-to-b from-gray-900 to-black py-32">
         <div className="container">
             <div className="mb-16 flex flex-col items-center">
-            <h2 className="text-5xl font-bold tracking-tighter">{t("heading")}</h2>
+            <h2 className="font-bold tracking-tighter text-center text-4xl sm:text-6xl md:text-8xl">{t("heading")}</h2>
             <div className="mt-2 h-1 w-20 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500" />
             </div>
             <div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-sm">
-            <div className="mb-8 grid gap-8 md:grid-cols-3">
+            <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-center">
+
                 <ContactCard icon={<Mail />} label={t("email")} value="mihailkirkov04@gmail.com" color="purple" />
                 <ContactCard icon={<Github />} label={t("github")} value="@MihailKirkov" color="cyan" />
                 <ContactCard icon={<Linkedin />} label={t("linkedin")} value="@Mihail-Kirkov" color="purple" />

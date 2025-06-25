@@ -7,6 +7,7 @@ interface ExperienceCardProps {
 }
 
 export default function ExperienceCard({ exp }: ExperienceCardProps) {
+    if (!exp) return null;
     return (
         <Card className="max-w-md bg-white dark:bg-zinc-900 border border-white/10 rounded-2xl">
         <CardHeader>

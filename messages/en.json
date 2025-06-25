@@ -16,7 +16,8 @@
         "download_docx": "Download .docx",
         "download_pdf": "Download .pdf",
         "preview_pdf": "Preview .pdf",
-        "resume_preview_title": "Resume Preview"
+        "resume_preview_title": "Resume Preview",
+        "menu": "Menu"
     },
     "about": {
         "title": "About Me",
