@@ -13,12 +13,15 @@ const HeroSection = () => {
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden pt-16">
       <HeroParticles />
       <div className="container relative z-10 flex flex-col items-center justify-center gap-4 sm:gap-6 md:gap-8 text-center">
-        <div className="inline-block rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-4 py-1 text-xs font-light tracking-wider">
-          {t('role')}
-        </div>
-        <h1 className="bg-gradient-to-br from-white to-white/60 bg-clip-text font-bold tracking-tighter text-transparent max-w-4xl text-4xl sm:text-5xl md:text-6xl">
+        <div>
+
+        <h1 className="bg-gradient-to-br from-white to-white/60 bg-clip-text font-bold tracking-tighter text-transparent max-w-4xl text-4xl sm:text-6xl md:text-8xl">
           {t('title')}
         </h1>
+        <h2 className="text-sm text-muted-foreground w-full text-right">
+          {t('shortDescription')}
+        </h2>
+        </div>
         <p className="max-w-xl text-md md:text-lg font-light leading-relaxed text-white/70">
           {t('description')}
         </p>
