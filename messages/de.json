@@ -1,7 +1,7 @@
 {
     "hero": {
-
         "title": "Mihail Kirkov",
+        "shortDescription": "21 Jahre • 👨‍💻 Softwareentwickler • 📍 Wien, Österreich",
         "role": "Fullstack-Entwickler",
         "description": "Fullstack-Webentwickler mit Spezialisierung auf leistungsstarke und skalierbare Anwendungen mit React, TypeScript und modernen JavaScript-Backends. Ebenfalls erfahren mit PHP und Python für robuste API- und Backend-Entwicklung.",
         "viewProjects": "Projekte ansehen",

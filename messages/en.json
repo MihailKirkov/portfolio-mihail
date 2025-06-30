@@ -1,6 +1,7 @@
 {
     "hero": {
         "title": "Mihail Kirkov",
+        "shortDescription": "21 years old • 👨‍💻 Developer • 📍 Vienna, Austria",
         "role": "Full Stack Developer",
         "description": "Full-stack web developer specializing in building performant and scalable applications using React, TypeScript, and modern JavaScript backends. Also experienced with PHP and Python for robust API and backend development.",
         "viewProjects": "View Projects",
