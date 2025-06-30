@@ -11,7 +11,7 @@ const ExperienceSection = () => {
         <section id="experience" className="py-32">
         <div className="container">
             <div className="mb-16 flex flex-col items-center">
-            <h2 className="font-bold tracking-tighter text-center text-4xl sm:text-6xl md:text-8xl">{t("heading")}</h2>
+            <h2 className="font-bold tracking-tighter text-center text-4xl sm:text-5xl md:text-6xl">{t("heading")}</h2>
             <div className="mt-2 h-1 w-20 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500"></div>
             </div>
             <ExperienceTimeline />

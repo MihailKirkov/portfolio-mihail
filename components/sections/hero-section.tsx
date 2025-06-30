@@ -16,7 +16,7 @@ const HeroSection = () => {
         <div className="inline-block rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 px-4 py-1 text-xs font-light tracking-wider">
           {t('role')}
         </div>
-        <h1 className="bg-gradient-to-br from-white to-white/60 bg-clip-text font-bold tracking-tighter text-transparent max-w-4xl text-4xl sm:text-6xl md:text-8xl">
+        <h1 className="bg-gradient-to-br from-white to-white/60 bg-clip-text font-bold tracking-tighter text-transparent max-w-4xl text-4xl sm:text-5xl md:text-6xl">
           {t('title')}
         </h1>
         <p className="max-w-xl text-md md:text-lg font-light leading-relaxed text-white/70">
