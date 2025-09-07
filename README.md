@@ -37,6 +37,10 @@ It showcases my projects, skills, and experience — with an **AI-powered chat a
 ├── app/                # Next.js app router pages
 ├── components/         # Reusable UI and chat components
 │   └── chat/           # Chat widget pieces (input, list, suggestions, etc.)
+│   └── common/         # Commonly used components (loading spinner)
+│   └── dialogs/        # Dialog components ( experience-create-dialog for admin, etc.)
+│   └── sections/       # Sections of the landing page ( about-section, contact-section, etc. )
+│   └── ui/             # UI Components from ShadCN
 ├── hooks/              # Custom React hooks (e.g., useChatStream)
 ├── lib/                # OpenAI, Firebase, RAG utilities
 ├── public/             # Static assets (e.g., avatar images)
