@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { TranslationsProvider } from "@/components/translations-provider"
+import ChatWidget from "@/components/chat/chat-widget"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,6 +26,7 @@ export default function RootLayout({
           <TooltipProvider>
             <TranslationsProvider>
               {children}
+              <ChatWidget />
               <Toaster/>
             </TranslationsProvider>
           </TooltipProvider>
