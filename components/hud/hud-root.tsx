@@ -7,7 +7,8 @@ import { buildSections, type SectionKey } from "@/lib/sections";
 import { Stage } from "@/components/hud/stage";
 import { MobileView } from "@/components/hud/mobile-view";
 import { NodeModal } from "@/components/hud/node-modal";
-import { ModeTabs, type Mode } from "@/components/hud/mode-tabs";
+import { Frame } from "@/components/hud/frame";
+import type { Mode } from "@/components/hud/mode-tabs";
 
 const STORAGE_KEY = "hud-mode";
 
@@ -43,11 +44,15 @@ export function HudRoot({ content }: { content: Content }) {
   useEffect(() => {
     const STAGE_W = 1080;
     const STAGE_H = 632;
+    const STRIP = 40; // status strip height (matches --strip-h)
     function scale() {
       const s = scalerRef.current;
       if (!s) return;
-      const availW = window.innerWidth - 24;
-      const availH = window.innerHeight - 46 - 24; // top bar + breathing room
+      // reserve the cockpit-frame inset + top status strip so the HUD sits
+      // inside the frame (matches --frame-inset: clamp(12px, 2vw, 28px))
+      const inset = Math.min(28, Math.max(12, window.innerWidth * 0.02));
+      const availW = window.innerWidth - inset * 2 - 36;
+      const availH = window.innerHeight - inset * 2 - STRIP - 28;
       const f = Math.min(availW / STAGE_W, availH / STAGE_H, 1.65);
       s.style.transform = `scale(${f})`;
     }
@@ -90,7 +95,7 @@ export function HudRoot({ content }: { content: Content }) {
 
   return (
     <MotionConfig reducedMotion="user">
-      <ModeTabs mode={mode} onChange={changeMode} />
+      <Frame mode={mode} onChange={changeMode} />
 
       <div className="viewport" ref={viewportRef}>
         <div className="scaler" ref={scalerRef}>

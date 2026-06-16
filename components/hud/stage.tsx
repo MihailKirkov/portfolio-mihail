@@ -81,7 +81,9 @@ export function Stage({
       {/* persistent six nodes — glide + resize into each arrangement */}
       {sections.map((s) => {
         const box = layout.nodes[s.key];
-        const cls = `node${box.right ? " r" : ""}${s.key === "ai" ? " ai" : ""}`;
+        const cls = `card node${box.right ? " r" : ""}${
+          s.key === "ai" ? " ai" : ""
+        }`;
         return (
           <motion.button
             key={s.key}
@@ -99,7 +101,7 @@ export function Stage({
 
       {/* persistent terminal — slides + reshapes; conversation state survives */}
       <motion.div
-        className="panel term"
+        className="card panel term"
         layout
         style={layout.terminal}
         transition={MORPH}

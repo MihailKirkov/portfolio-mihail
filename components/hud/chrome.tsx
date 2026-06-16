@@ -42,7 +42,7 @@ export function DeckChrome({ content }: { content: Content }) {
       </div>
 
       <div
-        className="panel"
+        className="card panel"
         style={{ left: 0, top: 56, width: 240, height: 408, padding: 16 }}
       >
         <div className="head">capability</div>
@@ -85,7 +85,7 @@ export function DeckChrome({ content }: { content: Content }) {
       </div>
 
       <div
-        className="panel"
+        className="card panel"
         style={{ right: 0, top: 56, width: 240, height: 408, padding: 16 }}
       >
         <div className="head">project status</div>
@@ -215,6 +215,18 @@ export function VisorChrome({ content }: { content: Content }) {
           available <b>aug 2026</b>
         </div>
         <div>eu · no sponsor</div>
+      </div>
+
+      {/* flank radar dials echoing the reference HUD's side instruments */}
+      <div className="radar" style={{ top: 182, left: 30 }}>
+        <span className="radar-sweep" />
+        <span className="radar-blip" />
+        <span className="radar-lbl">scan</span>
+      </div>
+      <div className="radar" style={{ top: 182, right: 30 }}>
+        <span className="radar-sweep" />
+        <span className="radar-blip" />
+        <span className="radar-lbl">net</span>
       </div>
 
       <div className="read" style={{ bottom: 40, left: 22, width: 150 }}>

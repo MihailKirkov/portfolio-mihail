@@ -19,6 +19,12 @@
   --green: #4fd6a8;
   --ai: #7cc4ff;
   --glow: rgba(74, 163, 224, 0.35);
+  /* single brighter cyan accent — active/hover/key lines only. Tune here. */
+  --accent: #5ad6ff;
+  --glow-accent: rgba(90, 214, 255, 0.4);
+  /* cockpit frame geometry (shared with the scaler maths in hud-root) */
+  --frame-inset: clamp(12px, 2vw, 28px);
+  --strip-h: 40px;
 }
 
 @theme inline {
@@ -66,12 +72,33 @@ body {
   pointer-events: none;
   overflow: hidden;
   background: radial-gradient(
-    120% 92% at 50% 36%,
-    #0b1d33 0%,
-    #071527 34%,
-    #040c18 70%,
-    #02060d 100%
+      66% 52% at 50% 32%,
+      rgba(40, 100, 162, 0.22) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      120% 92% at 50% 36%,
+      #0c2138 0%,
+      #08182c 34%,
+      #050f1c 70%,
+      #02060d 100%
+    );
+}
+/* faint full-field grid (the cockpit graph behind everything) */
+.bg::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background-image: linear-gradient(rgba(74, 163, 224, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 163, 224, 0.08) 1px, transparent 1px);
+  background-size: 56px 56px;
+  transform: translate(var(--bgx, 0px), var(--bgy, 0px));
+  -webkit-mask-image: radial-gradient(
+    120% 92% at 50% 38%,
+    #000 24%,
+    transparent 80%
   );
+  mask-image: radial-gradient(120% 92% at 50% 38%, #000 24%, transparent 80%);
 }
 /* perspective floor receding to the horizon, fading out near the top */
 .bg-grid {
@@ -90,7 +117,7 @@ body {
   transform: perspective(440px) rotateX(70deg)
     translate(var(--bgx, 0px), var(--bgy, 0px));
   transform-origin: bottom center;
-  opacity: 0.55;
+  opacity: 0.7;
   -webkit-mask-image: linear-gradient(to top, #000 8%, transparent 78%);
   mask-image: linear-gradient(to top, #000 8%, transparent 78%);
 }
@@ -177,22 +204,107 @@ body {
 }
 
 /* ============================================================
-   Mode switcher (top bar)
+   Cockpit frame + top status strip
    ============================================================ */
-.tabs {
+.frame {
   position: fixed;
+  inset: var(--frame-inset);
+  z-index: 6;
+  pointer-events: none;
+  border: 1px solid var(--line2);
+  --carm: 26px; /* corner-bracket arm length */
+  background:
+    /* bright accent corner brackets at all four corners */
+    linear-gradient(var(--accent), var(--accent)) left top / var(--carm) 2px
+      no-repeat,
+    linear-gradient(var(--accent), var(--accent)) left top / 2px var(--carm)
+      no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right top / var(--carm) 2px
+      no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right top / 2px var(--carm)
+      no-repeat,
+    linear-gradient(var(--accent), var(--accent)) left bottom / var(--carm) 2px
+      no-repeat,
+    linear-gradient(var(--accent), var(--accent)) left bottom / 2px var(--carm)
+      no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right bottom / var(--carm) 2px
+      no-repeat,
+    linear-gradient(var(--accent), var(--accent)) right bottom / 2px var(--carm)
+      no-repeat;
+  box-shadow: inset 0 0 90px rgba(12, 36, 64, 0.22);
+}
+/* edge ticks along the top + bottom rails */
+.frame::before,
+.frame::after {
+  content: "";
+  position: absolute;
+  left: 70px;
+  right: 70px;
+  height: 5px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--line2) 0 1px,
+    transparent 1px 58px
+  );
+  opacity: 0.55;
+}
+.frame::before {
+  top: -1px;
+}
+.frame::after {
+  bottom: -1px;
+}
+.strip {
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 46px;
-  z-index: 210;
+  height: var(--strip-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(
+    180deg,
+    rgba(6, 14, 26, 0.74),
+    rgba(6, 14, 26, 0.52)
+  );
+  backdrop-filter: blur(5px);
+  pointer-events: auto;
+  font-family: var(--font-orbitron), sans-serif;
+}
+.strip-l {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.strip-l .sep {
+  color: var(--accent);
+}
+.strip-r {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 14px;
-  background: rgba(4, 8, 15, 0.82);
-  border-bottom: 1px solid var(--line);
-  backdrop-filter: blur(4px);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.strip-r .on1 {
+  color: var(--green);
+}
+.strip-r .clock {
+  color: var(--bright);
+}
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-orbitron), sans-serif;
 }
 .tabs .lbl {
@@ -229,7 +341,10 @@ body {
    Stage / scaler
    ============================================================ */
 .viewport {
-  padding-top: 46px;
+  padding-top: calc(var(--frame-inset) + var(--strip-h));
+  padding-bottom: var(--frame-inset);
+  padding-left: var(--frame-inset);
+  padding-right: var(--frame-inset);
   height: 100dvh;
   display: flex;
   align-items: center;
@@ -341,29 +456,103 @@ body {
   margin-bottom: 5px;
 }
 
-/* HUD nodes (buttons) */
+/* ============================================================
+   Reusable HUD card — frosted frame for nodes, panels, terminal
+   ============================================================ */
+.card {
+  --bk: var(--edge); /* corner-bracket colour */
+  --arm: 13px; /* bracket arm length */
+  border: 1px solid var(--line2);
+  background:
+    /* short L-shaped corner brackets at TL, BL, BR (TR is the chamfer) */
+    linear-gradient(var(--bk), var(--bk)) left 3px top 3px / var(--arm) 1.5px
+      no-repeat,
+    linear-gradient(var(--bk), var(--bk)) left 3px top 3px / 1.5px var(--arm)
+      no-repeat,
+    linear-gradient(var(--bk), var(--bk)) left 3px bottom 3px / var(--arm) 1.5px
+      no-repeat,
+    linear-gradient(var(--bk), var(--bk)) left 3px bottom 3px / 1.5px var(--arm)
+      no-repeat,
+    linear-gradient(var(--bk), var(--bk)) right 3px bottom 3px / var(--arm) 1.5px
+      no-repeat,
+    linear-gradient(var(--bk), var(--bk)) right 3px bottom 3px / 1.5px var(--arm)
+      no-repeat,
+    /* frosted translucent fill — the background grid shows through */
+    linear-gradient(158deg, rgba(18, 40, 68, 0.55), rgba(7, 18, 34, 0.46));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(159, 214, 255, 0.13),
+    0 3px 16px rgba(2, 8, 16, 0.4);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  transition: border-color 0.16s, box-shadow 0.16s, color 0.16s, background 0.16s;
+}
+.card::after {
+  /* quick scan-line that sweeps the card on hover */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 46%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(120, 215, 255, 0.16),
+    transparent
+  );
+  opacity: 0;
+  pointer-events: none;
+}
+.card:hover {
+  --bk: var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(159, 214, 255, 0.22),
+    0 3px 18px rgba(2, 8, 16, 0.45), 0 0 22px var(--glow-accent);
+}
+.card:hover::after {
+  animation: cardScan 0.75s ease;
+}
+@keyframes cardScan {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(220%);
+  }
+}
+
+/* HUD nodes (buttons) — card frame + node specifics */
 .node {
   position: absolute;
-  border: 1px solid var(--line2);
-  background: var(--panel);
   color: var(--ink);
   font-size: 13px;
-  padding: 9px 12px;
   cursor: pointer;
-  transition: 0.16s;
   letter-spacing: 0.03em;
   text-align: left;
   font-family: var(--font-share-tech), ui-monospace, monospace;
-  clip-path: polygon(7% 0, 100% 0, 100% 76%, 93% 100%, 0 100%, 0 24%);
+}
+.node::before {
+  /* small corner index tick by the chamfer */
+  content: "";
+  position: absolute;
+  top: 7px;
+  right: 15px;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  box-shadow: 0 0 5px var(--glow-accent);
+  opacity: 0.7;
 }
 .node:hover {
-  background: var(--panel2);
-  border-color: var(--bright);
-  box-shadow: 0 0 14px var(--glow);
   color: var(--bright);
 }
 .node:focus-visible {
-  outline: 2px solid var(--bright);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 .node .k {
@@ -371,14 +560,18 @@ body {
   color: var(--dim);
 }
 .node.r {
-  clip-path: polygon(0 0, 93% 0, 100% 24%, 100% 100%, 7% 100%, 0 76%);
   text-align: right;
 }
+/* active node (ai integration) stays brightest */
 .node.ai {
-  border-color: var(--edge);
-  background: #0c2740;
+  --bk: var(--accent);
+  border-color: var(--accent);
   color: var(--ai);
-  box-shadow: 0 0 12px rgba(124, 196, 255, 0.22);
+  box-shadow: inset 0 1px 0 rgba(159, 214, 255, 0.18),
+    0 0 22px var(--glow-accent);
+}
+.node.ai::before {
+  opacity: 1;
 }
 
 /* gauges */
@@ -430,27 +623,28 @@ body {
 .r1 {
   inset: 0;
   border: 1px solid var(--line2);
-  border-top-color: var(--bright);
+  border-top-color: var(--accent);
+  box-shadow: 0 0 16px var(--glow-accent);
   animation: spin 9s linear infinite;
 }
 .r2 {
-  border: 1px dashed var(--line);
+  border: 1px dashed var(--line2);
   animation: spinr 16s linear infinite;
 }
 .r3 {
   border: 1px solid var(--edge);
-  border-bottom-color: var(--bright);
+  border-bottom-color: var(--accent);
   animation: spin 6s linear infinite;
 }
 .hub {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, #103251, #08182a);
+  background: radial-gradient(circle, #154062, #08182a);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 22px var(--glow), inset 0 0 16px rgba(74, 163, 224, 0.25);
+  box-shadow: 0 0 36px var(--glow-accent), inset 0 0 22px rgba(90, 200, 255, 0.3);
 }
 .hub .nm {
   font-family: var(--font-orbitron), sans-serif;
@@ -475,12 +669,15 @@ body {
   animation: spin 4.5s linear infinite;
 }
 
-/* panels */
+/* panels — card frame + a thin labeled header rule on the first heading */
 .panel {
   position: absolute;
-  border: 1px solid var(--line2);
-  background: var(--bg2);
-  clip-path: polygon(0 0, 97% 0, 100% 6%, 100% 100%, 3% 100%, 0 94%);
+}
+.panel > .head:first-child {
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  color: var(--bright);
 }
 
 /* terminal */
@@ -608,6 +805,84 @@ body {
   border: 1px solid var(--line);
   border-radius: 50%;
   opacity: 0.5;
+}
+
+/* small circular radar/stat dial (flank filler, esp. Visor) */
+.radar {
+  position: absolute;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  border: 1px solid var(--line2);
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(22, 54, 86, 0.32),
+    rgba(6, 16, 28, 0.16) 70%,
+    transparent 72%
+  );
+  box-shadow: inset 0 0 18px rgba(40, 110, 170, 0.18),
+    0 0 14px rgba(10, 30, 55, 0.4);
+  overflow: hidden;
+}
+.radar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-radial-gradient(
+      circle at 50% 50%,
+      transparent 0 16px,
+      rgba(74, 163, 224, 0.16) 16px 17px
+    ),
+    linear-gradient(rgba(74, 163, 224, 0.16), rgba(74, 163, 224, 0.16)) 50% 0 /
+      1px 100% no-repeat,
+    linear-gradient(90deg, rgba(74, 163, 224, 0.16), rgba(74, 163, 224, 0.16)) 0
+      50% / 100% 1px no-repeat;
+}
+.radar .radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0 300deg,
+    var(--glow-accent) 348deg,
+    transparent 360deg
+  );
+  animation: spin 3.6s linear infinite;
+}
+.radar .radar-blip {
+  position: absolute;
+  top: 34%;
+  left: 62%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--glow-accent);
+  animation: blip 3.6s linear infinite;
+}
+@keyframes blip {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  45% {
+    opacity: 0.2;
+  }
+}
+.radar .radar-lbl {
+  position: absolute;
+  bottom: 7px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dim);
 }
 .bracket {
   position: absolute;
@@ -794,8 +1069,8 @@ body {
   .viewport {
     display: none;
   }
-  /* all modes collapse to the same stack on mobile — the switcher is a no-op */
-  .tabs {
+  /* the cockpit frame + switcher are desktop-only; mobile is a plain stack */
+  .frame {
     display: none;
   }
   .mobile {
