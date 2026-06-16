@@ -1,25 +1,23 @@
 "use client";
 
 // CSS-ring reactor core (the lightweight ambient version used as the constant
-// anchor across modes). Each ring/hub sits on its own translateZ plane so the
-// pointer-driven 3D tilt (see `.core3d` in globals.css, fed by --tiltX/--tiltY)
-// produces real parallax depth. The Three.js core is layered on top in a later
-// step and lazy-loaded so it never blocks first paint.
+// anchor across modes). Insets are percentages so the whole core scales cleanly
+// at any size — important because framer-motion morphs the core's box between
+// modes. Each ring/hub sits on its own translateZ plane so the pointer-driven
+// 3D tilt (`.core3d`, fed by --tiltX/--tiltY) produces real parallax depth.
 
 export function CssCore({
-  size,
-  rings = 1,
-  sweep = false,
+  rings = 3,
+  sweep = true,
   label = "M.K",
   role,
 }: {
-  size: number;
   rings?: 1 | 2 | 3;
   sweep?: boolean;
   label?: string;
   role?: string;
 }) {
-  const hubInset = rings === 3 ? 54 : 22;
+  const hubInset = rings >= 3 ? "28%" : "16%";
   return (
     <div className="core3d">
       {sweep && <div className="sweep" />}
@@ -28,12 +26,12 @@ export function CssCore({
       </div>
       {rings >= 2 && (
         <div className="clayer" style={{ transform: "translateZ(26px)" }}>
-          <div className="ring r2" style={{ inset: 16 }} />
+          <div className="ring r2" style={{ inset: "9%" }} />
         </div>
       )}
       {rings >= 3 && (
         <div className="clayer" style={{ transform: "translateZ(44px)" }}>
-          <div className="ring r3" style={{ inset: 36 }} />
+          <div className="ring r3" style={{ inset: "19%" }} />
         </div>
       )}
       <div className="clayer" style={{ transform: "translateZ(64px)" }}>

@@ -244,19 +244,16 @@ body {
   width: 1080px;
   height: 632px;
 }
-/* layout boot-in — replays on each mode switch (container is keyed by mode) */
-.layout {
-  animation: layIn 0.42s cubic-bezier(0.2, 0.8, 0.2, 1);
+/* full-stage overlay holding the mode-specific chrome; transparent + click
+   through, but its own interactive links stay clickable */
+.chrome-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
-@keyframes layIn {
-  from {
-    opacity: 0;
-    transform: scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+.chrome-layer a,
+.chrome-layer button {
+  pointer-events: auto;
 }
 
 /* ============================================================
@@ -358,8 +355,6 @@ body {
   text-align: left;
   font-family: var(--font-share-tech), ui-monospace, monospace;
   clip-path: polygon(7% 0, 100% 0, 100% 76%, 93% 100%, 0 100%, 0 24%);
-  /* restrained parallax opposite the core tilt (vars set on the scaler) */
-  transform: translate(var(--ndx, 0px), var(--ndy, 0px));
 }
 .node:hover {
   background: var(--panel2);

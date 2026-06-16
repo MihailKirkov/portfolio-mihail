@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MotionConfig } from "framer-motion";
 import type { Content } from "@/lib/types";
 import { buildSections, type SectionKey } from "@/lib/sections";
-import { FlightDeck } from "@/components/hud/flight-deck";
-import { Visor } from "@/components/hud/visor";
-import { Reactor } from "@/components/hud/reactor";
+import { Stage } from "@/components/hud/stage";
 import { MobileView } from "@/components/hud/mobile-view";
 import { NodeModal } from "@/components/hud/node-modal";
 import { ModeTabs, type Mode } from "@/components/hud/mode-tabs";
@@ -74,14 +73,10 @@ export function HudRoot({ content }: { content: Content }) {
       const py = (e.clientY - r.top) / r.height - 0.5;
       s!.style.setProperty("--tiltY", `${px * MAX_TILT * 2}deg`);
       s!.style.setProperty("--tiltX", `${-py * MAX_TILT * 2}deg`);
-      s!.style.setProperty("--ndx", `${-px * 8}px`);
-      s!.style.setProperty("--ndy", `${-py * 8}px`);
     }
     function reset() {
       s!.style.setProperty("--tiltX", "0deg");
       s!.style.setProperty("--tiltY", "0deg");
-      s!.style.setProperty("--ndx", "0px");
-      s!.style.setProperty("--ndy", "0px");
     }
     vp.addEventListener("pointermove", onMove);
     vp.addEventListener("pointerleave", reset);
@@ -94,39 +89,23 @@ export function HudRoot({ content }: { content: Content }) {
   const activeSection = sections.find((s) => s.key === open) ?? null;
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <ModeTabs mode={mode} onChange={changeMode} />
 
       <div className="viewport" ref={viewportRef}>
         <div className="scaler" ref={scalerRef}>
-          {/* keying on mode replays the boot animation + gauge fills on switch */}
-          <div className="layout" key={mode}>
-            {mode === "visor" && (
-              <Visor
-                content={content}
-                sections={sections}
-                onOpen={setOpen}
-                trigger={mode}
-              />
-            )}
-            {mode === "deck" && (
-              <FlightDeck
-                content={content}
-                sections={sections}
-                onOpen={setOpen}
-                trigger={mode}
-              />
-            )}
-            {mode === "reactor" && (
-              <Reactor content={content} sections={sections} onOpen={setOpen} />
-            )}
-          </div>
+          <Stage
+            content={content}
+            sections={sections}
+            mode={mode}
+            onOpen={setOpen}
+          />
         </div>
       </div>
 
       <MobileView content={content} sections={sections} onOpen={setOpen} />
 
       <NodeModal section={activeSection} onClose={() => setOpen(null)} />
-    </>
+    </MotionConfig>
   );
 }
