@@ -19,6 +19,28 @@ export function DeckChrome({ content }: { content: Content }) {
   ];
   return (
     <>
+      {/* deck-only credibility pills, sitting left of the persistent CV/socials */}
+      <div
+        style={{
+          position: "absolute",
+          top: 6,
+          right: 152,
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
+        }}
+      >
+        <span className="mpill" style={{ margin: 0 }}>
+          2+ yrs production
+        </span>
+        <span className="mpill" style={{ margin: 0 }}>
+          available aug 2026
+        </span>
+        <span className="mpill" style={{ margin: 0 }}>
+          eu citizen · no sponsorship
+        </span>
+      </div>
+
       <div
         className="panel"
         style={{ left: 0, top: 56, width: 240, height: 408, padding: 16 }}
@@ -84,11 +106,11 @@ export function DeckChrome({ content }: { content: Content }) {
         <div className="head" style={{ marginTop: 18 }}>
           certified
         </div>
-        <div style={{ fontSize: 12, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, lineHeight: 1.32 }}>
           {certifications.map((c) => (
-            <div key={c.id} style={{ marginTop: 7 }}>
-              <span style={{ color: "var(--bright)" }}>{c.name}</span>
-              <span style={{ color: "var(--faint)" }}> · {c.issuer}</span>
+            <div key={c.id} style={{ marginTop: 8 }}>
+              <div style={{ color: "var(--bright)" }}>{c.name}</div>
+              <div style={{ color: "var(--faint)" }}>· {c.issuer}</div>
             </div>
           ))}
         </div>

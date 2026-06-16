@@ -36,18 +36,10 @@ export function Stage({
 
   return (
     <div className="stage">
-      {/* persistent brand + top-right (identical in every mode) */}
+      {/* persistent brand + top-right (CV + socials, identical in every mode;
+          the deck-only spec pills live in DeckChrome) */}
       <Brand profile={profile} />
       <div className="topr" style={{ right: 0, top: 6 }}>
-        <span className="mpill" style={{ margin: 0 }}>
-          2+ yrs production
-        </span>
-        <span className="mpill" style={{ margin: 0 }}>
-          available aug 2026
-        </span>
-        <span className="mpill" style={{ margin: 0 }}>
-          eu citizen · no sponsorship
-        </span>
         <CvLink profile={profile} />
         <Socials profile={profile} />
       </div>

@@ -36,6 +36,7 @@ export const LAYOUTS: Record<Mode, ModeLayout> = {
       style: { left: 440, top: 58, width: 200, height: 200 },
       rings: 3,
       label: "M.K",
+      role: "full-stack",
     },
     terminal: { left: 256, top: 296, width: 568, height: 298 },
     nodes: {
@@ -67,7 +68,7 @@ export const LAYOUTS: Record<Mode, ModeLayout> = {
     core: {
       style: { left: 462, top: 148, width: 156, height: 156 },
       rings: 3,
-      label: "M.KIRKOV",
+      label: "M.K.",
       role: "full-stack",
     },
     terminal: { left: 8, top: 420, width: 1064, height: 204 },

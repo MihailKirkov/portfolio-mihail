@@ -32,3 +32,6 @@ next-env.d.ts
 
 # editor
 .idea
+
+# local scratch / screenshots / capture scripts (Claude)
+/_*
