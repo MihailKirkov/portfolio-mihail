@@ -136,13 +136,8 @@ export function Visor({
             linkedin ↗
           </a>
           <br />
-          <a
-            className="ico"
-            href={profile.social.portfolio}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            portfolio ↗
+          <a className="ico" href={`mailto:${profile.email}`}>
+            email ↗
           </a>
         </div>
         <a

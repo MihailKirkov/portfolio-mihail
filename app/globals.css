@@ -56,6 +56,98 @@ body {
   overflow-x: hidden;
 }
 
+/* ============================================================
+   Background depth layers — navy gradient + cockpit grid + particles
+   ============================================================ */
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background: radial-gradient(
+    120% 92% at 50% 36%,
+    #0b1d33 0%,
+    #071527 34%,
+    #040c18 70%,
+    #02060d 100%
+  );
+}
+/* perspective floor receding to the horizon, fading out near the top */
+.bg-grid {
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  bottom: -8%;
+  height: 64%;
+  background-image: linear-gradient(
+      to right,
+      rgba(90, 175, 235, 0.3) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to top, rgba(90, 175, 235, 0.3) 1px, transparent 1px);
+  background-size: 48px 48px;
+  transform: perspective(440px) rotateX(70deg)
+    translate(var(--bgx, 0px), var(--bgy, 0px));
+  transform-origin: bottom center;
+  opacity: 0.55;
+  -webkit-mask-image: linear-gradient(to top, #000 8%, transparent 78%);
+  mask-image: linear-gradient(to top, #000 8%, transparent 78%);
+}
+.bg-particles {
+  position: absolute;
+  inset: 0;
+  transform: translate(calc(var(--bgx, 0px) * 1.7), calc(var(--bgy, 0px) * 1.7));
+}
+.bg-particles .p {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 6px var(--glow);
+  opacity: 0;
+  animation-name: drift;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+@keyframes drift {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  12% {
+    opacity: 0.5;
+  }
+  88% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-64px);
+  }
+}
+
+/* ============================================================
+   Scrollbars — thin, cold-blue thumb, transparent track (global)
+   ============================================================ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--edge) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--edge);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--blue);
+}
+
 /* scanline overlay */
 .fx-scanline {
   content: "";
@@ -78,9 +170,9 @@ body {
   pointer-events: none;
   z-index: 199;
   background: radial-gradient(
-    120% 90% at 50% 40%,
-    transparent 55%,
-    rgba(0, 2, 6, 0.85) 100%
+    120% 92% at 50% 40%,
+    transparent 62%,
+    rgba(0, 2, 6, 0.6) 100%
   );
 }
 
@@ -138,13 +230,14 @@ body {
    ============================================================ */
 .viewport {
   padding-top: 46px;
-  min-height: 100vh;
+  height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 .scaler {
-  transform-origin: top center;
+  transform-origin: center center;
 }
 .stage {
   position: relative;
@@ -265,6 +358,8 @@ body {
   text-align: left;
   font-family: var(--font-share-tech), ui-monospace, monospace;
   clip-path: polygon(7% 0, 100% 0, 100% 76%, 93% 100%, 0 100%, 0 24%);
+  /* restrained parallax opposite the core tilt (vars set on the scaler) */
+  transform: translate(var(--ndx, 0px), var(--ndy, 0px));
 }
 .node:hover {
   background: var(--panel2);
@@ -318,6 +413,20 @@ body {
 /* reactor core (CSS rings — fallback / ambient) */
 .core {
   position: absolute;
+  perspective: 760px;
+}
+/* pointer-driven 3D tilt — --tiltX/--tiltY are set on the scaler on mousemove */
+.core3d {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--tiltX, 0deg)) rotateY(var(--tiltY, 0deg));
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.clayer {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
 }
 .ring {
   position: absolute;
@@ -529,28 +638,42 @@ body {
 /* ============================================================
    Modal (hologram)
    ============================================================ */
+/* projector beam — the holo "light source" from the top bar to the modal */
 .beam {
   position: fixed;
   top: 46px;
   bottom: 0;
   left: 50%;
   width: 1px;
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleY(0.2);
+  transform-origin: top center;
   z-index: 240;
   background: linear-gradient(var(--bright), transparent);
-  opacity: 0.4;
+  opacity: 0;
+  transition: opacity 0.22s ease, transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.beam.show {
+  opacity: 0.45;
+  transform: translateX(-50%) scaleY(1);
 }
 .backdrop {
   position: fixed;
   inset: 0;
   z-index: 235;
-  background: rgba(2, 7, 14, 0.55);
+  background: rgba(2, 7, 14, 0.5);
+  opacity: 0;
+  backdrop-filter: blur(0px);
+  transition: opacity 0.26s ease, backdrop-filter 0.26s ease;
+}
+.backdrop.show {
+  opacity: 1;
+  backdrop-filter: blur(3px);
 }
 .modal {
   position: fixed;
   left: 50%;
-  top: 54%;
-  transform: translate(-50%, -50%) scale(0.5) skewX(9deg);
+  top: 53%;
+  transform: translate(-50%, -50%) scale(0.85) skewX(5deg);
   width: min(440px, 92vw);
   z-index: 245;
   border: 1px solid var(--bright);
@@ -558,12 +681,41 @@ body {
   box-shadow: 0 0 34px rgba(74, 163, 224, 0.5);
   padding: 18px 20px;
   opacity: 0;
-  transition: transform 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.35), opacity 0.3s;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.3), opacity 0.22s ease;
   clip-path: polygon(4% 0, 100% 0, 100% 90%, 96% 100%, 0 100%, 0 10%);
 }
 .modal.show {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1) skewX(0);
+  animation: holoPulse 0.5s ease-out;
+}
+/* content staggers in just after the frame projects */
+.modal.show .mh {
+  animation: holoIn 0.3s 0.08s both;
+}
+.modal.show .mb {
+  animation: holoIn 0.34s 0.15s both;
+}
+@keyframes holoPulse {
+  0% {
+    box-shadow: 0 0 0 rgba(124, 196, 255, 0);
+  }
+  35% {
+    box-shadow: 0 0 64px rgba(124, 196, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 34px rgba(74, 163, 224, 0.5);
+  }
+}
+@keyframes holoIn {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .modal .mh {
   display: flex;
@@ -647,15 +799,13 @@ body {
   .viewport {
     display: none;
   }
-  .tabs .lbl {
+  /* all modes collapse to the same stack on mobile — the switcher is a no-op */
+  .tabs {
     display: none;
   }
   .mobile {
     display: block;
-    padding: 62px 16px 40px;
-  }
-  .tabs {
-    justify-content: center;
+    padding: 26px 16px 40px;
   }
 }
 .mwrap {

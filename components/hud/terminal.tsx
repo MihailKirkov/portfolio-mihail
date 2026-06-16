@@ -16,13 +16,11 @@ export function Terminal({ config }: { config: TerminalConfig }) {
   const [booted, setBooted] = useState(false);
   const [busy, setBusy] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
-  const startedRef = useRef(false);
 
-  // type out the greeting once
+  // Type out the greeting once per mount. A cancelled flag (not a ref guard)
+  // is used so the effect survives StrictMode's mount→cleanup→remount in dev
+  // and replays cleanly when this component remounts on a layout switch.
   useEffect(() => {
-    if (startedRef.current) return;
-    startedRef.current = true;
-
     const reduce = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     ).matches;
@@ -36,17 +34,26 @@ export function Terminal({ config }: { config: TerminalConfig }) {
 
     setMessages([{ role: "assistant", text: "", pending: true }]);
     let i = 0;
+    let cancelled = false;
     const id = setInterval(() => {
+      if (cancelled) return;
       i++;
       setMessages([
-        { role: "assistant", text: greeting.slice(0, i), pending: i < greeting.length },
+        {
+          role: "assistant",
+          text: greeting.slice(0, i),
+          pending: i < greeting.length,
+        },
       ]);
       if (i >= greeting.length) {
         clearInterval(id);
         setBooted(true);
       }
     }, 18);
-    return () => clearInterval(id);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, [config.greeting]);
 
   // autoscroll

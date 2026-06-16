@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Orbitron, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
+import { Background } from "@/components/hud/background";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${orbitron.variable} ${shareTechMono.variable}`}>
       <body>
+        <Background />
         {children}
         <div className="fx-vignette" aria-hidden="true" />
         <div className="fx-scanline" aria-hidden="true" />

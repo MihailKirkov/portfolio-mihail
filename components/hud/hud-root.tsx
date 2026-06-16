@@ -38,19 +38,57 @@ export function HudRoot({ content }: { content: Content }) {
     }
   }
 
-  // scale the 1080×632 stage to fit the viewport width (clean, measured).
+  // Scale the 1080×632 stage to *fill* the viewport — fit both axes and scale
+  // up (capped) so the composition reaches the bottom instead of packing at the
+  // top. The viewport is exactly one screen tall, so nothing overflows.
   useEffect(() => {
+    const STAGE_W = 1080;
+    const STAGE_H = 632;
     function scale() {
       const s = scalerRef.current;
-      const vp = viewportRef.current;
-      if (!s || !vp) return;
-      const f = Math.min(1, (window.innerWidth - 24) / 1080);
+      if (!s) return;
+      const availW = window.innerWidth - 24;
+      const availH = window.innerHeight - 46 - 24; // top bar + breathing room
+      const f = Math.min(availW / STAGE_W, availH / STAGE_H, 1.65);
       s.style.transform = `scale(${f})`;
-      vp.style.height = `${632 * f + 20}px`;
     }
     scale();
     window.addEventListener("resize", scale);
     return () => window.removeEventListener("resize", scale);
+  }, []);
+
+  // Pointer-driven 3D tilt: map cursor position over the stage to --tiltX/--tiltY
+  // (core parallax) and --ndx/--ndy (a few px of opposite node drift). Disabled
+  // under prefers-reduced-motion.
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduce) return;
+    const vp = viewportRef.current;
+    const s = scalerRef.current;
+    if (!vp || !s) return;
+
+    const MAX_TILT = 12; // degrees
+    function onMove(e: PointerEvent) {
+      const r = vp!.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5; // -0.5..0.5
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      s!.style.setProperty("--tiltY", `${px * MAX_TILT * 2}deg`);
+      s!.style.setProperty("--tiltX", `${-py * MAX_TILT * 2}deg`);
+      s!.style.setProperty("--ndx", `${-px * 8}px`);
+      s!.style.setProperty("--ndy", `${-py * 8}px`);
+    }
+    function reset() {
+      s!.style.setProperty("--tiltX", "0deg");
+      s!.style.setProperty("--tiltY", "0deg");
+      s!.style.setProperty("--ndx", "0px");
+      s!.style.setProperty("--ndy", "0px");
+    }
+    vp.addEventListener("pointermove", onMove);
+    vp.addEventListener("pointerleave", reset);
+    return () => {
+      vp.removeEventListener("pointermove", onMove);
+      vp.removeEventListener("pointerleave", reset);
+    };
   }, []);
 
   const activeSection = sections.find((s) => s.key === open) ?? null;

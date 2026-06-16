@@ -71,8 +71,12 @@ export function NodeModal({
 
   return (
     <>
-      <div className="backdrop" onClick={handleClose} aria-hidden="true" />
-      <div className="beam" aria-hidden="true" />
+      <div
+        className={`backdrop${show ? " show" : ""}`}
+        onClick={handleClose}
+        aria-hidden="true"
+      />
+      <div className={`beam${show ? " show" : ""}`} aria-hidden="true" />
       <div
         ref={dialogRef}
         className={`modal${show ? " show" : ""}`}
