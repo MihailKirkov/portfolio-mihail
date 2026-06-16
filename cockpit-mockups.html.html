@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M.Kirkov — cockpit mockups</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04080f; --bg2:#07101d; --panel:#0a1828; --panel2:#0c2236;
+  --line:#163e63; --line2:#1d4b7a; --edge:#2f6ea8;
+  --blue:#4aa3e0; --bright:#9fd6ff; --dim:#557da8; --faint:#33597f;
+  --ink:#dcecff; --green:#4fd6a8; --ai:#7cc4ff;
+  --glow:rgba(74,163,224,.35);
+  --mono:'Share Tech Mono',ui-monospace,monospace; --disp:'Orbitron',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--blue);font-family:var(--mono);min-height:100%}
+body{overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:200;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0 2px,rgba(3,8,16,.45) 2px 3px);opacity:.5}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:199;
+  background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(0,2,6,.85) 100%)}
+
+.tabs{position:fixed;top:0;left:0;right:0;height:46px;z-index:210;display:flex;align-items:center;
+  gap:8px;padding:0 14px;background:rgba(4,8,15,.82);border-bottom:1px solid var(--line);
+  backdrop-filter:blur(4px);font-family:var(--disp)}
+.tabs .lbl{font-size:11px;letter-spacing:.18em;color:var(--faint);margin-right:6px;text-transform:uppercase}
+.tab{font-family:var(--disp);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--dim);background:transparent;border:1px solid var(--line);padding:7px 12px;cursor:pointer;
+  border-radius:0;transition:.15s;clip-path:polygon(8% 0,100% 0,100% 72%,92% 100%,0 100%,0 28%)}
+.tab:hover{color:var(--bright);border-color:var(--edge)}
+.tab.on{color:#04101f;background:var(--blue);border-color:var(--blue)}
+.sr-radio{position:absolute;width:0;height:0;opacity:0;pointer-events:none}
+#L-visor:checked~.tabs label[for=L-visor],#L-deck:checked~.tabs label[for=L-deck],#L-reactor:checked~.tabs label[for=L-reactor]{color:#04101f;background:var(--blue);border-color:var(--blue)}
+
+.viewport{padding-top:46px;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.scaler{transform-origin:top center}
+.stage{position:relative;width:1080px;height:632px}
+.layout{display:none}
+#L-visor:checked~.viewport #visor,#L-deck:checked~.viewport #deck,#L-reactor:checked~.viewport #reactor{display:block}
+
+/* ---- shared HUD components ---- */
+.brand{position:absolute;display:flex;align-items:center;gap:11px}
+.mono{width:34px;height:34px;border:1px solid var(--edge);display:flex;align-items:center;justify-content:center;
+  color:var(--bright);font-size:13px;font-family:var(--disp);
+  clip-path:polygon(22% 0,100% 0,100% 78%,78% 100%,0 100%,0 22%)}
+.brand h1{font-family:var(--disp);font-size:14px;font-weight:500;margin:0;color:var(--ink);letter-spacing:.04em}
+.brand .sub{font-size:12px;color:var(--dim)}
+.topr{position:absolute;display:flex;align-items:center;gap:10px}
+.cv{font-size:12px;color:#04101f;background:var(--blue);padding:6px 11px;font-weight:500;cursor:pointer;
+  border:0;font-family:var(--mono);box-shadow:0 0 10px var(--glow)}
+.ico{font-size:17px;color:var(--blue);cursor:pointer}.ico:hover{color:var(--bright)}
+
+.read{font-size:12px;line-height:1.85;color:var(--faint)}
+.read .on1{color:var(--green)} .read b{color:var(--bright);font-weight:400}
+.head{font-size:12px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+
+.node{position:absolute;border:1px solid var(--line2);background:var(--panel);color:var(--ink);
+  font-size:13px;padding:9px 12px;cursor:pointer;transition:.16s;letter-spacing:.03em;
+  clip-path:polygon(7% 0,100% 0,100% 76%,93% 100%,0 100%,0 24%)}
+.node:hover{background:var(--panel2);border-color:var(--bright);box-shadow:0 0 14px var(--glow);color:var(--bright)}
+.node .k{font-size:11px;color:var(--dim)}
+.node.r{clip-path:polygon(0 0,93% 0,100% 24%,100% 100%,7% 100%,0 76%);text-align:right}
+.node.ai{border-color:var(--edge);background:#0c2740;color:var(--ai);box-shadow:0 0 12px rgba(124,196,255,.22)}
+
+.gauge{margin-top:6px}.gauge .gl{font-size:12px;color:var(--dim);display:flex;justify-content:space-between}
+.bar{height:5px;background:#10283f;margin-top:3px;overflow:hidden}
+.fill{height:5px;background:var(--blue);width:0;transition:width 1.1s cubic-bezier(.2,.8,.2,1);box-shadow:0 0 8px var(--glow)}
+
+.core{position:absolute}
+.ring{position:absolute;border-radius:50%}
+.r1{inset:0;border:1px solid var(--line2);border-top-color:var(--bright);animation:spin 9s linear infinite}
+.r2{border:1px dashed var(--line);animation:spinr 16s linear infinite}
+.r3{border:1px solid var(--edge);border-bottom-color:var(--bright);animation:spin 6s linear infinite}
+.hub{position:absolute;border-radius:50%;background:radial-gradient(circle,#103251,#08182a);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 22px var(--glow),inset 0 0 16px rgba(74,163,224,.25)}
+.hub .nm{font-family:var(--disp);font-size:12px;color:var(--bright);letter-spacing:.06em}
+.hub .rl{font-size:11px;color:var(--dim)}
+.sweep{position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 295deg,rgba(74,163,224,.30) 350deg,transparent 360deg);
+  animation:spin 4.5s linear infinite}
+
+.panel{position:absolute;border:1px solid var(--line2);background:var(--bg2);
+  clip-path:polygon(0 0,97% 0,100% 6%,100% 100%,3% 100%,0 94%)}
+.term{display:flex;flex-direction:column}
+.term .tt{padding:8px 11px;border-bottom:1px solid var(--line);font-size:12px;color:var(--dim);display:flex;align-items:center;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.log{flex:1;padding:11px;font-size:13px;line-height:1.65;color:var(--bright);overflow:auto}
+.log .me{color:var(--green)} .log .ai{color:var(--dim)}
+.cur{animation:blink 1s step-end infinite}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 11px 9px}
+.chip{font-size:12px;color:var(--ai);border:1px solid var(--line2);padding:4px 9px;cursor:pointer;transition:.15s}
+.chip:hover{background:var(--panel2);border-color:var(--bright)}
+.inrow{display:flex;border-top:1px solid var(--line)}
+.inrow input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font-family:var(--mono);font-size:13px;padding:9px 11px}
+.inrow input::placeholder{color:var(--faint)}
+.inrow button{background:transparent;border:0;border-left:1px solid var(--line);color:var(--blue);font-family:var(--mono);font-size:13px;padding:0 14px;cursor:pointer}
+
+.wave{position:absolute;display:flex;gap:3px;align-items:flex-end;opacity:.5}
+.wave i{display:block;width:4px;background:var(--edge);transform-origin:bottom;animation:wv 1.3s ease-in-out infinite}
+.deco{position:absolute;border:1px solid var(--line);border-radius:50%;opacity:.5}
+.bracket{position:absolute;opacity:.55}
+
+.btn-ghost{font-size:12px;color:var(--blue);border:1px solid var(--edge);padding:5px 11px;cursor:pointer;display:inline-block}
+.btn-ghost:hover{color:var(--bright);box-shadow:0 0 10px var(--glow)}
+
+/* ---- modal ---- */
+.beam{display:none;position:fixed;top:46px;bottom:0;left:50%;width:1px;transform:translateX(-50%);z-index:240;
+  background:linear-gradient(var(--bright),transparent);opacity:.4}
+.backdrop{display:none;position:fixed;inset:0;z-index:235;background:rgba(2,7,14,.55)}
+.modal{display:none;position:fixed;left:50%;top:54%;transform:translate(-50%,-50%) scale(.5) skewX(9deg);
+  width:min(440px,92vw);z-index:245;border:1px solid var(--bright);background:rgba(8,22,40,.97);
+  box-shadow:0 0 34px rgba(74,163,224,.5);padding:18px 20px;opacity:0;
+  transition:transform .34s cubic-bezier(.2,.9,.3,1.35),opacity .3s;
+  clip-path:polygon(4% 0,100% 0,100% 90%,96% 100%,0 100%,0 10%)}
+.modal.show{opacity:1;transform:translate(-50%,-50%) scale(1) skewX(0)}
+.modal .mh{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line2);padding-bottom:9px;margin-bottom:11px}
+.modal .mh h3{font-family:var(--disp);font-size:14px;font-weight:500;margin:0;color:var(--bright);letter-spacing:.05em;text-transform:uppercase}
+.modal .mx{font-size:20px;color:var(--blue);cursor:pointer;line-height:1}
+.modal .mb{font-size:13px;line-height:1.7;color:var(--ink);max-height:46vh;overflow:auto}
+.modal .mb b{color:var(--bright);font-weight:400}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes spinr{to{transform:rotate(-360deg)}}
+@keyframes blink{50%{opacity:0}}
+@keyframes wv{0%,100%{transform:scaleY(.28)}50%{transform:scaleY(1)}}
+
+/* ---- mobile fallback ---- */
+.mobile{display:none}
+@media(max-width:780px){
+  .viewport,.tabs .lbl{display:none}
+  .mobile{display:block;padding:62px 16px 40px}
+  .tabs{justify-content:center}
+}
+.mwrap{max-width:520px;margin:0 auto}
+.mhead{font-family:var(--disp);color:var(--ink);font-size:20px;margin:0 0 4px;letter-spacing:.04em}
+.msub{color:var(--dim);font-size:13px;margin:0 0 14px}
+.mpill{display:inline-block;font-size:12px;color:var(--ai);border:1px solid var(--line2);padding:4px 9px;margin:0 6px 6px 0}
+.mlist{margin:16px 0;display:flex;flex-direction:column;gap:8px}
+.mitem{border:1px solid var(--line2);background:var(--panel);color:var(--ink);font-size:14px;padding:12px 14px;cursor:pointer}
+.mitem:hover{border-color:var(--bright)}
+
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<input class="sr-radio" type="radio" name="layout" id="L-visor" >
+<input class="sr-radio" type="radio" name="layout" id="L-deck" checked>
+<input class="sr-radio" type="radio" name="layout" id="L-reactor">
+<div class="tabs">
+  <span class="lbl">layout</span>
+  <label class="tab" for="L-visor">C1 · Visor</label>
+  <label class="tab" for="L-deck">C2 · Flight deck</label>
+  <label class="tab" for="L-reactor">C3 · Reactor</label>
+</div>
+
+<div class="viewport">
+<div class="scaler" id="scaler">
+
+<!-- ============ C1 VISOR ============ -->
+<div class="layout" id="visor"><div class="stage">
+  <div class="brand" style="left:0;top:2px"><div class="mono">MK</div><div><h1>MIHAIL KIRKOV</h1><div class="sub">full-stack · react/next · node · php · ai</div></div></div>
+  <div class="topr" style="right:0;top:6px"><div class="cv">⤓ CV</div><i class="ico ti">⌥</i><span class="ico">in</span><span class="ico">✉</span></div>
+
+  <div class="bracket" style="top:54px;left:0;width:150px;height:104px;border-top:2px solid var(--edge);border-left:2px solid var(--edge);border-top-left-radius:84px"></div>
+  <div class="bracket" style="top:54px;right:0;width:150px;height:104px;border-top:2px solid var(--edge);border-right:2px solid var(--edge);border-top-right-radius:84px"></div>
+  <div class="bracket" style="bottom:0;left:0;width:150px;height:120px;border-bottom:2px solid var(--edge);border-left:2px solid var(--edge);border-bottom-left-radius:84px"></div>
+  <div class="bracket" style="bottom:0;right:0;width:150px;height:120px;border-bottom:2px solid var(--edge);border-right:2px solid var(--edge);border-bottom-right-radius:84px"></div>
+
+  <div class="read" style="top:64px;left:22px"><div class="on1">● secure link</div><div>sys ▮▮▮▮▮ <b>100%</b></div><div>exp <b>2+ yrs</b></div></div>
+  <div class="read" style="top:64px;right:22px;text-align:right"><div>vienna → eindhoven</div><div>available <b>aug 2026</b></div><div>eu · no sponsor</div></div>
+
+  <div class="read" style="bottom:40px;left:22px;width:150px">
+    <div class="head">proficiency</div>
+    <div class="gauge"><div class="gl"><span>react/next</span></div><div class="bar"><div class="fill" data-w="92"></div></div></div>
+    <div class="gauge"><div class="gl"><span>node · php</span></div><div class="bar"><div class="fill" data-w="80"></div></div></div>
+    <div class="gauge"><div class="gl"><span>ai integ</span></div><div class="bar"><div class="fill" data-w="78"></div></div></div>
+  </div>
+  <div class="read" style="bottom:40px;right:22px;width:150px;text-align:right">
+    <div class="head">comms</div>
+    <div style="line-height:2">github ↗<br>linkedin ↗<br>portfolio ↗</div>
+    <span class="btn-ghost" style="margin-top:4px">book a call</span>
+  </div>
+
+  <div class="core" style="left:50%;top:60px;width:96px;height:96px;transform:translateX(-50%)">
+    <div class="ring r1"></div><div class="ring r2" style="inset:13px"></div>
+    <div class="hub" style="inset:26px"><div class="nm">M.K</div></div>
+  </div>
+
+  <div style="position:absolute;left:208px;right:208px;top:172px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+    <div class="node" data-k="identity"><div>identity</div><div class="k">who · pitch</div></div>
+    <div class="node" data-k="experience"><div>experience</div><div class="k">gutes-set</div></div>
+    <div class="node" data-k="stack"><div>stack</div><div class="k">full-stack</div></div>
+    <div class="node" data-k="projects"><div>projects</div><div class="k">3 builds</div></div>
+    <div class="node ai" data-k="ai"><div>ai integration ◆</div><div class="k">claude api</div></div>
+    <div class="node" data-k="credentials"><div>credentials</div><div class="k">certs · infos</div></div>
+  </div>
+
+  <div class="panel term" style="left:208px;right:208px;top:262px;bottom:40px" data-term></div>
+</div></div>
+
+<!-- ============ C2 FLIGHT DECK ============ -->
+<div class="layout" id="deck"><div class="stage">
+  <div class="brand" style="left:0;top:2px"><div class="mono">MK</div><div><h1>MIHAIL KIRKOV</h1><div class="sub">full-stack developer · ai integration</div></div></div>
+  <div class="topr" style="right:0;top:6px"><span class="mpill" style="margin:0">2+ yrs production</span><span class="mpill" style="margin:0">available aug 2026</span><div class="cv">⤓ CV</div></div>
+
+  <!-- left gauge column -->
+  <div class="panel" style="left:0;top:60px;width:230px;height:300px;padding:14px">
+    <div class="head">capability</div>
+    <div class="gauge"><div class="gl"><span>frontend</span><span>react/next/ts</span></div><div class="bar"><div class="fill" data-w="92"></div></div></div>
+    <div class="gauge"><div class="gl"><span>backend</span><span>node/php/py</span></div><div class="bar"><div class="fill" data-w="82"></div></div></div>
+    <div class="gauge"><div class="gl"><span>ai integration</span><span>claude/rag</span></div><div class="bar"><div class="fill" data-w="78"></div></div></div>
+    <div class="gauge"><div class="gl"><span>devops</span><span>docker/ci</span></div><div class="bar"><div class="fill" data-w="68"></div></div></div>
+    <div class="head" style="margin-top:14px">languages</div>
+    <div style="font-size:12px;line-height:1.95;color:var(--dim)">english <b style="color:var(--bright)">fluent</b><br>bulgarian <b style="color:var(--bright)">native</b><br>german <span style="color:var(--faint)">basic</span></div>
+  </div>
+  <div class="read" style="left:0;top:374px;width:230px">
+    <div class="on1">● secure link</div><div>vienna → eindhoven</div><div>eu citizen · no sponsorship</div>
+  </div>
+
+  <!-- center: core + nodes orbit + terminal -->
+  <div class="core" style="left:50%;top:66px;width:92px;height:92px;transform:translateX(-50%)">
+    <div class="ring r1"></div><div class="hub" style="inset:22px"><div class="nm">M.K</div></div>
+  </div>
+  <div class="node" data-k="identity" style="left:300px;top:74px;width:150px">identity</div>
+  <div class="node r" data-k="projects" style="right:300px;top:74px;width:150px">projects</div>
+  <div class="node" data-k="experience" style="left:268px;top:128px;width:150px">experience</div>
+  <div class="node ai r" data-k="ai" style="right:268px;top:128px;width:150px">ai integration ◆</div>
+  <div class="node" data-k="stack" style="left:300px;top:182px;width:150px">stack</div>
+  <div class="node r" data-k="credentials" style="right:300px;top:182px;width:150px">credentials</div>
+  <div class="panel term" style="left:250px;right:250px;top:248px;bottom:24px" data-term></div>
+
+  <!-- right status column -->
+  <div class="panel" style="right:0;top:60px;width:230px;height:300px;padding:14px">
+    <div class="head">project status</div>
+    <div style="font-size:12px;line-height:1.5;color:var(--ink)"><span class="on1">●</span> lead-hq <span style="color:var(--dim)">ai grader</span></div>
+    <div style="font-size:12px;line-height:1.5;color:var(--ink);margin-top:5px"><span class="on1">●</span> ignight <span style="color:var(--dim)">realtime ws</span></div>
+    <div style="font-size:12px;line-height:1.5;color:var(--ink);margin-top:5px"><span class="on1">●</span> izlei <span style="color:var(--dim)">next/prisma</span></div>
+    <div class="head" style="margin-top:14px">certified</div>
+    <div style="font-size:12px;line-height:1.7;color:var(--dim)">claude api · anthropic<br>python · u.michigan<br>full-stack · udemy</div>
+    <div class="head" style="margin-top:14px">background</div>
+    <div style="font-size:12px;line-height:1.5;color:var(--dim)">bulgarian national<br>informatics team '19</div>
+  </div>
+  <div class="read" style="right:0;top:374px;width:230px;text-align:right">
+    <div class="head">comms</div>
+    <span class="btn-ghost">book a call</span>
+  </div>
+</div></div>
+
+<!-- ============ C3 REACTOR ============ -->
+<div class="layout" id="reactor"><div class="stage">
+  <div class="brand" style="left:0;top:2px"><div class="mono">MK</div><div><h1>MIHAIL KIRKOV</h1><div class="sub">full-stack · react/next · node · php · ai</div></div></div>
+  <div class="topr" style="right:0;top:6px"><div class="cv">⤓ CV</div><span class="ico">gh</span><span class="ico">in</span><span class="ico">✉</span></div>
+
+  <div class="read" style="top:58px;left:6px"><div class="on1">● secure</div><div>2+ yrs prod</div><div>10+ modules</div></div>
+  <div class="read" style="top:58px;right:6px;text-align:right"><div>available aug</div><div>eu citizen</div><div>no sponsor</div></div>
+
+  <svg viewBox="0 0 1080 360" style="position:absolute;top:58px;left:0;width:1080px;height:360px">
+    <g stroke="#163e63" stroke-width="1" fill="none">
+      <line x1="540" y1="180" x2="250" y2="60"/><line x1="540" y1="180" x2="830" y2="60"/>
+      <line x1="540" y1="180" x2="120" y2="180"/><line x1="540" y1="180" x2="960" y2="180"/>
+      <line x1="540" y1="180" x2="250" y2="300"/><line x1="540" y1="180" x2="830" y2="300"/>
+    </g>
+  </svg>
+
+  <div class="core" style="left:50%;top:148px;width:150px;height:150px;transform:translateX(-50%);z-index:2">
+    <div class="sweep"></div>
+    <div class="ring r1"></div><div class="ring r2" style="inset:16px"></div><div class="ring r3" style="inset:36px"></div>
+    <div class="hub" style="inset:54px"><div class="nm">M.KIRKOV</div><div class="rl">full-stack</div></div>
+  </div>
+
+  <div class="node" data-k="identity" style="left:170px;top:88px;width:170px;z-index:3">identity</div>
+  <div class="node r" data-k="projects" style="right:170px;top:88px;width:170px;z-index:3">projects</div>
+  <div class="node" data-k="experience" style="left:8px;top:202px;width:160px;z-index:3">experience</div>
+  <div class="node ai r" data-k="ai" style="right:8px;top:202px;width:160px;z-index:3">ai integration ◆</div>
+  <div class="node" data-k="stack" style="left:170px;top:316px;width:170px;z-index:3">stack</div>
+  <div class="node r" data-k="credentials" style="right:170px;top:316px;width:170px;z-index:3">credentials</div>
+
+  <div class="deco" style="left:24px;bottom:120px;width:54px;height:54px;animation:spinr 18s linear infinite"></div>
+  <div class="deco" style="right:24px;bottom:120px;width:54px;height:54px;border-style:dashed;animation:spin 22s linear infinite"></div>
+  <div class="wave" style="left:300px;bottom:92px;height:22px">
+    <i style="animation-delay:0s"></i><i style="animation-delay:.1s"></i><i style="animation-delay:.2s"></i><i style="animation-delay:.05s"></i><i style="animation-delay:.3s"></i><i style="animation-delay:.15s"></i><i style="animation-delay:.25s"></i><i style="animation-delay:.08s"></i>
+  </div>
+
+  <div class="panel term" style="left:8px;right:8px;top:420px;bottom:8px" data-term></div>
+</div></div>
+
+</div><!-- /scaler -->
+</div><!-- /viewport -->
+
+<!-- mobile fallback -->
+<div class="mobile"><div class="mwrap">
+  <h1 class="mhead">Mihail Kirkov</h1>
+  <p class="msub">full-stack developer · react/next · node · php · ai integration</p>
+  <span class="mpill">2+ yrs production</span><span class="mpill">available aug 2026</span><span class="mpill">eu citizen</span>
+  <div class="mlist">
+    <div class="mitem" data-k="identity">› identity</div>
+    <div class="mitem" data-k="experience">› experience</div>
+    <div class="mitem" data-k="stack">› stack</div>
+    <div class="mitem" data-k="projects">› projects</div>
+    <div class="mitem" data-k="ai" style="border-color:var(--edge);color:var(--ai)">› ai integration ◆</div>
+    <div class="mitem" data-k="credentials">› credentials</div>
+  </div>
+  <div class="cv" style="display:inline-block">⤓ download CV</div>
+  <span class="btn-ghost" style="margin-left:8px">book a call</span>
+  <div class="panel term" style="position:relative;margin-top:18px;height:320px;clip-path:none;border:1px solid var(--line2)" data-term></div>
+</div></div>
+
+<!-- modal -->
+<div class="backdrop" id="backdrop"></div>
+<div class="beam" id="beam"></div>
+<div class="modal" id="modal">
+  <div class="mh"><h3 id="mtitle"></h3><span class="mx" id="mx">✕</span></div>
+  <div class="mb" id="mbody"></div>
+</div>
+
+<script>
+const DATA={
+  identity:["Identity","Mihail Kirkov — full-stack developer (React/Next · Node · PHP) with real AI-integration experience. <b>2+ years production</b>. EU citizen (Bulgarian), relocating to Eindhoven <b>Sept 2026</b>, available August. The lane is frontend polish + AI integration — not generic junior."],
+  experience:["Experience","<b>GuTeS-SET, Vienna</b> — Lead Developer (Sep 2025–now): drive feature dev on the React/TS + PHP ERM, own the client relationship and delivery.<br><br>Full-Stack Developer (Feb 2024–Sep 2025): built <b>2 production Dolibarr ERMs</b>, 10+ custom PHP modules. New React/TS UI + a Node.js real-time event server replacing legacy. Multi-frontend ERM (3 React apps) for a German client serving ~50 partner companies.<br><br><b>Coding Giants</b> — C# teacher (2023)."],
+  stack:["Stack","<b>Frontend</b> — React, Next.js, TypeScript, Tailwind, Three.js<br><b>Backend</b> — Node.js, Express, PHP, Python, Supabase, REST<br><b>AI</b> — Claude API, RAG, MCP, tool use, agents<br><b>DevOps</b> — Docker, CI/CD, Git, Linux"],
+  projects:["Projects","<b>Lead-HQ</b> (2026) — lead-management platform. Next.js 15 + Supabase + TanStack. Apify Maps scraping, OpenAI lead scoring, custom email-enrichment pipeline.<br><br><b>Izlei</b> (2025) — anonymous posting app + admin panel. Next.js, Prisma, PostgreSQL.<br><br><b>Ignight</b> (2025) — real-time multiplayer games. React/TS + Node/Express, WebSockets, Docker."],
+  ai:["AI integration","<b>Building with the Claude API</b> — Anthropic certification: RAG, MCP, agents, tool use, prompt engineering.<br><br>Shipped in Lead-HQ: an AI lead-scoring grader over scraped data. The differentiator — shipping AI features <b>end to end</b>, not just calling an API once. This terminal is itself a live example."],
+  credentials:["Credentials","<b>Certs</b> — Building with the Claude API (Anthropic) · Python for Everybody (U. Michigan) · Full-Stack Web Dev Bootcamp (Udemy).<br><br><b>Education</b> — WKO Wien vocational IT training, coursework Feb 2024–2026 · HS of Mathematics 'Geo Milev', 5.70/6.00.<br><br><b>Competitive</b> — Bulgarian national informatics team (2019), two-time medalist, C++ algorithms."]
+};
+const QA={
+  "what's your stack?":"Frontend React/Next/TS, backend Node + PHP + Python, and real AI integration (Claude API, RAG, agents). Full-stack, end to end.",
+  "your stack?":"Frontend React/Next/TS, backend Node + PHP + Python, plus real AI integration — Claude API, RAG, agents.",
+  "why hire you?":"I ship AI features end to end, not just demos. EU citizen so zero sponsorship friction, relocating to Eindhoven in September, available August. Low-risk, fast hire.",
+  "why should we hire you?":"I ship AI features end to end, not just demos. EU citizen, relocating to Eindhoven in September, available August — a fast, low-risk hire.",
+  "tell me about a project":"Lead-HQ: a lead-management platform I built solo — Next.js 15 + Supabase, Apify scraping, and an OpenAI grader that scores leads automatically.",
+  "a project?":"Lead-HQ — a lead-management platform I built solo: Next.js 15 + Supabase, Apify scraping, and an OpenAI grader that scores leads automatically."
+};
+const SUGG=["what's your stack?","why hire you?","tell me about a project"];
+
+/* tabs */
+/* tabs are CSS-driven; re-trigger gauge fill on switch */
+document.querySelectorAll('.sr-radio').forEach(r=>r.addEventListener('change',fillGauges));
+
+/* scale-to-fit */
+function scale(){
+  const s=document.getElementById('scaler');
+  const f=Math.min(1,(window.innerWidth-24)/1080);
+  s.style.transform='scale('+f+')';
+  document.querySelector('.viewport').style.height=(632*f+20)+'px';
+}
+window.addEventListener('resize',scale); scale();
+
+/* gauges */
+function fillGauges(){document.querySelectorAll('.fill').forEach(f=>{f.style.width=f.dataset.w+'%';});}
+
+/* modal */
+const modal=document.getElementById('modal'),bd=document.getElementById('backdrop'),beam=document.getElementById('beam');
+function openModal(k){const d=DATA[k];if(!d)return;document.getElementById('mtitle').textContent=d[0];
+  document.getElementById('mbody').innerHTML=d[1];bd.style.display='block';beam.style.display='block';
+  modal.style.display='block';requestAnimationFrame(()=>modal.classList.add('show'));}
+function closeModal(){modal.classList.remove('show');bd.style.display='none';beam.style.display='none';
+  setTimeout(()=>modal.style.display='none',300);}
+document.addEventListener('click',e=>{const n=e.target.closest('[data-k]');if(n)openModal(n.dataset.k);});
+document.getElementById('mx').addEventListener('click',closeModal);
+bd.addEventListener('click',closeModal);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+/* terminals */
+function buildTerm(el){
+  el.innerHTML='<div class="tt"><span class="dot"></span>ask-mihail.exe — live</div>'+
+    '<div class="log"></div><div class="chips"></div>'+
+    '<div class="inrow"><input placeholder="type a question…"><button>↵</button></div>';
+  const log=el.querySelector('.log'),chips=el.querySelector('.chips'),input=el.querySelector('input');
+  function line(html,who){const d=document.createElement('div');d.style.margin='3px 0';
+    d.innerHTML=(who==='u'?'<span class="me">› you: </span>':'<span class="ai">mihail: </span>')+html;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+  function type(txt,after){const d=document.createElement('div');d.style.margin='3px 0';log.appendChild(d);let i=0;
+    (function step(){d.innerHTML='<span class="ai">mihail: </span>'+txt.slice(0,++i)+'<span class="cur">▋</span>';
+      log.scrollTop=log.scrollHeight;if(i<txt.length)setTimeout(step,18);else{d.innerHTML='<span class="ai">mihail: </span>'+txt;if(after)after();}})();}
+  function answer(q){line(q,'u');type(QA[q]||"Good question — in the live version this runs on a real model fed my CV. Try a suggestion for now.");}
+  type("Hi! I'm Mihail. Nice to meet you. Ask me anything — or pick one below.",()=>{
+    SUGG.forEach(s=>{const c=document.createElement('span');c.className='chip';c.textContent=s;c.onclick=()=>answer(s);chips.appendChild(c);});});
+  function send(){const v=input.value.trim();if(!v)return;input.value='';answer(v.toLowerCase());}
+  el.querySelector('button').onclick=send;
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')send();});
+}
+document.querySelectorAll('[data-term]').forEach(buildTerm);
+fillGauges();
+</script>
+</body>
+</html>

@@ -1,65 +1,123 @@
-import { NextRequest } from "next/server";
-import { openai, MODEL } from "@/lib/openai";
-import { retrieve, toContext } from "@/lib/rag";
+import Anthropic from "@anthropic-ai/sdk";
+import { buildSystemPrompt } from "@/lib/chat-context";
 
-// stream tokens as Server-Sent Events so the shadcn UI feels instant.
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export async function POST(req: NextRequest) {
-    const { messages } = await req.json();
-    const userText = messages?.[messages.length - 1]?.content ?? "";
+// ---- abuse guards -----------------------------------------------------------
+const MAX_INPUT_CHARS = 500;
+const MAX_HISTORY_MESSAGES = 8;
+const MAX_OUTPUT_TOKENS = 300;
 
-    const top = await retrieve(userText, 6);
-    const context = toContext(top);
+// simple in-memory per-IP rate limiter (sliding window).
+// Survives within a warm serverless instance; good enough to stop a bored
+// visitor running up a bill. For multi-instance scale, swap for a shared store.
+const RATE_LIMIT = 12; // requests
+const RATE_WINDOW_MS = 60_000; // per minute
+const hits = new Map<string, number[]>();
 
-    const system = [
-        "You are a portfolio assistant for a software developer.",
-        "Answer ONLY using the provided CONTEXT.",
-        "If the answer is not in CONTEXT, say you don't know and offer a way to contact the developer.",
-        "Keep answers brief and factual. Use short sentences. Include links from context if relevant.",
-        "",
-        "If users ask for things like salary expectations or personal data not in context, say you don't know.",
-        "",
-        "CONTEXT:",
-        context,
-    ].join("\n");
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const arr = (hits.get(ip) ?? []).filter((t) => now - t < RATE_WINDOW_MS);
+  arr.push(now);
+  hits.set(ip, arr);
+  return arr.length > RATE_LIMIT;
+}
 
-  // OpenAI Responses API with text stream
-    const response = await openai.chat.completions.create({
-        model: MODEL,
-        temperature: 0.2,
-        stream: true,
-        messages: [{ role: "system", content: system }, ...(messages ?? [])],
+function getIp(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
+
+interface IncomingMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export async function POST(req: Request) {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return new Response("Chat is not configured.", { status: 503 });
+  }
+
+  const ip = getIp(req);
+  if (rateLimited(ip)) {
+    return new Response("Too many messages — give me a moment.", {
+      status: 429,
     });
+  }
 
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-        async start(controller) {
-        try {
-            for await (const part of response) {
-            const token = part.choices?.[0]?.delta?.content ?? "";
-            if (token) {
-                controller.enqueue(
-                encoder.encode(
-                    `data: ${JSON.stringify({ type: "text", content: token })}\n\n`
-                )
-                );
-            }
-            }
-            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-            controller.close();
-        } catch (err) {
-            controller.error(err);
-        }
-        },
-    });
+  let body: { message?: unknown; history?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return new Response("Bad request.", { status: 400 });
+  }
 
-  // SSE response (compatible with common chat hooks)
-    return new Response(stream, {
-        headers: {
-        "Content-Type": "text/event-stream; charset=utf-8",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-        },
-    });
+  const message =
+    typeof body.message === "string"
+      ? body.message.slice(0, MAX_INPUT_CHARS).trim()
+      : "";
+  if (!message) {
+    return new Response("Empty message.", { status: 400 });
+  }
+
+  const history: IncomingMessage[] = Array.isArray(body.history)
+    ? (body.history as unknown[])
+        .filter(
+          (m): m is IncomingMessage =>
+            !!m &&
+            typeof m === "object" &&
+            (("role" in m && (m.role === "user" || m.role === "assistant")) as boolean) &&
+            "content" in m &&
+            typeof (m as IncomingMessage).content === "string"
+        )
+        .slice(-MAX_HISTORY_MESSAGES)
+        .map((m) => ({
+          role: m.role,
+          content: m.content.slice(0, MAX_INPUT_CHARS),
+        }))
+    : [];
+
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+  const messages: Anthropic.MessageParam[] = [
+    ...history.map((m) => ({ role: m.role, content: m.content })),
+    { role: "user" as const, content: message },
+  ];
+
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        const ai = client.messages.stream({
+          model: "claude-haiku-4-5",
+          max_tokens: MAX_OUTPUT_TOKENS,
+          system: buildSystemPrompt(),
+          messages,
+        });
+
+        ai.on("text", (delta) => {
+          controller.enqueue(encoder.encode(delta));
+        });
+
+        await ai.finalMessage();
+        controller.close();
+      } catch {
+        controller.enqueue(
+          encoder.encode(
+            "Something glitched on my end — try again, or email me at mihailkirkov04@gmail.com."
+          )
+        );
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-store",
+    },
+  });
 }

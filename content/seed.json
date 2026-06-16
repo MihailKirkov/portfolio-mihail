@@ -1,0 +1,185 @@
+{
+  "profile": {
+    "name": "Mihail Kirkov",
+    "title": "Full-Stack Developer · React/Next.js · Node.js · PHP · AI Integration",
+    "tagline": "Full-stack developer · AI integration",
+    "summary": "Full-stack developer (React/Next.js · Node.js · PHP/Python) with 2+ years of production experience building ERM systems and real-time web applications with hands-on AI integration. EU citizen, relocating to Eindhoven in September 2026.",
+    "pitch": "Mihail Kirkov — full-stack developer (React/Next · Node · PHP) with real AI-integration experience. 2+ years production. EU citizen (Bulgarian), relocating to Eindhoven September 2026, available August. The lane is frontend polish + AI integration — not generic junior.",
+    "location_current": "Vienna, Austria",
+    "location_target": "Eindhoven, Netherlands (Sept 2026)",
+    "availability": "Available August 2026 · open to on-site/hybrid (Eindhoven) and remote-EU",
+    "eligibility_note": "EU citizen (Bulgarian) — no visa, work permit, or sponsorship required",
+    "email": "mihailkirkov04@gmail.com",
+    "phone": null,
+    "cv_url": "/cv.pdf",
+    "social": {
+      "github": "https://github.com/MihailKirkov",
+      "linkedin": "https://www.linkedin.com/in/mihail-kirkov-b65b36262",
+      "portfolio": "https://portfolio-mihail.vercel.app"
+    }
+  },
+  "experiences": [
+    {
+      "id": "gutes-lead",
+      "company": "GuTeS-SET",
+      "role": "Lead Developer",
+      "location": "Vienna",
+      "start": "Sep 2025",
+      "end": "Present",
+      "bullets": [
+        "Drive feature development across the React/TypeScript and PHP ERM systems while staying hands-on.",
+        "Own the client-team relationship.",
+        "Run feature planning, deadline setting, and delivery coordination."
+      ],
+      "sort_order": 1
+    },
+    {
+      "id": "gutes-fullstack",
+      "company": "GuTeS-SET",
+      "role": "Full-Stack Web Developer",
+      "location": "Vienna",
+      "start": "Feb 2024",
+      "end": "Sep 2025",
+      "bullets": [
+        "Built and maintained two production ERM systems on Dolibarr (10+ custom PHP modules total).",
+        "Primary: an internal logistics ERM for the ~20-person parent company — built a new React/TypeScript UI and a Node.js real-time event server replacing legacy interfaces.",
+        "Second: a multi-frontend ERM (3 distinct React apps) for a German client supporting operations across ~50 partner companies.",
+        "Additional work in Next.js and Python."
+      ],
+      "sort_order": 2
+    },
+    {
+      "id": "coding-giants",
+      "company": "Coding Giants Bulgaria",
+      "role": "C# Coding Teacher",
+      "location": "Remote",
+      "start": "May 2023",
+      "end": "Jul 2023",
+      "bullets": [
+        "Delivered C# lessons remotely.",
+        "Designed exercises.",
+        "Provided individual support for varying skill levels."
+      ],
+      "sort_order": 3
+    }
+  ],
+  "projects": [
+    {
+      "id": "lead-hq",
+      "name": "Lead-HQ",
+      "period": "Apr 2026 – May 2026",
+      "description": "Lead-management platform built from scratch with Next.js 15, Supabase, and TanStack Table. Integrates Apify for Google Maps scraping, OpenAI for lead scoring, and a custom email-enrichment pipeline.",
+      "stack": ["Next.js 15", "Supabase", "TanStack Table", "Apify", "OpenAI"],
+      "link": "#",
+      "sort_order": 1
+    },
+    {
+      "id": "izlei",
+      "name": "Izlei",
+      "period": "Mar 2025",
+      "description": "Anonymous posting web app for a Bulgarian client; user-submitted posts with a custom admin panel for approval/editing/deletion.",
+      "stack": ["Next.js", "TypeScript", "Prisma ORM", "PostgreSQL"],
+      "link": "#",
+      "sort_order": 2
+    },
+    {
+      "id": "ignight",
+      "name": "Ignight",
+      "period": "Jun 2025",
+      "description": "Real-time online multiplayer games platform. React/TypeScript frontend + Node.js/Express backend, WebSockets for live game state, Docker for deployment.",
+      "stack": ["React", "TypeScript", "Node.js", "Express", "WebSockets", "Docker"],
+      "link": "#",
+      "sort_order": 3
+    }
+  ],
+  "skill_groups": [
+    {
+      "id": "frontend",
+      "label": "Frontend",
+      "items": ["React", "Next.js", "TypeScript", "JavaScript", "Tailwind CSS", "Three.js"],
+      "sort_order": 1
+    },
+    {
+      "id": "backend",
+      "label": "Backend",
+      "items": ["Node.js", "Express.js", "PHP", "Python", "REST APIs", "Supabase"],
+      "sort_order": 2
+    },
+    {
+      "id": "ai",
+      "label": "AI integration",
+      "items": ["Claude API", "RAG", "MCP", "tool use", "agents", "prompt engineering"],
+      "sort_order": 3
+    },
+    {
+      "id": "devops",
+      "label": "DevOps & tools",
+      "items": ["Docker", "CI/CD", "Git", "GitHub", "Linux"],
+      "sort_order": 4
+    }
+  ],
+  "certifications": [
+    {
+      "id": "claude-api",
+      "name": "Building with the Claude API",
+      "issuer": "Anthropic",
+      "date": "May 2025",
+      "note": "RAG, MCP, agents, tool use, prompt engineering",
+      "sort_order": 1
+    },
+    {
+      "id": "python-michigan",
+      "name": "Python for Everybody (5 courses)",
+      "issuer": "University of Michigan",
+      "date": "2023",
+      "note": "",
+      "sort_order": 2
+    },
+    {
+      "id": "udemy-fullstack",
+      "name": "Complete Full Stack Web Developer Bootcamp",
+      "issuer": "Udemy",
+      "date": "2023",
+      "note": "",
+      "sort_order": 3
+    }
+  ],
+  "education": [
+    {
+      "id": "wko",
+      "institution": "Wirtschaftskammer Wien (WKO)",
+      "focus": "Vocational IT training coursework: Application Development, Data Technology & System Management, Applied Mathematics",
+      "credential_line": "Ongoing vocational IT coursework — no diploma or qualification claim",
+      "period": "Feb 2024 – 2026",
+      "sort_order": 1
+    },
+    {
+      "id": "geo-milev",
+      "institution": "High School of Mathematics \"Geo Milev\", Pleven",
+      "focus": "Mathematics & IT",
+      "credential_line": "Diploma 5.70/6.00",
+      "period": "2015 – 2022",
+      "sort_order": 2
+    }
+  ],
+  "competitive": {
+    "id": "competitive",
+    "lines": [
+      "Bulgarian National Informatics Team (2015–2020).",
+      "Algorithmic problem solving in C++; selected to the national team in 2019; two-time competition medalist."
+    ]
+  },
+  "languages": [
+    { "id": "english", "name": "English", "level": "fluent", "sort_order": 1 },
+    { "id": "bulgarian", "name": "Bulgarian", "level": "native", "sort_order": 2 },
+    { "id": "german", "name": "German", "level": "basic", "sort_order": 3 }
+  ],
+  "terminal": {
+    "greeting": "Hi! I'm Mihail. Nice to meet you. Ask me anything — or pick one below.",
+    "suggestions": [
+      "What's your stack?",
+      "Why should we hire you?",
+      "Tell me about a project"
+    ]
+  }
+}

@@ -1,37 +1,45 @@
-import type React from "react"
-import "@/app/globals.css"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "sonner"
-import { TooltipProvider } from "@/components/ui/tooltip"
-import { TranslationsProvider } from "@/components/translations-provider"
-import ChatWidget from "@/components/chat/chat-widget"
+import type { Metadata, Viewport } from "next";
+import { Orbitron, Share_Tech_Mono } from "next/font/google";
+import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] })
+const orbitron = Orbitron({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-orbitron",
+  display: "swap",
+});
 
-export const metadata = {
-  title: "Developer Portfolio | Mihail Kirkov",
-  description: "Mihail Kirkov's Portfolio",
-}
+const shareTechMono = Share_Tech_Mono({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-share-tech",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Mihail Kirkov — Full-Stack Developer · AI Integration",
+  description:
+    "Full-stack developer (React/Next.js · Node.js · PHP/Python) with 2+ years of production experience and hands-on AI integration. EU citizen, relocating to Eindhoven September 2026.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#04080f",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <TooltipProvider>
-            <TranslationsProvider>
-              {children}
-              <ChatWidget />
-              <Toaster/>
-            </TranslationsProvider>
-          </TooltipProvider>
-        </ThemeProvider>
+    <html lang="en" className={`${orbitron.variable} ${shareTechMono.variable}`}>
+      <body>
+        {children}
+        <div className="fx-vignette" aria-hidden="true" />
+        <div className="fx-scanline" aria-hidden="true" />
       </body>
     </html>
-  )
+  );
 }
