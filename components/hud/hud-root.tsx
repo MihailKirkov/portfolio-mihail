@@ -97,7 +97,13 @@ export function HudRoot({ content }: { content: Content }) {
     <MotionConfig reducedMotion="user">
       <Frame mode={mode} onChange={changeMode} />
 
-      <div className="viewport" ref={viewportRef}>
+      <div
+        className="viewport"
+        ref={viewportRef}
+        id="hud-stage"
+        role="tabpanel"
+        aria-labelledby={`tab-${mode}`}
+      >
         <div className="scaler" ref={scalerRef}>
           <Stage
             content={content}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 // Fixed deterministic particle field (no Math.random — keeps SSR/CSR markup
 // identical, no hydration mismatch). Values are %/px/seconds.
@@ -22,6 +22,22 @@ const PARTICLES = [
 ];
 
 export function Background() {
+  const bgRef = useRef<HTMLDivElement>(null);
+
+  // Freeze the particle animations whenever the tab is backgrounded, so an
+  // idle tab spends no CPU on offscreen motion. Re-runs on visibility change.
+  useEffect(() => {
+    const sync = () => {
+      bgRef.current?.setAttribute(
+        "data-paused",
+        document.hidden ? "true" : "false"
+      );
+    };
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+
   // Subtle parallax of the depth layers following the cursor across the whole
   // window. Disabled under prefers-reduced-motion (vars stay 0 → static).
   useEffect(() => {
@@ -41,7 +57,7 @@ export function Background() {
   }, []);
 
   return (
-    <div className="bg" aria-hidden="true">
+    <div className="bg" aria-hidden="true" ref={bgRef}>
       <div className="bg-grid" />
       <div className="bg-particles">
         {PARTICLES.map((p, i) => (

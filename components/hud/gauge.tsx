@@ -23,7 +23,7 @@ export function Gauge({
   }, [value, trigger]);
 
   return (
-    <div className="gauge">
+    <div className="gauge" aria-hidden="true">
       <div className="gl">
         <span>{left}</span>
         {right && <span>{right}</span>}

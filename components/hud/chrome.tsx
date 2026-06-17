@@ -59,7 +59,7 @@ export function DeckChrome({ content }: { content: Content }) {
               <b
                 style={{
                   color:
-                    l.level === "basic" ? "var(--faint)" : "var(--bright)",
+                    l.level === "basic" ? "var(--dim)" : "var(--bright)",
                   fontWeight: 400,
                 }}
               >
@@ -110,7 +110,7 @@ export function DeckChrome({ content }: { content: Content }) {
           {certifications.map((c) => (
             <div key={c.id} style={{ marginTop: 8 }}>
               <div style={{ color: "var(--bright)" }}>{c.name}</div>
-              <div style={{ color: "var(--faint)" }}>· {c.issuer}</div>
+              <div style={{ color: "var(--dim)" }}>· {c.issuer}</div>
             </div>
           ))}
         </div>
@@ -218,12 +218,12 @@ export function VisorChrome({ content }: { content: Content }) {
       </div>
 
       {/* flank radar dials echoing the reference HUD's side instruments */}
-      <div className="radar" style={{ top: 182, left: 30 }}>
+      <div className="radar" style={{ top: 182, left: 30 }} aria-hidden="true">
         <span className="radar-sweep" />
         <span className="radar-blip" />
         <span className="radar-lbl">scan</span>
       </div>
-      <div className="radar" style={{ top: 182, right: 30 }}>
+      <div className="radar" style={{ top: 182, right: 30 }} aria-hidden="true">
         <span className="radar-sweep" />
         <span className="radar-blip" />
         <span className="radar-lbl">net</span>
@@ -313,6 +313,7 @@ export function ReactorChrome() {
 
       <div
         className="deco"
+        aria-hidden="true"
         style={{
           left: 24,
           bottom: 120,
@@ -323,6 +324,7 @@ export function ReactorChrome() {
       />
       <div
         className="deco"
+        aria-hidden="true"
         style={{
           right: 24,
           bottom: 120,
@@ -332,7 +334,11 @@ export function ReactorChrome() {
           animation: "spin 22s linear infinite",
         }}
       />
-      <div className="wave" style={{ left: 300, bottom: 92, height: 22 }}>
+      <div
+        className="wave"
+        aria-hidden="true"
+        style={{ left: 300, bottom: 92, height: 22 }}
+      >
         {[0, 0.1, 0.2, 0.05, 0.3, 0.15, 0.25, 0.08].map((d, i) => (
           <i key={i} style={{ animationDelay: `${d}s` }} />
         ))}

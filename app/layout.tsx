@@ -17,10 +17,33 @@ const shareTechMono = Share_Tech_Mono({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const title =
+  "Mihail Kirkov — Full-Stack Developer (React/Next · Node · PHP · AI)";
+const description =
+  "Full-stack developer with 2+ years production experience and hands-on AI integration. EU citizen relocating to Eindhoven, September 2026 — available August. React/Next, Node/PHP, and Claude-powered apps.";
+
 export const metadata: Metadata = {
-  title: "Mihail Kirkov — Full-Stack Developer · AI Integration",
-  description:
-    "Full-stack developer (React/Next.js · Node.js · PHP/Python) with 2+ years of production experience and hands-on AI integration. EU citizen, relocating to Eindhoven September 2026.",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title,
+    description,
+    url: siteUrl,
+    siteName: "Mihail Kirkov",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 export const viewport: Viewport = {

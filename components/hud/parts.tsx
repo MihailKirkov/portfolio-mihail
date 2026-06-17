@@ -25,7 +25,7 @@ export function Brand({ profile }: { profile: Profile }) {
 
 export function CvLink({ profile }: { profile: Profile }) {
   return (
-    <a className="cv" href={profile.cv_url} download>
+    <a className="cv" href={profile.cv_url} download="Mihail-Kirkov-CV.pdf">
       <DownloadIcon /> CV
     </a>
   );

@@ -211,11 +211,15 @@ export function Terminal({ config }: { config: TerminalConfig }) {
   return (
     <>
       <div className="tt">
-        <span className="agent" data-state={busy ? "gen" : "idle"}>
+        <span
+          className="agent"
+          data-state={busy ? "gen" : "idle"}
+          aria-hidden="true"
+        >
           <span className="agent-eye" />
         </span>
         <span className="tt-name">ask-mihail.exe</span>
-        <span className="tt-status">
+        <span className="tt-status" aria-hidden="true">
           // {busy ? "generating…" : AMBIENT[tick % AMBIENT.length]}
         </span>
       </div>

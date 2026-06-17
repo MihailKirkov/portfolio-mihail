@@ -34,7 +34,7 @@ export function Frame({
           ask-mihail <span className="sep">//</span> portfolio
         </span>
         <ModeTabs mode={mode} onChange={onChange} />
-        <span className="strip-r">
+        <span className="strip-r" aria-hidden="true">
           <span className="on1">●</span> online <Clock />
         </span>
       </div>

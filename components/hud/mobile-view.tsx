@@ -41,7 +41,7 @@ export function MobileView({
           ))}
         </div>
 
-        <a className="cv" href={profile.cv_url} download>
+        <a className="cv" href={profile.cv_url} download="Mihail-Kirkov-CV.pdf">
           <DownloadIcon /> download CV
         </a>
         <a

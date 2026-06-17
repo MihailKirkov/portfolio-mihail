@@ -138,6 +138,10 @@ body {
   animation-iteration-count: infinite;
   z-index: 999;
 }
+/* freeze the field while the tab is backgrounded — no offscreen CPU spin */
+.bg[data-paused="true"] .p {
+  animation-play-state: paused;
+}
 @keyframes drift {
   0% {
     opacity: 0;
@@ -441,7 +445,7 @@ body {
   position: absolute;
   font-size: 12px;
   line-height: 1.85;
-  color: var(--faint);
+  color: var(--dim);
 }
 .read .on1 {
   color: var(--green);
@@ -873,7 +877,7 @@ body {
   padding: 9px 11px;
 }
 .inrow input::placeholder {
-  color: var(--faint);
+  color: var(--dim);
 }
 .inrow button {
   background: transparent;
@@ -1005,6 +1009,74 @@ body {
 .btn-ghost:hover {
   color: var(--bright);
   box-shadow: 0 0 10px var(--glow);
+}
+
+/* ============================================================
+   Status pages (404 / error) — HUD frame language
+   ============================================================ */
+.status-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.status-card {
+  position: relative;
+  max-width: 520px;
+  width: 100%;
+  padding: 48px 40px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(12, 34, 54, 0.6), rgba(7, 16, 29, 0.6));
+  border: 1px solid var(--line2);
+  backdrop-filter: blur(6px);
+}
+.status-card::before,
+.status-card::after {
+  content: "";
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-color: var(--accent);
+  opacity: 0.8;
+}
+.status-card::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+.status-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid;
+  border-right: 2px solid;
+}
+.status-code {
+  font-family: var(--font-orbitron), sans-serif;
+  font-size: clamp(28px, 6vw, 44px);
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-shadow: 0 0 24px var(--glow-accent);
+  margin: 0;
+}
+.status-code .sep {
+  color: var(--dim);
+  margin: 0 8px;
+}
+.status-msg {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 18px 0 28px;
+}
+.status-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
 }
 
 /* ============================================================
@@ -1223,6 +1295,18 @@ body {
 }
 .mitem:hover {
   border-color: var(--bright);
+}
+
+/* ============================================================
+   Focus visibility — every interactive control gets a clear ring
+   ============================================================ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ============================================================
