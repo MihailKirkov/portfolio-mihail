@@ -1250,6 +1250,8 @@ body {
   .mobile {
     display: block;
     padding: 26px 16px 40px;
+    z-index: 1;
+    position: relative;
   }
 }
 .mwrap {
