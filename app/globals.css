@@ -68,7 +68,7 @@ body {
 .bg {
   position: fixed;
   inset: 0;
-  z-index: -1;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
   background: radial-gradient(
@@ -125,6 +125,7 @@ body {
   position: absolute;
   inset: 0;
   transform: translate(calc(var(--bgx, 0px) * 1.7), calc(var(--bgy, 0px) * 1.7));
+  z-index: 999;
 }
 .bg-particles .p {
   position: absolute;
@@ -135,6 +136,7 @@ body {
   animation-name: drift;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  z-index: 999;
 }
 @keyframes drift {
   0% {

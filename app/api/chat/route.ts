@@ -12,7 +12,7 @@ const MAX_OUTPUT_TOKENS = 300;
 // simple in-memory per-IP rate limiter (sliding window).
 // Survives within a warm serverless instance; good enough to stop a bored
 // visitor running up a bill. For multi-instance scale, swap for a shared store.
-const RATE_LIMIT = 12; // requests
+const RATE_LIMIT = 10; // requests
 const RATE_WINDOW_MS = 60_000; // per minute
 const hits = new Map<string, number[]>();
 
