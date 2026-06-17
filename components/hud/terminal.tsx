@@ -23,13 +23,24 @@ const CANNED: Record<string, string> = {
     "Lead-HQ — a lead-management platform I built solo: Next.js 15 + Supabase, Apify for Google-Maps scraping, and an AI grader that scores every lead automatically. End-to-end, from scrape to scored pipeline.",
 };
 
+// Faint ambient statuses the idle agent slowly cycles through, so the empty
+// terminal reads as a live presence rather than a dead box.
+const AMBIENT = ["listening…", "context: cv loaded", "awaiting query", "standby"];
+
 export function Terminal({ config }: { config: TerminalConfig }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [booted, setBooted] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [tick, setTick] = useState(0);
   const logRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // slow ambient ticker (the "system log" feel)
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 3400);
+    return () => clearInterval(id);
+  }, []);
 
   // Type out the greeting once per mount. A cancelled flag (not a ref guard)
   // is used so the effect survives StrictMode's mount→cleanup→remount in dev
@@ -200,8 +211,13 @@ export function Terminal({ config }: { config: TerminalConfig }) {
   return (
     <>
       <div className="tt">
-        <span className="dot" />
-        ask-mihail.exe — live
+        <span className="agent" data-state={busy ? "gen" : "idle"}>
+          <span className="agent-eye" />
+        </span>
+        <span className="tt-name">ask-mihail.exe</span>
+        <span className="tt-status">
+          // {busy ? "generating…" : AMBIENT[tick % AMBIENT.length]}
+        </span>
       </div>
       <div className="log" ref={logRef} aria-live="polite">
         {messages.map((m, i) => (

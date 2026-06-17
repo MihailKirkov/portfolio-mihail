@@ -692,7 +692,107 @@ body {
   color: var(--dim);
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+}
+
+/* terminal idle agent — a HUD orb with a scanning, blinking eye */
+.agent {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1px solid var(--edge);
+  background: radial-gradient(
+    circle at 50% 42%,
+    rgba(40, 104, 166, 0.5),
+    rgba(6, 18, 32, 0.65)
+  );
+  box-shadow: 0 0 9px var(--glow-accent), inset 0 0 7px rgba(90, 200, 255, 0.28);
+  overflow: hidden;
+}
+.agent::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1px solid rgba(90, 200, 255, 0.35);
+}
+.agent-eye {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 2.5px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent) 30%,
+    var(--accent) 70%,
+    transparent
+  );
+  animation: agentBlink 3.6s ease-in-out infinite;
+}
+.agent-eye::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 20%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bright);
+  box-shadow: 0 0 6px var(--glow-accent);
+  animation: agentScan 2.8s ease-in-out infinite;
+}
+@keyframes agentBlink {
+  0%,
+  41%,
+  49%,
+  100% {
+    transform: translateY(-50%) scaleY(1);
+    opacity: 1;
+  }
+  45% {
+    transform: translateY(-50%) scaleY(0.16);
+    opacity: 0.7;
+  }
+}
+@keyframes agentScan {
+  0%,
+  100% {
+    left: 22%;
+  }
+  50% {
+    left: 78%;
+  }
+}
+.agent[data-state="gen"] {
+  box-shadow: 0 0 16px var(--glow-accent), inset 0 0 9px rgba(90, 200, 255, 0.5);
+  animation: agentPulse 0.9s ease-in-out infinite;
+}
+.agent[data-state="gen"] .agent-eye::after {
+  animation-duration: 0.7s;
+}
+@keyframes agentPulse {
+  0%,
+  100% {
+    border-color: var(--edge);
+  }
+  50% {
+    border-color: var(--accent);
+  }
+}
+.tt-name {
+  color: var(--dim);
+}
+.tt-status {
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 0.04em;
 }
 
 .dot {
