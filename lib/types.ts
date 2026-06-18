@@ -69,6 +69,13 @@ export interface Competitive {
   lines: string[];
 }
 
+export interface TimelineEntry {
+  id: string;
+  date: string;
+  label: string;
+  sort_order: number;
+}
+
 export interface Language {
   id: string;
   name: string;
@@ -89,6 +96,7 @@ export interface Content {
   certifications: Certification[];
   education: Education[];
   competitive: Competitive;
+  timeline: TimelineEntry[];
   languages: Language[];
   terminal: TerminalConfig;
 }

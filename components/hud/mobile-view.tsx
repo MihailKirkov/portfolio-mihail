@@ -29,11 +29,6 @@ export function MobileView({
             <button
               key={s.key}
               className="mitem"
-              style={
-                s.key === "ai"
-                  ? { borderColor: "var(--edge)", color: "var(--ai)" }
-                  : undefined
-              }
               onClick={() => onOpen(s.key)}
             >
               › {s.label}

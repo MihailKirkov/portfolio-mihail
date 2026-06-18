@@ -568,17 +568,6 @@ body {
 .node.r {
   text-align: right;
 }
-/* active node (ai integration) stays brightest */
-.node.ai {
-  --bk: var(--accent);
-  border-color: var(--accent);
-  color: var(--ai);
-  box-shadow: inset 0 1px 0 rgba(159, 214, 255, 0.18),
-    0 0 22px var(--glow-accent);
-}
-.node.ai::before {
-  opacity: 1;
-}
 
 /* gauges */
 .gauge {
@@ -799,6 +788,19 @@ body {
   color: var(--faint);
   font-size: 11px;
   letter-spacing: 0.04em;
+}
+/* caption framing the terminal as proof-of-work, not a generic widget */
+.tt-caption {
+  margin: 0;
+  padding: 6px 11px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--dim);
+}
+.tt-caption b {
+  color: var(--ai);
+  font-weight: 400;
 }
 
 .dot {
@@ -1203,6 +1205,197 @@ body {
 .modal .mb b {
   color: var(--bright);
   font-weight: 400;
+}
+
+/* ============================================================
+   Modal visuals — career timeline, skills radar, location map
+   (pure SVG/CSS; animate in on open, static under reduced motion)
+   ============================================================ */
+
+/* --- career timeline (vertical, dated ticks on a cold-blue rail) --- */
+.tl {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 2px 0 0;
+  position: relative;
+}
+.tl::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 4px;
+  bottom: 6px;
+  width: 1.5px;
+  background: linear-gradient(var(--edge), var(--line));
+  transform-origin: top;
+  animation: tlRail 0.55s ease-out both;
+}
+.tl-item {
+  position: relative;
+  padding: 0 0 13px 22px;
+  animation: tlIn 0.4s ease-out both;
+}
+.tl-item:last-child {
+  padding-bottom: 0;
+}
+.tl-dot {
+  position: absolute;
+  left: 5px;
+  top: 3px;
+  width: 9px;
+  height: 9px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--bg2);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 7px var(--glow-accent);
+}
+.tl-date {
+  display: block;
+  font-family: var(--font-orbitron), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  color: var(--bright);
+}
+.tl-text {
+  display: block;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+  margin-top: 1px;
+}
+@keyframes tlIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes tlRail {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* --- skills radar / spider chart --- */
+.radar-chart {
+  width: 220px;
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 2px auto 10px;
+}
+.rc-grid polygon {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+.rc-grid line {
+  stroke: var(--line);
+  stroke-width: 1;
+  opacity: 0.5;
+}
+.rc-poly {
+  fill: rgba(90, 214, 255, 0.16);
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px var(--glow-accent));
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: rcIn 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.rc-dot {
+  fill: var(--accent);
+}
+.rc-lbl {
+  fill: var(--dim);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: var(--font-share-tech), ui-monospace, monospace;
+}
+@keyframes rcIn {
+  from {
+    opacity: 0;
+    transform: scale(0.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* --- location map (Vienna -> Eindhoven) --- */
+.geo {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 2px 0 2px;
+  border: 1px solid var(--line);
+  background: rgba(7, 18, 34, 0.4);
+}
+.geo-land {
+  fill: rgba(40, 100, 162, 0.1);
+  stroke: var(--line2);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+.geo-arc {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  filter: drop-shadow(0 0 4px var(--glow-accent));
+  animation: geoMarch 7s linear infinite;
+}
+.geo-pin circle {
+  fill: var(--accent);
+}
+.geo-pin .geo-ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: geoPing 2.6s ease-out infinite;
+}
+.geo-dest .geo-ring {
+  animation-delay: 1.3s;
+}
+.geo-pin text {
+  fill: var(--bright);
+  font-size: 9px;
+  letter-spacing: 0.07em;
+  font-family: var(--font-share-tech), ui-monospace, monospace;
+}
+.geo-cap {
+  fill: var(--dim);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-family: var(--font-share-tech), ui-monospace, monospace;
+}
+@keyframes geoMarch {
+  to {
+    stroke-dashoffset: -160;
+  }
+}
+@keyframes geoPing {
+  0% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(3);
+  }
 }
 
 /* ============================================================

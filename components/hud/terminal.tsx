@@ -223,6 +223,9 @@ export function Terminal({ config }: { config: TerminalConfig }) {
           // {busy ? "generating…" : AMBIENT[tick % AMBIENT.length]}
         </span>
       </div>
+      <p className="tt-caption">
+        an AI agent I built — <b>Claude API + RAG</b>. Ask anything.
+      </p>
       <div className="log" ref={logRef} aria-live="polite">
         {messages.map((m, i) => (
           <div key={i} style={{ margin: "3px 0" }}>

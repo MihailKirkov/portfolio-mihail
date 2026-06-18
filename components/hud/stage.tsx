@@ -81,9 +81,7 @@ export function Stage({
       {/* persistent six nodes — glide + resize into each arrangement */}
       {sections.map((s) => {
         const box = layout.nodes[s.key];
-        const cls = `card node${box.right ? " r" : ""}${
-          s.key === "ai" ? " ai" : ""
-        }`;
+        const cls = `card node${box.right ? " r" : ""}`;
         return (
           <motion.button
             key={s.key}

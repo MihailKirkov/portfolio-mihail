@@ -68,7 +68,7 @@
       "id": "lead-hq",
       "name": "Lead-HQ",
       "period": "Apr 2026 – May 2026",
-      "description": "Lead-management platform built from scratch with Next.js 15, Supabase, and TanStack Table. Integrates Apify for Google Maps scraping, OpenAI for lead scoring, and a custom email-enrichment pipeline.",
+      "description": "Lead-management platform built solo with Next.js 15, Supabase, and TanStack Table. Integrates Apify for Google-Maps scraping and a custom email-enrichment pipeline — plus an AI grader that scores every scraped lead automatically. An AI feature shipped end to end, from scrape to scored pipeline.",
       "stack": ["Next.js 15", "Supabase", "TanStack Table", "Apify", "OpenAI"],
       "link": "#",
       "sort_order": 1
@@ -169,6 +169,16 @@
       "Algorithmic problem solving in C++; selected to the national team in 2019; two-time competition medalist."
     ]
   },
+  "timeline": [
+    { "id": "cp-start", "date": "2015", "label": "Started competitive programming (informatics)", "sort_order": 1 },
+    { "id": "national-team", "date": "2019", "label": "Selected to the Bulgarian National Informatics Team", "sort_order": 2 },
+    { "id": "hs-diploma", "date": "2022", "label": "HS diploma — Geo Milev (5.70/6.00)", "sort_order": 3 },
+    { "id": "gutes-fullstack", "date": "Feb 2024", "label": "GuTeS-SET — Full-Stack Developer", "sort_order": 4 },
+    { "id": "shipped-2025", "date": "2025", "label": "Shipped Izlei and Ignight", "sort_order": 5 },
+    { "id": "gutes-lead", "date": "Sep 2025", "label": "GuTeS-SET — Lead Developer", "sort_order": 6 },
+    { "id": "lead-hq", "date": "Apr–May 2026", "label": "Built Lead-HQ", "sort_order": 7 },
+    { "id": "relocate", "date": "Sep 2026", "label": "Relocating to Eindhoven, NL", "sort_order": 8 }
+  ],
   "languages": [
     { "id": "english", "name": "English", "level": "fluent", "sort_order": 1 },
     { "id": "bulgarian", "name": "Bulgarian", "level": "native", "sort_order": 2 },
