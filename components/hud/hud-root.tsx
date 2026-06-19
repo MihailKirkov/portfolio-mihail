@@ -7,6 +7,7 @@ import { buildSections, type SectionKey } from "@/lib/sections";
 import { Stage } from "@/components/hud/stage";
 import { MobileView } from "@/components/hud/mobile-view";
 import { NodeModal } from "@/components/hud/node-modal";
+import { ProjectDeck } from "@/components/hud/project-deck";
 import { Frame } from "@/components/hud/frame";
 import type { Mode } from "@/components/hud/mode-tabs";
 
@@ -91,7 +92,11 @@ export function HudRoot({ content }: { content: Content }) {
     };
   }, []);
 
-  const activeSection = sections.find((s) => s.key === open) ?? null;
+  // Projects gets a bespoke full-screen deck; the other five keep the modal.
+  const projectsOpen = open === "projects";
+  const activeSection = projectsOpen
+    ? null
+    : sections.find((s) => s.key === open) ?? null;
 
   return (
     <MotionConfig reducedMotion="user">
@@ -117,6 +122,13 @@ export function HudRoot({ content }: { content: Content }) {
       <MobileView content={content} sections={sections} onOpen={setOpen} />
 
       <NodeModal section={activeSection} onClose={() => setOpen(null)} />
+
+      {projectsOpen && (
+        <ProjectDeck
+          projects={content.projects}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </MotionConfig>
   );
 }
