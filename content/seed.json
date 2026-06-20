@@ -65,6 +65,23 @@
   ],
   "projects": [
     {
+      "id": "job-cc",
+      "slug": "job-cc",
+      "name": "Job-CC",
+      "title": "Job-CC",
+      "period": "June 2026",
+      "role": "Solo developer",
+      "description": "A personal job-discovery inbox + application tracker",
+      "shortDescription": "A personal job-discovery inbox + application tracker",
+      "longDescription": "A personal job-discovery inbox + application tracker",
+      "stack": ["Next.js", "Supabase", "Tailwind", "ClaudeAPI"],
+      "link": "https://ignis-job-application.vercel.app/",
+      "links": {},
+      "gallery": ["/job_cc/needs-action.png", "/job_cc/discovery.png", "/job_cc/tracker.png"],
+      "featured": true,
+      "sort_order": 1
+    },
+    {
       "id": "lead-hq",
       "slug": "lead-hq",
       "name": "Lead-HQ",
@@ -75,11 +92,11 @@
       "shortDescription": "Lead-management platform with Google-Maps scraping, email enrichment, and an AI grader that scores every scraped lead automatically.",
       "longDescription": "Problem: sales outreach started from raw, unscored lists, so time was wasted qualifying weak prospects by hand.\n\nApproach: built a solo Next.js 15 + Supabase platform that scrapes Google Maps through Apify, runs a custom email-enrichment pipeline, and feeds every lead through an AI grader that scores it automatically — results land in a sortable TanStack-Table pipeline.\n\nOutcome: an AI feature shipped end to end, from raw scrape to a scored, prioritised lead pipeline.",
       "stack": ["Next.js 15", "Supabase", "TanStack Table", "Apify", "OpenAI"],
-      "link": "#",
+      "link": "https://lead-hq.vercel.app/",
       "links": {},
       "gallery": [],
       "featured": true,
-      "sort_order": 1
+      "sort_order": 2
     },
     {
       "id": "izlei",
@@ -96,7 +113,7 @@
       "links": {},
       "gallery": [],
       "featured": false,
-      "sort_order": 2
+      "sort_order": 3
     },
     {
       "id": "ignight",
@@ -113,7 +130,41 @@
       "links": {},
       "gallery": [],
       "featured": false,
-      "sort_order": 3
+      "sort_order": 4
+    },
+    {
+      "id": "ignight",
+      "slug": "ignight",
+      "name": "Ignight",
+      "title": "Ignight",
+      "period": "Jun 2025",
+      "role": "Solo developer",
+      "description": "Real-time online multiplayer games platform. React/TypeScript frontend + Node.js/Express backend, WebSockets for live game state, Docker for deployment.",
+      "shortDescription": "Real-time multiplayer games platform with live game state synced over WebSockets.",
+      "longDescription": "Problem: deliver multiplayer games that stay perfectly in sync across every connected player in real time.\n\nApproach: a React/TypeScript frontend with a Node.js/Express backend, WebSockets driving live game state, all containerised with Docker for deployment.\n\nOutcome: a working real-time multiplayer platform running live game sessions.",
+      "stack": ["React", "TypeScript", "Node.js", "Express", "WebSockets", "Docker"],
+      "link": "#",
+      "links": {},
+      "gallery": [],
+      "featured": false,
+      "sort_order": 5
+    },
+    {
+      "id": "ignight",
+      "slug": "ignight",
+      "name": "Ignight",
+      "title": "Ignight",
+      "period": "Jun 2025",
+      "role": "Solo developer",
+      "description": "Real-time online multiplayer games platform. React/TypeScript frontend + Node.js/Express backend, WebSockets for live game state, Docker for deployment.",
+      "shortDescription": "Real-time multiplayer games platform with live game state synced over WebSockets.",
+      "longDescription": "Problem: deliver multiplayer games that stay perfectly in sync across every connected player in real time.\n\nApproach: a React/TypeScript frontend with a Node.js/Express backend, WebSockets driving live game state, all containerised with Docker for deployment.\n\nOutcome: a working real-time multiplayer platform running live game sessions.",
+      "stack": ["React", "TypeScript", "Node.js", "Express", "WebSockets", "Docker"],
+      "link": "#",
+      "links": {},
+      "gallery": [],
+      "featured": false,
+      "sort_order": 6
     }
   ],
   "skill_groups": [

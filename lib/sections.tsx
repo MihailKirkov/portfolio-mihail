@@ -41,7 +41,8 @@ export function buildSections(content: Content): Section[] {
   // proficiency per skill group — the same values the deck/visor gauges show
   const RADAR: { label: string; value: number }[] = [
     { label: "Frontend", value: 92 },
-    { label: "Backend", value: 82 },
+    { label: "Backend", value: 85 },
+    { label: "Databases", value: 80 },
     { label: "AI integration", value: 78 },
     { label: "DevOps", value: 68 },
   ];
@@ -109,7 +110,7 @@ export function buildSections(content: Content): Section[] {
           <SkillsRadar axes={RADAR} />
           {skill_groups.map((g) => (
             <p key={g.id} style={{ margin: "0 0 8px" }}>
-              <B>{g.label}</B> — {g.items.join(", ")}
+              <B>{g.label}</B> - {g.items.join(", ")}
             </p>
           ))}
         </div>
@@ -140,7 +141,7 @@ export function buildSections(content: Content): Section[] {
     {
       key: "timeline",
       label: "timeline",
-      sub: "2015 → now",
+      sub: "2004 → now",
       title: "Career Timeline",
       body: <CareerTimeline items={timeline} />,
     },

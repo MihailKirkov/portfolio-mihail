@@ -25,7 +25,7 @@ export function SkillsRadar({ axes }: { axes: RadarAxis[] }) {
 
   return (
     <svg
-      className="radar-chart"
+      className="radar-chart overflow-visible"
       viewBox="0 0 220 200"
       role="img"
       aria-label={`Skills radar — ${axes
