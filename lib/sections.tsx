@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
 import type { Content } from "@/lib/types";
+import { SkillsRadar } from "@/components/hud/skills-radar";
+import { CareerTimeline } from "@/components/hud/career-timeline";
+import { LocationMap } from "@/components/hud/location-map";
 
 export type SectionKey =
   | "identity"
   | "experience"
   | "stack"
   | "projects"
-  | "ai"
+  | "timeline"
   | "credentials";
 
 export interface Section {
@@ -24,8 +27,25 @@ export interface Section {
 const B = ({ children }: { children: ReactNode }) => <b>{children}</b>;
 
 export function buildSections(content: Content): Section[] {
-  const { profile, experiences, skill_groups, projects, certifications, education, competitive } =
-    content;
+  const {
+    profile,
+    experiences,
+    skill_groups,
+    projects,
+    certifications,
+    education,
+    competitive,
+    timeline,
+  } = content;
+
+  // proficiency per skill group — the same values the deck/visor gauges show
+  const RADAR: { label: string; value: number }[] = [
+    { label: "Frontend", value: 92 },
+    { label: "Backend", value: 85 },
+    { label: "Databases", value: 80 },
+    { label: "AI integration", value: 78 },
+    { label: "DevOps", value: 68 },
+  ];
 
   return [
     {
@@ -37,14 +57,16 @@ export function buildSections(content: Content): Section[] {
         <div>
           <p style={{ marginTop: 0 }}>{profile.pitch}</p>
           <p>
-            <B>Status:</B> {profile.availability}
+            <B>AI integration:</B> hands-on — Claude API, RAG, tool use and
+            agents, shipped in production (not demos).
           </p>
           <p>
+            <B>Status:</B> {profile.availability}
+          </p>
+          <p style={{ marginBottom: 8 }}>
             <B>Eligibility:</B> {profile.eligibility_note}
           </p>
-          <p style={{ marginBottom: 0 }}>
-            {profile.location_current} → {profile.location_target}
-          </p>
+          <LocationMap />
         </div>
       ),
     },
@@ -85,9 +107,10 @@ export function buildSections(content: Content): Section[] {
       title: "Stack",
       body: (
         <div>
+          <SkillsRadar axes={RADAR} />
           {skill_groups.map((g) => (
             <p key={g.id} style={{ margin: "0 0 8px" }}>
-              <B>{g.label}</B> — {g.items.join(", ")}
+              <B>{g.label}</B> - {g.items.join(", ")}
             </p>
           ))}
         </div>
@@ -116,27 +139,11 @@ export function buildSections(content: Content): Section[] {
       ),
     },
     {
-      key: "ai",
-      label: "ai integration ◆",
-      sub: "claude api",
-      title: "AI integration",
-      body: (
-        <div>
-          <p style={{ marginTop: 0 }}>
-            <B>Building with the Claude API</B> — Anthropic certification: RAG,
-            MCP, agents, tool use, prompt engineering.
-          </p>
-          <p>
-            Shipped in <B>Lead-HQ</B>: an AI lead-scoring grader over scraped
-            data. The differentiator — shipping AI features <B>end to end</B>,
-            not just calling an API once.
-          </p>
-          <p style={{ marginBottom: 0, color: "var(--ai)" }}>
-            ◆ This terminal is itself a live example — it runs on a real model
-            grounded in my CV.
-          </p>
-        </div>
-      ),
+      key: "timeline",
+      label: "timeline",
+      sub: "2004 → now",
+      title: "Career Timeline",
+      body: <CareerTimeline items={timeline} />,
     },
     {
       key: "credentials",

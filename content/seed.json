@@ -65,31 +65,106 @@
   ],
   "projects": [
     {
-      "id": "lead-hq",
-      "name": "Lead-HQ",
-      "period": "Apr 2026 – May 2026",
-      "description": "Lead-management platform built from scratch with Next.js 15, Supabase, and TanStack Table. Integrates Apify for Google Maps scraping, OpenAI for lead scoring, and a custom email-enrichment pipeline.",
-      "stack": ["Next.js 15", "Supabase", "TanStack Table", "Apify", "OpenAI"],
-      "link": "#",
+      "id": "job-cc",
+      "slug": "job-cc",
+      "name": "Job-CC",
+      "title": "Job-CC",
+      "period": "June 2026",
+      "role": "Solo developer",
+      "description": "A personal job-discovery inbox + application tracker",
+      "shortDescription": "A personal job-discovery inbox + application tracker",
+      "longDescription": "A personal job-discovery inbox + application tracker",
+      "stack": ["Next.js", "Supabase", "Tailwind", "ClaudeAPI"],
+      "link": "https://ignis-job-application.vercel.app/",
+      "links": {},
+      "gallery": ["/job_cc/needs-action.png", "/job_cc/discovery.png", "/job_cc/tracker.png"],
+      "featured": true,
       "sort_order": 1
     },
     {
-      "id": "izlei",
-      "name": "Izlei",
-      "period": "Mar 2025",
-      "description": "Anonymous posting web app for a Bulgarian client; user-submitted posts with a custom admin panel for approval/editing/deletion.",
-      "stack": ["Next.js", "TypeScript", "Prisma ORM", "PostgreSQL"],
-      "link": "#",
+      "id": "lead-hq",
+      "slug": "lead-hq",
+      "name": "Lead-HQ",
+      "title": "Lead-HQ",
+      "period": "Apr 2026 – May 2026",
+      "role": "Solo developer",
+      "description": "Lead-management platform built solo with Next.js 15, Supabase, and TanStack Table. Integrates Apify for Google-Maps scraping and a custom email-enrichment pipeline — plus an AI grader that scores every scraped lead automatically. An AI feature shipped end to end, from scrape to scored pipeline.",
+      "shortDescription": "Lead-management platform with Google-Maps scraping, email enrichment, and an AI grader that scores every scraped lead automatically.",
+      "longDescription": "Problem: sales outreach started from raw, unscored lists, so time was wasted qualifying weak prospects by hand.\n\nApproach: built a solo Next.js 15 + Supabase platform that scrapes Google Maps through Apify, runs a custom email-enrichment pipeline, and feeds every lead through an AI grader that scores it automatically — results land in a sortable TanStack-Table pipeline.\n\nOutcome: an AI feature shipped end to end, from raw scrape to a scored, prioritised lead pipeline.",
+      "stack": ["Next.js 15", "Supabase", "TanStack Table", "Apify", "OpenAI"],
+      "link": "https://lead-hq.vercel.app/",
+      "links": {},
+      "gallery": [],
+      "featured": true,
       "sort_order": 2
     },
     {
+      "id": "izlei",
+      "slug": "izlei",
+      "name": "Izlei",
+      "title": "Izlei",
+      "period": "Mar 2025",
+      "role": "Freelance developer",
+      "description": "Anonymous posting web app for a Bulgarian client; user-submitted posts with a custom admin panel for approval/editing/deletion.",
+      "shortDescription": "Anonymous posting app for a Bulgarian client, with a custom moderation admin panel.",
+      "longDescription": "Problem: the client needed a space for anonymous user submissions without exposing identities, while keeping full editorial control.\n\nApproach: built with Next.js, TypeScript, and Prisma over PostgreSQL — public anonymous posting backed by a custom admin panel for approving, editing, and deleting posts.\n\nOutcome: a moderated anonymous board the client runs end to end themselves.",
+      "stack": ["Next.js", "TypeScript", "Prisma ORM", "PostgreSQL"],
+      "link": "#",
+      "links": {},
+      "gallery": [],
+      "featured": false,
+      "sort_order": 3
+    },
+    {
       "id": "ignight",
+      "slug": "ignight",
       "name": "Ignight",
+      "title": "Ignight",
       "period": "Jun 2025",
+      "role": "Solo developer",
       "description": "Real-time online multiplayer games platform. React/TypeScript frontend + Node.js/Express backend, WebSockets for live game state, Docker for deployment.",
+      "shortDescription": "Real-time multiplayer games platform with live game state synced over WebSockets.",
+      "longDescription": "Problem: deliver multiplayer games that stay perfectly in sync across every connected player in real time.\n\nApproach: a React/TypeScript frontend with a Node.js/Express backend, WebSockets driving live game state, all containerised with Docker for deployment.\n\nOutcome: a working real-time multiplayer platform running live game sessions.",
       "stack": ["React", "TypeScript", "Node.js", "Express", "WebSockets", "Docker"],
       "link": "#",
-      "sort_order": 3
+      "links": {},
+      "gallery": [],
+      "featured": false,
+      "sort_order": 4
+    },
+    {
+      "id": "ignight",
+      "slug": "ignight",
+      "name": "Ignight",
+      "title": "Ignight",
+      "period": "Jun 2025",
+      "role": "Solo developer",
+      "description": "Real-time online multiplayer games platform. React/TypeScript frontend + Node.js/Express backend, WebSockets for live game state, Docker for deployment.",
+      "shortDescription": "Real-time multiplayer games platform with live game state synced over WebSockets.",
+      "longDescription": "Problem: deliver multiplayer games that stay perfectly in sync across every connected player in real time.\n\nApproach: a React/TypeScript frontend with a Node.js/Express backend, WebSockets driving live game state, all containerised with Docker for deployment.\n\nOutcome: a working real-time multiplayer platform running live game sessions.",
+      "stack": ["React", "TypeScript", "Node.js", "Express", "WebSockets", "Docker"],
+      "link": "#",
+      "links": {},
+      "gallery": [],
+      "featured": false,
+      "sort_order": 5
+    },
+    {
+      "id": "ignight",
+      "slug": "ignight",
+      "name": "Ignight",
+      "title": "Ignight",
+      "period": "Jun 2025",
+      "role": "Solo developer",
+      "description": "Real-time online multiplayer games platform. React/TypeScript frontend + Node.js/Express backend, WebSockets for live game state, Docker for deployment.",
+      "shortDescription": "Real-time multiplayer games platform with live game state synced over WebSockets.",
+      "longDescription": "Problem: deliver multiplayer games that stay perfectly in sync across every connected player in real time.\n\nApproach: a React/TypeScript frontend with a Node.js/Express backend, WebSockets driving live game state, all containerised with Docker for deployment.\n\nOutcome: a working real-time multiplayer platform running live game sessions.",
+      "stack": ["React", "TypeScript", "Node.js", "Express", "WebSockets", "Docker"],
+      "link": "#",
+      "links": {},
+      "gallery": [],
+      "featured": false,
+      "sort_order": 6
     }
   ],
   "skill_groups": [
@@ -106,16 +181,22 @@
       "sort_order": 2
     },
     {
+      "id": "databases",
+      "label": "Databases",
+      "items": ["PostgreSQL", "MySQL", "Prisma ORM", "Supabase", "MariaDB"],
+      "sort_order": 3
+    },
+    {
       "id": "ai",
       "label": "AI integration",
       "items": ["Claude API", "RAG", "MCP", "tool use", "agents", "prompt engineering"],
-      "sort_order": 3
+      "sort_order": 4
     },
     {
       "id": "devops",
       "label": "DevOps & tools",
       "items": ["Docker", "CI/CD", "Git", "GitHub", "Linux"],
-      "sort_order": 4
+      "sort_order": 5
     }
   ],
   "certifications": [
@@ -166,9 +247,19 @@
     "id": "competitive",
     "lines": [
       "Bulgarian National Informatics Team (2015–2020).",
-      "Algorithmic problem solving in C++; selected to the national team in 2019; two-time competition medalist."
+      "Algorithmic problem solving in C++; selected to the national team in 2019; two-time national champion."
     ]
   },
+  "timeline": [
+    { "id": "cp-start", "date": "2015", "label": "Started competitive programming (informatics)", "sort_order": 1 },
+    { "id": "national-team", "date": "2019", "label": "Selected to the Bulgarian National Informatics Team", "sort_order": 2 },
+    { "id": "hs-diploma", "date": "2022", "label": "HS diploma — Geo Milev (5.70/6.00)", "sort_order": 3 },
+    { "id": "gutes-fullstack", "date": "Feb 2024", "label": "GuTeS-SET — Full-Stack Developer", "sort_order": 4 },
+    { "id": "shipped-2025", "date": "2025", "label": "Shipped Izlei and Ignight", "sort_order": 5 },
+    { "id": "gutes-lead", "date": "Sep 2025", "label": "GuTeS-SET — Lead Developer", "sort_order": 6 },
+    { "id": "lead-hq", "date": "Apr–May 2026", "label": "Built Lead-HQ", "sort_order": 7 },
+    { "id": "relocate", "date": "Sep 2026", "label": "Relocating to Eindhoven, NL", "sort_order": 8 }
+  ],
   "languages": [
     { "id": "english", "name": "English", "level": "fluent", "sort_order": 1 },
     { "id": "bulgarian", "name": "Bulgarian", "level": "native", "sort_order": 2 },

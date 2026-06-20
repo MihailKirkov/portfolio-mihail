@@ -31,11 +31,24 @@ export interface Experience {
 
 export interface Project {
   id: string;
+  /** url-safe id; also the folder name under /public/projects/<slug>/ */
+  slug: string;
   name: string;
+  title: string;
   period: string;
+  role: string;
+  /** kept for the deck-status readout in chrome.tsx + fallbacks */
   description: string;
+  shortDescription: string;
+  /** narrative: problem -> approach -> outcome */
+  longDescription: string;
   stack: string[];
+  /** legacy single link, kept for backwards compat */
   link: string;
+  links: { repo?: string; live?: string };
+  /** image paths under /public/projects/<slug>/ — may be empty */
+  gallery: string[];
+  featured: boolean;
   sort_order: number;
 }
 
@@ -69,6 +82,13 @@ export interface Competitive {
   lines: string[];
 }
 
+export interface TimelineEntry {
+  id: string;
+  date: string;
+  label: string;
+  sort_order: number;
+}
+
 export interface Language {
   id: string;
   name: string;
@@ -89,6 +109,7 @@ export interface Content {
   certifications: Certification[];
   education: Education[];
   competitive: Competitive;
+  timeline: TimelineEntry[];
   languages: Language[];
   terminal: TerminalConfig;
 }

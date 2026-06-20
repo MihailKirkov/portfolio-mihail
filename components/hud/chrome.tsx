@@ -13,7 +13,8 @@ export function DeckChrome({ content }: { content: Content }) {
   const { profile, languages, projects, certifications } = content;
   const CAPABILITY = [
     { left: "frontend", right: "react/next/ts", value: 92 },
-    { left: "backend", right: "node/php/py", value: 82 },
+    { left: "backend", right: "node/php/py", value: 85 },
+    { left: "databases", right: "sql/nosql", value: 80 },
     { left: "ai integration", right: "claude/rag", value: 78 },
     { left: "devops", right: "docker/ci", value: 68 },
   ];
@@ -37,7 +38,7 @@ export function DeckChrome({ content }: { content: Content }) {
           available aug 2026
         </span>
         <span className="mpill" style={{ margin: 0 }}>
-          eu citizen · no sponsorship
+          eu citizen · bulgarian national
         </span>
       </div>
 
@@ -68,13 +69,13 @@ export function DeckChrome({ content }: { content: Content }) {
             </div>
           ))}
         </div>
-        <div className="head" style={{ marginTop: 18 }}>
+        {/* <div className="head" style={{ marginTop: 18 }}>
           focus
         </div>
         <div style={{ fontSize: 12, lineHeight: 1.6, color: "var(--dim)" }}>
           frontend polish ·{" "}
           <span style={{ color: "var(--bright)" }}>ai integration</span>
-        </div>
+        </div> */}
       </div>
       <div className="read" style={{ left: 0, top: 480, width: 240 }}>
         <div className="head">status</div>
@@ -201,7 +202,7 @@ export function VisorChrome({ content }: { content: Content }) {
       />
 
       <div className="read" style={{ top: 64, left: 22 }}>
-        <div className="on1">● secure link</div>
+        <div className="on1">● available</div>
         <div>
           sys ▮▮▮▮▮ <b>100%</b>
         </div>
@@ -214,7 +215,7 @@ export function VisorChrome({ content }: { content: Content }) {
         <div>
           available <b>aug 2026</b>
         </div>
-        <div>eu · no sponsor</div>
+        <div>eu citizen</div>
       </div>
 
       {/* flank radar dials echoing the reference HUD's side instruments */}
