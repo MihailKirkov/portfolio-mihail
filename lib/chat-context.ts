@@ -4,7 +4,7 @@ import type { Content } from "@/lib/types";
 // Builds the grounding for the chatbot from the BUNDLED content (not a live DB
 // read), so the terminal keeps working even if Supabase is paused.
 export function buildSystemPrompt(content: Content = seedContent): string {
-  const { profile, experiences, projects, skill_groups, certifications, education, competitive, languages } =
+  const { profile, identity, experiences, projects, skill_groups, certifications, education, competitive, languages } =
     content;
 
   const exp = experiences
@@ -49,6 +49,8 @@ Availability: ${profile.availability}
 Eligibility: ${profile.eligibility_note}
 Email: ${profile.email}
 Languages: ${langs}
+About: ${identity.about}
+${identity.fun_fact}
 
 == EXPERIENCE ==
 ${exp}

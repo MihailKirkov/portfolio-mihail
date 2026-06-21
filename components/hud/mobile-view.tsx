@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Content } from "@/lib/types";
 import type { Section, SectionKey } from "@/lib/sections";
 import { Terminal } from "@/components/hud/terminal";
 import { DownloadIcon } from "@/components/hud/icons";
+
+const NOTE_KEY = "mobile-note-dismissed";
 
 export function MobileView({
   content,
@@ -15,9 +18,42 @@ export function MobileView({
   onOpen: (key: SectionKey) => void;
 }) {
   const { profile } = content;
+
+  // one-time "lite view" note — shown until the visitor dismisses it, then
+  // remembered in localStorage so it never reappears. Starts hidden so the
+  // server render and a returning visitor never flash it.
+  const [showNote, setShowNote] = useState(false);
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(NOTE_KEY)) setShowNote(true);
+    } catch {
+      /* storage unavailable — just skip the note */
+    }
+  }, []);
+  function dismissNote() {
+    setShowNote(false);
+    try {
+      localStorage.setItem(NOTE_KEY, "1");
+    } catch {
+      /* storage unavailable — non-fatal */
+    }
+  }
+
   return (
     <div className="mobile">
       <div className="mwrap">
+        {showNote && (
+          <div className="mnote" role="note">
+            <span>Lite view — open on desktop for the full cockpit.</span>
+            <button
+              className="mnote-x"
+              onClick={dismissNote}
+              aria-label="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
         <h1 className="mhead">{profile.name}</h1>
         <p className="msub">{profile.title.toLowerCase()}</p>
         <span className="mpill">2+ yrs production</span>

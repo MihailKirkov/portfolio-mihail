@@ -29,6 +29,7 @@ const B = ({ children }: { children: ReactNode }) => <b>{children}</b>;
 export function buildSections(content: Content): Section[] {
   const {
     profile,
+    identity,
     experiences,
     skill_groups,
     projects,
@@ -63,8 +64,14 @@ export function buildSections(content: Content): Section[] {
           <p>
             <B>Status:</B> {profile.availability}
           </p>
-          <p style={{ marginBottom: 8 }}>
+          <p>
             <B>Eligibility:</B> {profile.eligibility_note}
+          </p>
+          <p>
+            <B>About:</B> {identity.about}
+          </p>
+          <p className="funfact" style={{ marginBottom: 8 }}>
+            {identity.fun_fact}
           </p>
           <LocationMap />
         </div>

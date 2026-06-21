@@ -16,6 +16,6 @@ const LocationMapInner = dynamic(
   }
 );
 
-export function LocationMap() {
-  return <LocationMapInner />;
+export function LocationMap({ mini = false }: { mini?: boolean }) {
+  return <LocationMapInner mini={mini} />;
 }

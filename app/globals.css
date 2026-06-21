@@ -306,6 +306,13 @@ body {
 }
 .strip-r .clock {
   color: var(--bright);
+  /* tabular figures + a fixed-width box so the ticking digits never change
+     width and nothing else in the strip reflows each second */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  display: inline-block;
+  min-width: 8.5ch;
+  text-align: right;
 }
 .tabs {
   display: flex;
@@ -992,6 +999,32 @@ body {
   text-transform: uppercase;
   color: var(--dim);
 }
+
+/* instrument dials: real readouts (skills spider / location ping) nested inside
+   the circular frame instead of the synced filler sweep+blip. The crosshair
+   ::before is dropped so it doesn't clash with the chart/map. */
+.radar.live::before {
+  display: none;
+}
+.radar.live {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.radar.live .radar-sweep {
+  opacity: 0.5;
+}
+.radar.live .radar-chart.mini,
+.radar.live .geo-mini {
+  width: 84px;
+  height: 84px;
+  margin: 0 0 8px;
+  border: 0;
+  background: transparent;
+}
+.radar.live .geo-mini {
+  filter: drop-shadow(0 0 3px var(--glow-accent));
+}
 .bracket {
   position: absolute;
   opacity: 0.55;
@@ -1205,6 +1238,16 @@ body {
 .modal .mb b {
   color: var(--bright);
   font-weight: 400;
+}
+/* styled "fun fact" line in the Identity modal — set apart from the body copy */
+.modal .mb .funfact {
+  margin-top: 12px;
+  padding: 8px 11px;
+  font-size: 12px;
+  color: var(--accent);
+  background: rgba(90, 214, 255, 0.07);
+  border-left: 2px solid var(--accent);
+  letter-spacing: 0.02em;
 }
 
 /* ============================================================
@@ -1913,6 +1956,33 @@ body {
   color: var(--dim);
   font-size: 13px;
   margin: 0 0 14px;
+}
+/* one-time dismissible "lite view" note — inline, non-blocking */
+.mnote {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 16px;
+  padding: 9px 12px;
+  font-size: 12px;
+  color: var(--dim);
+  background: rgba(7, 18, 34, 0.6);
+  border: 1px solid var(--line2);
+  border-left: 2px solid var(--accent);
+}
+.mnote-x {
+  flex: none;
+  background: transparent;
+  border: 0;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+.mnote-x:hover {
+  color: var(--bright);
 }
 .mpill {
   display: inline-block;

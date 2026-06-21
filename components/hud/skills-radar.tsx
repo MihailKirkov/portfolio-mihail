@@ -2,6 +2,10 @@
 // scales in on open via CSS (.rc-poly) and is static under prefers-reduced-motion
 // (the global reduced-motion rule disables the animation, leaving the final shape).
 // Axes map 1:1 to the skill groups; values are the existing proficiency numbers.
+//
+// `mini` renders a label-less, compact variant sized to drop into the Visor
+// flank dial (a ~104px circle). It is decorative there (aria-hidden) — the full
+// labelled chart still lives in the Stack modal.
 
 export interface RadarAxis {
   label: string;
@@ -9,10 +13,16 @@ export interface RadarAxis {
   value: number;
 }
 
-export function SkillsRadar({ axes }: { axes: RadarAxis[] }) {
-  const cx = 110;
-  const cy = 96;
-  const R = 60;
+export function SkillsRadar({
+  axes,
+  mini = false,
+}: {
+  axes: RadarAxis[];
+  mini?: boolean;
+}) {
+  const cx = mini ? 52 : 110;
+  const cy = mini ? 52 : 96;
+  const R = mini ? 40 : 60;
   const n = axes.length;
 
   // vertex at axis i, radius r — first axis points straight up, then clockwise
@@ -22,6 +32,31 @@ export function SkillsRadar({ axes }: { axes: RadarAxis[] }) {
   };
   const ring = (f: number) => axes.map((_, i) => pt(i, R * f).join(",")).join(" ");
   const valuePts = axes.map((ax, i) => pt(i, R * (ax.value / 100)).join(",")).join(" ");
+
+  if (mini) {
+    return (
+      <svg
+        className="radar-chart mini overflow-visible"
+        viewBox="0 0 104 104"
+        aria-hidden="true"
+      >
+        <g className="rc-grid">
+          {[0.5, 1].map((f) => (
+            <polygon key={f} points={ring(f)} />
+          ))}
+          {axes.map((_, i) => {
+            const [x, y] = pt(i, R);
+            return <line key={i} x1={cx} y1={cy} x2={x} y2={y} />;
+          })}
+        </g>
+        <polygon className="rc-poly" points={valuePts} />
+        {axes.map((ax, i) => {
+          const [x, y] = pt(i, R * (ax.value / 100));
+          return <circle key={ax.label} className="rc-dot" cx={x} cy={y} r={1.8} />;
+        })}
+      </svg>
+    );
+  }
 
   return (
     <svg

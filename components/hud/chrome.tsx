@@ -7,6 +7,18 @@
 
 import type { Content } from "@/lib/types";
 import { Gauge } from "@/components/hud/gauge";
+import { SkillsRadar } from "@/components/hud/skills-radar";
+import { LocationMap } from "@/components/hud/location-map";
+
+// proficiency per skill group — same values the deck/visor gauges and the Stack
+// modal radar use; drives the Visor "skills" instrument dial.
+const SKILL_RADAR = [
+  { label: "Frontend", value: 92 },
+  { label: "Backend", value: 85 },
+  { label: "Databases", value: 80 },
+  { label: "AI integration", value: 78 },
+  { label: "DevOps", value: 68 },
+];
 
 // ---- Flight Deck: gauge + status columns ---------------------------------
 export function DeckChrome({ content }: { content: Content }) {
@@ -119,9 +131,9 @@ export function DeckChrome({ content }: { content: Content }) {
           background
         </div>
         <div style={{ fontSize: 12, lineHeight: 1.6, color: "var(--dim)" }}>
-          bulgarian national
+          National Informatics Team
           <br />
-          informatics team &apos;19
+          2× medalist
         </div>
       </div>
       <div
@@ -218,16 +230,17 @@ export function VisorChrome({ content }: { content: Content }) {
         <div>eu citizen</div>
       </div>
 
-      {/* flank radar dials echoing the reference HUD's side instruments */}
-      <div className="radar" style={{ top: 182, left: 30 }} aria-hidden="true">
+      {/* flank instrument dials — real readouts, not filler. LEFT = live skills
+          spider chart; RIGHT = Vienna→Eindhoven locator ping (reuses the real
+          map). Decorative duplicates of modal content, so aria-hidden. */}
+      <div className="radar live" style={{ top: 182, left: 30 }} aria-hidden="true">
         <span className="radar-sweep" />
-        <span className="radar-blip" />
-        <span className="radar-lbl">scan</span>
+        <SkillsRadar axes={SKILL_RADAR} mini />
+        <span className="radar-lbl">skills</span>
       </div>
-      <div className="radar" style={{ top: 182, right: 30 }} aria-hidden="true">
-        <span className="radar-sweep" />
-        <span className="radar-blip" />
-        <span className="radar-lbl">net</span>
+      <div className="radar live" style={{ top: 182, right: 30 }} aria-hidden="true">
+        <LocationMap mini />
+        <span className="radar-lbl">location</span>
       </div>
 
       <div className="read" style={{ bottom: 40, left: 22, width: 150 }}>
@@ -281,9 +294,9 @@ export function ReactorChrome() {
   return (
     <>
       <div className="read" style={{ top: 58, left: 6 }}>
-        <div className="on1">● secure</div>
-        <div>2+ yrs prod</div>
-        <div>10+ modules</div>
+        <div className="on1">● available aug 2026</div>
+        <div>2+ yrs production</div>
+        <div>React · Node · PHP</div>
       </div>
       <div className="read" style={{ top: 58, right: 6, textAlign: "right" }}>
         <div>available aug</div>
