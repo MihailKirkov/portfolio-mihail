@@ -44,11 +44,11 @@ export function DeckChrome({ content }: { content: Content }) {
         }}
       >
         <span className="mpill" style={{ margin: 0 }}>
-          2+ yrs production
+          2+ yrs experience
         </span>
-        <span className="mpill" style={{ margin: 0 }}>
+        {/* <span className="mpill" style={{ margin: 0 }}>
           available aug 2026
-        </span>
+        </span> */}
         <span className="mpill" style={{ margin: 0 }}>
           eu citizen · bulgarian national
         </span>
@@ -99,41 +99,54 @@ export function DeckChrome({ content }: { content: Content }) {
 
       <div
         className="card panel"
-        style={{ right: 0, top: 56, width: 240, height: 408, padding: 16 }}
+        style={{
+          right: 0,
+          top: 56,
+          width: 240,
+          height: 408,
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
+        {/* fixed panel title — stays put; the body below scrolls */}
         <div className="head">project status</div>
-        {projects.map((p) => (
-          <div
-            key={p.id}
-            style={{
-              fontSize: 12,
-              lineHeight: 1.6,
-              color: "var(--ink)",
-              marginTop: 6,
-            }}
-          >
-            <span className="on1">●</span> {p.name.toLowerCase()}{" "}
-            <span style={{ color: "var(--dim)" }}>{p.stack[0]}</span>
-          </div>
-        ))}
-        <div className="head" style={{ marginTop: 18 }}>
-          certified
-        </div>
-        <div style={{ fontSize: 11, lineHeight: 1.32 }}>
-          {certifications.map((c) => (
-            <div key={c.id} style={{ marginTop: 8 }}>
-              <div style={{ color: "var(--bright)" }}>{c.name}</div>
-              <div style={{ color: "var(--dim)" }}>· {c.issuer}</div>
+        {/* scrollable body: list overflows the card, so scroll it (smooth, no
+            visible scrollbar — wheel/drag/keyboard only) */}
+        <div className="deck-scroll">
+          {projects.map((p) => (
+            <div
+              key={p.id}
+              style={{
+                fontSize: 12,
+                lineHeight: 1.6,
+                color: "var(--ink)",
+                marginTop: 6,
+              }}
+            >
+              <span className="on1">●</span> {p.name.toLowerCase()}{" "}
+              <span style={{ color: "var(--dim)" }}>{p.stack[0]}</span>
             </div>
           ))}
-        </div>
-        <div className="head" style={{ marginTop: 18 }}>
-          background
-        </div>
-        <div style={{ fontSize: 12, lineHeight: 1.6, color: "var(--dim)" }}>
-          National Informatics Team
-          <br />
-          2× medalist
+          <div className="head" style={{ marginTop: 18 }}>
+            certified
+          </div>
+          <div style={{ fontSize: 11, lineHeight: 1.32 }}>
+            {certifications.map((c) => (
+              <div key={c.id} style={{ marginTop: 8 }}>
+                <div style={{ color: "var(--bright)" }}>{c.name}</div>
+                <div style={{ color: "var(--dim)" }}>· {c.issuer}</div>
+              </div>
+            ))}
+          </div>
+          <div className="head" style={{ marginTop: 18 }}>
+            background
+          </div>
+          <div style={{ fontSize: 12, lineHeight: 1.6, color: "var(--dim)" }}>
+            National Informatics Team
+            <br />
+            2× medalist
+          </div>
         </div>
       </div>
       <div
