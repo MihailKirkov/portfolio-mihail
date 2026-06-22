@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-// "MK" monogram favicon — cold-blue on dark navy, matching the in-app brand.
+// "MK" monogram favicon - cold-blue on dark navy, matching the in-app brand.
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 

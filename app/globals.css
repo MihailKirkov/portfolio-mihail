@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   Design tokens — cold blue military HUD (dark)
+   Design tokens - cold blue military HUD (dark)
    ============================================================ */
 :root {
   --bg: #04080f;
@@ -19,7 +19,7 @@
   --green: #4fd6a8;
   --ai: #7cc4ff;
   --glow: rgba(74, 163, 224, 0.35);
-  /* single brighter cyan accent — active/hover/key lines only. Tune here. */
+  /* single brighter cyan accent - active/hover/key lines only. Tune here. */
   --accent: #5ad6ff;
   --glow-accent: rgba(90, 214, 255, 0.4);
   /* cockpit frame geometry (shared with the scaler maths in hud-root) */
@@ -63,7 +63,7 @@ body {
 }
 
 /* ============================================================
-   Background depth layers — navy gradient + cockpit grid + particles
+   Background depth layers - navy gradient + cockpit grid + particles
    ============================================================ */
 .bg {
   position: fixed;
@@ -138,7 +138,7 @@ body {
   animation-iteration-count: infinite;
   z-index: 999;
 }
-/* freeze the field while the tab is backgrounded — no offscreen CPU spin */
+/* freeze the field while the tab is backgrounded - no offscreen CPU spin */
 .bg[data-paused="true"] .p {
   animation-play-state: paused;
 }
@@ -160,7 +160,7 @@ body {
 }
 
 /* ============================================================
-   Scrollbars — thin, cold-blue thumb, transparent track (global)
+   Scrollbars - thin, cold-blue thumb, transparent track (global)
    ============================================================ */
 * {
   scrollbar-width: thin;
@@ -470,7 +470,7 @@ body {
 }
 
 /* ============================================================
-   Reusable HUD card — frosted frame for nodes, panels, terminal
+   Reusable HUD card - frosted frame for nodes, panels, terminal
    ============================================================ */
 .card {
   --bk: var(--edge); /* corner-bracket colour */
@@ -490,7 +490,7 @@ body {
       no-repeat,
     linear-gradient(var(--bk), var(--bk)) right 3px bottom 3px / 1.5px var(--arm)
       no-repeat,
-    /* frosted translucent fill — the background grid shows through */
+    /* frosted translucent fill - the background grid shows through */
     linear-gradient(158deg, rgba(18, 40, 68, 0.55), rgba(7, 18, 34, 0.46));
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -539,7 +539,7 @@ body {
   }
 }
 
-/* HUD nodes (buttons) — card frame + node specifics */
+/* HUD nodes (buttons) - card frame + node specifics */
 .node {
   position: absolute;
   color: var(--ink);
@@ -600,12 +600,12 @@ body {
   box-shadow: 0 0 8px var(--glow);
 }
 
-/* reactor core (CSS rings — fallback / ambient) */
+/* reactor core (CSS rings - fallback / ambient) */
 .core {
   position: absolute;
   perspective: 760px;
 }
-/* pointer-driven 3D tilt — --tiltX/--tiltY are set on the scaler on mousemove */
+/* pointer-driven 3D tilt - --tiltX/--tiltY are set on the scaler on mousemove */
 .core3d {
   position: absolute;
   inset: 0;
@@ -671,7 +671,7 @@ body {
   animation: spin 4.5s linear infinite;
 }
 
-/* panels — card frame + a thin labeled header rule on the first heading */
+/* panels - card frame + a thin labeled header rule on the first heading */
 .panel {
   position: absolute;
 }
@@ -682,7 +682,7 @@ body {
   color: var(--bright);
 }
 
-/* scrollable panel body (e.g. Flight Deck "project status") — fills the
+/* scrollable panel body (e.g. Flight Deck "project status") - fills the
    remaining card height and scrolls smoothly with no visible scrollbar; the
    top/bottom fade cues that there's more content above/below. */
 .deck-scroll {
@@ -690,11 +690,13 @@ body {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  pointer-events: auto;
   scroll-behavior: smooth;
   overscroll-behavior: contain;
-  /* no scrollbar — scroll via wheel / drag / keyboard only */
+  /* no scrollbar - scroll via wheel / drag / keyboard only */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  padding-bottom: 8px;
   -webkit-mask-image: linear-gradient(
     to bottom,
     transparent 0,
@@ -731,7 +733,7 @@ body {
   gap: 8px;
 }
 
-/* terminal idle agent — a HUD orb with a scanning, blinking eye */
+/* terminal idle agent - a HUD orb with a scanning, blinking eye */
 .agent {
   position: relative;
   width: 26px;
@@ -1061,7 +1063,7 @@ body {
   filter: drop-shadow(0 0 3px var(--glow-accent));
 }
 
-/* chess stat dial — cosmetic ~70% arc, knight glyph + FIDE figure */
+/* chess stat dial - cosmetic ~70% arc, knight glyph + FIDE figure */
 .chess-dial {
   display: block;
 }
@@ -1091,13 +1093,13 @@ body {
 }
 .chess-knight {
   fill: var(--accent);
-  font-size: 16px;
+  font-size: 24px;
   filter: drop-shadow(0 0 2px var(--glow-accent));
 }
 .chess-fig {
   fill: var(--bright);
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 300;
   letter-spacing: 0.04em;
   font-family: var(--font-share-tech), ui-monospace, monospace;
 }
@@ -1129,7 +1131,7 @@ body {
 }
 
 /* ============================================================
-   Status pages (404 / error) — HUD frame language
+   Status pages (404 / error) - HUD frame language
    ============================================================ */
 .status-screen {
   position: fixed;
@@ -1199,7 +1201,7 @@ body {
 /* ============================================================
    Modal (hologram)
    ============================================================ */
-/* projector beam — the holo "light source" from the top bar to the modal */
+/* projector beam - the holo "light source" from the top bar to the modal */
 .beam {
   position: fixed;
   top: 46px;
@@ -1321,7 +1323,7 @@ body {
   color: var(--bright);
   font-weight: 400;
 }
-/* styled "fun fact" line in the Identity modal — set apart from the body copy */
+/* styled "fun fact" line in the Identity modal - set apart from the body copy */
 .modal .mb .funfact {
   margin-top: 12px;
   padding: 8px 11px;
@@ -1333,7 +1335,7 @@ body {
 }
 
 /* ============================================================
-   Projects — full-screen holographic project deck
+   Projects - full-screen holographic project deck
    ============================================================ */
 .deck-backdrop {
   position: fixed;
@@ -1446,7 +1448,7 @@ body {
   margin: 0 auto;
 }
 
-/* project card — bracketed monitor-frame tile */
+/* project card - bracketed monitor-frame tile */
 .pcard {
   --bk: var(--edge);
   --carm: 18px;
@@ -1767,7 +1769,7 @@ body {
   }
   .pcard.featured .pcard-hero {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16 / 9 !important;
     border-right: 0;
     border-bottom: 1px solid var(--line);
   }
@@ -1777,7 +1779,7 @@ body {
 }
 
 /* ============================================================
-   Modal visuals — career timeline, skills radar, location map
+   Modal visuals - career timeline, skills radar, location map
    (pure SVG/CSS; animate in on open, static under reduced motion)
    ============================================================ */
 
@@ -1910,7 +1912,7 @@ body {
   border: 1px solid var(--line);
   background: rgba(7, 18, 34, 0.4);
 }
-/* reserves the map's aspect ratio while the lazy chunk loads — no layout shift */
+/* reserves the map's aspect ratio while the lazy chunk loads - no layout shift */
 .geo-loading {
   aspect-ratio: 320 / 200;
 }
@@ -2039,7 +2041,7 @@ body {
   font-size: 13px;
   margin: 0 0 14px;
 }
-/* one-time dismissible "lite view" note — inline, non-blocking */
+/* one-time dismissible "lite view" note - inline, non-blocking */
 .mnote {
   display: flex;
   align-items: center;
@@ -2096,7 +2098,7 @@ body {
 }
 
 /* ============================================================
-   Focus visibility — every interactive control gets a clear ring
+   Focus visibility - every interactive control gets a clear ring
    ============================================================ */
 a:focus-visible,
 button:focus-visible,

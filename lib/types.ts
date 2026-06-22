@@ -53,7 +53,7 @@ export interface Project {
   /** legacy single link, kept for backwards compat */
   link: string;
   links: { repo?: string; live?: string };
-  /** image paths under /public/projects/<slug>/ — may be empty */
+  /** image paths under /public/projects/<slug>/ - may be empty */
   gallery: string[];
   featured: boolean;
   sort_order: number;

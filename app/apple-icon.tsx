@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-// Apple touch icon — same MK monogram, sized for home-screen bookmarks.
+// Apple touch icon - same MK monogram, sized for home-screen bookmarks.
 export const size = { width: 180, height: 180 };
 export const contentType = "image/png";
 

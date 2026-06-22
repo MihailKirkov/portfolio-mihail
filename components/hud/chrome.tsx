@@ -45,7 +45,8 @@ export function DeckChrome({ content }: { content: Content }) {
       </div>
 
       <div
-        className="card panel"
+        className="card panel deck-scroll"
+        tabIndex={0} role="region" aria-label="Capability overview, programming languages, languages"
         style={{ left: 0, top: 56, width: 240, height: 408, padding: 16 }}
       >
         <div className="head">capability</div>
@@ -99,11 +100,11 @@ export function DeckChrome({ content }: { content: Content }) {
           flexDirection: "column",
         }}
       >
-        {/* fixed panel title — stays put; the body below scrolls */}
+        {/* fixed panel title - stays put; the body below scrolls */}
         <div className="head">project status</div>
         {/* scrollable body: list overflows the card, so scroll it (smooth, no
-            visible scrollbar — wheel/drag/keyboard only) */}
-        <div className="deck-scroll">
+            visible scrollbar - wheel/drag/keyboard only) */}
+        <div className="deck-scroll" tabIndex={0} role="region" aria-label="Project status, certifications and background">
           {projects.map((p) => (
             <div
               key={p.id}
@@ -216,16 +217,16 @@ export function VisorChrome({ content }: { content: Content }) {
         })}
       />
 
-      <div className="read" style={{ top: 64, left: 22 }}>
+      <div className="read" style={{ top: 72, left: 32 }}>
         <div className="on1">● available</div>
-        <div>
+        {/* <div>
           sys ▮▮▮▮▮ <b>100%</b>
-        </div>
+        </div> */}
         <div>
           exp <b>2+ yrs</b>
         </div>
       </div>
-      <div className="read" style={{ top: 64, right: 22, textAlign: "right" }}>
+      <div className="read" style={{ top: 72, right: 32, textAlign: "right" }}>
         <div>vienna → eindhoven</div>
         <div>
           available <b>aug 2026</b>
@@ -233,7 +234,7 @@ export function VisorChrome({ content }: { content: Content }) {
         <div>eu citizen</div>
       </div>
 
-      {/* flank instrument dials — real readouts, not filler. LEFT = chess stat
+      {/* flank instrument dials - real readouts, not filler. LEFT = chess stat
           dial (~1800 FIDE, a real fact, so it stays in the a11y tree); RIGHT =
           Vienna→Eindhoven locator ping (reuses the real map, decorative). */}
       <div className="radar live" style={{ top: 182, left: 30 }}>
@@ -302,9 +303,8 @@ export function ReactorChrome() {
         <div>React · Node · PHP</div>
       </div>
       <div className="read" style={{ top: 58, right: 6, textAlign: "right" }}>
-        <div>available aug</div>
+        <div>Vienna→Eindhoven sept 2026</div>
         <div>eu citizen</div>
-        <div>no sponsor</div>
       </div>
 
       <svg

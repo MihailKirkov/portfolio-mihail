@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-// Fixed deterministic particle field (no Math.random — keeps SSR/CSR markup
 // identical, no hydration mismatch). Values are %/px/seconds.
 const PARTICLES = [
   { left: "7%", top: "24%", size: 4, dur: 13, delay: 0 },
