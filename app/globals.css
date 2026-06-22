@@ -1049,7 +1049,8 @@ body {
   opacity: 0.5;
 }
 .radar.live .radar-chart.mini,
-.radar.live .geo-mini {
+.radar.live .geo-mini,
+.radar.live .chess-dial {
   width: 84px;
   height: 84px;
   margin: 0 0 8px;
@@ -1058,6 +1059,53 @@ body {
 }
 .radar.live .geo-mini {
   filter: drop-shadow(0 0 3px var(--glow-accent));
+}
+
+/* chess stat dial — cosmetic ~70% arc, knight glyph + FIDE figure */
+.chess-dial {
+  display: block;
+}
+.chess-track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 2;
+  opacity: 0.6;
+}
+.chess-arc {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px var(--glow-accent));
+  stroke-dasharray: var(--chess-circ);
+  stroke-dashoffset: var(--chess-offset);
+  animation: chessArcIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@keyframes chessArcIn {
+  from {
+    stroke-dashoffset: var(--chess-circ);
+  }
+  to {
+    stroke-dashoffset: var(--chess-offset);
+  }
+}
+.chess-knight {
+  fill: var(--accent);
+  font-size: 16px;
+  filter: drop-shadow(0 0 2px var(--glow-accent));
+}
+.chess-fig {
+  fill: var(--bright);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-family: var(--font-share-tech), ui-monospace, monospace;
+}
+.chess-sub {
+  fill: var(--dim);
+  font-size: 7px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
 }
 .bracket {
   position: absolute;
