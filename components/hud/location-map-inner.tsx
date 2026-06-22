@@ -12,10 +12,11 @@ import { feature } from "topojson-client";
 import topoData from "@/lib/geo/countries-110m.json";
 
 // viewBox geometry — kept short/wide so both cities and the caption stay within
-// the Identity modal's scroll viewport without needing to scroll.
-const W = 320;
-const H = 150;
-const PAD = 10;
+// the Identity modal's scroll viewport without needing to scroll. The `mini`
+// variant (Visor flank dial) drops captions/labels and uses a squarer box so it
+// nests inside a ~104px circular instrument.
+const FULL = { W: 320, H: 150, PAD: 10 };
+const MINI = { W: 104, H: 104, PAD: 14 };
 
 // real city coordinates [lon, lat]
 const VIENNA: [number, number] = [16.3738, 48.2082];
@@ -38,7 +39,8 @@ const SHOW = new Set([
 
 type Topo = Parameters<typeof feature>[0];
 
-export function LocationMapInner() {
+export function LocationMapInner({ mini = false }: { mini?: boolean }) {
+  const { W, H, PAD } = mini ? MINI : FULL;
   const { countries, arc, vienna, eindhoven } = useMemo(() => {
     const projection = geoMercator().fitExtent(
       [[PAD, PAD], [W - PAD, H - PAD]],
@@ -82,14 +84,19 @@ export function LocationMapInner() {
       vienna: { x: vx, y: vy },
       eindhoven: { x: ex, y: ey },
     };
-  }, []);
+  }, [W, H, PAD]);
 
   return (
     <svg
-      className="geo"
+      className={mini ? "geo geo-mini" : "geo"}
       viewBox={`0 0 ${W} ${H}`}
-      role="img"
-      aria-label="Relocation route from Vienna to Eindhoven — Vienna, Austria to Eindhoven, Netherlands, September 2026"
+      role={mini ? undefined : "img"}
+      aria-hidden={mini ? "true" : undefined}
+      aria-label={
+        mini
+          ? undefined
+          : "Relocation route from Vienna to Eindhoven — Vienna, Austria to Eindhoven, Netherlands, September 2026"
+      }
     >
       <defs>
         <pattern id="geo-grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -118,23 +125,29 @@ export function LocationMapInner() {
       <g className="geo-pin" aria-hidden="true">
         <circle className="geo-ring" cx={vienna.x} cy={vienna.y} r="4" />
         <circle cx={vienna.x} cy={vienna.y} r="2.5" />
-        <text x={vienna.x} y={vienna.y + 14} textAnchor="middle">
-          Vienna, AT
-        </text>
+        {!mini && (
+          <text x={vienna.x} y={vienna.y + 14} textAnchor="middle">
+            Vienna, AT
+          </text>
+        )}
       </g>
 
       {/* Eindhoven pin (destination) */}
       <g className="geo-pin geo-dest" aria-hidden="true">
         <circle className="geo-ring" cx={eindhoven.x} cy={eindhoven.y} r="4" />
         <circle cx={eindhoven.x} cy={eindhoven.y} r="2.5" />
-        <text x={eindhoven.x} y={eindhoven.y - 9} textAnchor="middle">
-          Eindhoven, NL
-        </text>
+        {!mini && (
+          <text x={eindhoven.x} y={eindhoven.y - 9} textAnchor="middle">
+            Eindhoven, NL
+          </text>
+        )}
       </g>
 
-      <text className="geo-cap" x={W / 2} y={H - 7} textAnchor="middle">
-        relocating · Sept 2026
-      </text>
+      {!mini && (
+        <text className="geo-cap" x={W / 2} y={H - 7} textAnchor="middle">
+          relocating · Sept 2026
+        </text>
+      )}
     </svg>
   );
 }

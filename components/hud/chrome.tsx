@@ -7,6 +7,8 @@
 
 import type { Content } from "@/lib/types";
 import { Gauge } from "@/components/hud/gauge";
+import { ChessDial } from "@/components/hud/chess-dial";
+import { LocationMap } from "@/components/hud/location-map";
 
 // ---- Flight Deck: gauge + status columns ---------------------------------
 export function DeckChrome({ content }: { content: Content }) {
@@ -32,18 +34,19 @@ export function DeckChrome({ content }: { content: Content }) {
         }}
       >
         <span className="mpill" style={{ margin: 0 }}>
-          2+ yrs production
+          2+ yrs experience
         </span>
-        <span className="mpill" style={{ margin: 0 }}>
+        {/* <span className="mpill" style={{ margin: 0 }}>
           available aug 2026
-        </span>
+        </span> */}
         <span className="mpill" style={{ margin: 0 }}>
           eu citizen · bulgarian national
         </span>
       </div>
 
       <div
-        className="card panel"
+        className="card panel deck-scroll"
+        tabIndex={0} role="region" aria-label="Capability overview, programming languages, languages"
         style={{ left: 0, top: 56, width: 240, height: 408, padding: 16 }}
       >
         <div className="head">capability</div>
@@ -87,41 +90,54 @@ export function DeckChrome({ content }: { content: Content }) {
 
       <div
         className="card panel"
-        style={{ right: 0, top: 56, width: 240, height: 408, padding: 16 }}
+        style={{
+          right: 0,
+          top: 56,
+          width: 240,
+          height: 408,
+          padding: 16,
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
+        {/* fixed panel title - stays put; the body below scrolls */}
         <div className="head">project status</div>
-        {projects.map((p) => (
-          <div
-            key={p.id}
-            style={{
-              fontSize: 12,
-              lineHeight: 1.6,
-              color: "var(--ink)",
-              marginTop: 6,
-            }}
-          >
-            <span className="on1">●</span> {p.name.toLowerCase()}{" "}
-            <span style={{ color: "var(--dim)" }}>{p.stack[0]}</span>
-          </div>
-        ))}
-        <div className="head" style={{ marginTop: 18 }}>
-          certified
-        </div>
-        <div style={{ fontSize: 11, lineHeight: 1.32 }}>
-          {certifications.map((c) => (
-            <div key={c.id} style={{ marginTop: 8 }}>
-              <div style={{ color: "var(--bright)" }}>{c.name}</div>
-              <div style={{ color: "var(--dim)" }}>· {c.issuer}</div>
+        {/* scrollable body: list overflows the card, so scroll it (smooth, no
+            visible scrollbar - wheel/drag/keyboard only) */}
+        <div className="deck-scroll" tabIndex={0} role="region" aria-label="Project status, certifications and background">
+          {projects.map((p) => (
+            <div
+              key={p.id}
+              style={{
+                fontSize: 12,
+                lineHeight: 1.6,
+                color: "var(--ink)",
+                marginTop: 6,
+              }}
+            >
+              <span className="on1">●</span> {p.name.toLowerCase()}{" "}
+              <span style={{ color: "var(--dim)" }}>{p.stack[0]}</span>
             </div>
           ))}
-        </div>
-        <div className="head" style={{ marginTop: 18 }}>
-          background
-        </div>
-        <div style={{ fontSize: 12, lineHeight: 1.6, color: "var(--dim)" }}>
-          bulgarian national
-          <br />
-          informatics team &apos;19
+          <div className="head" style={{ marginTop: 18 }}>
+            certified
+          </div>
+          <div style={{ fontSize: 11, lineHeight: 1.32 }}>
+            {certifications.map((c) => (
+              <div key={c.id} style={{ marginTop: 8 }}>
+                <div style={{ color: "var(--bright)" }}>{c.name}</div>
+                <div style={{ color: "var(--dim)" }}>· {c.issuer}</div>
+              </div>
+            ))}
+          </div>
+          <div className="head" style={{ marginTop: 18 }}>
+            background
+          </div>
+          <div style={{ fontSize: 12, lineHeight: 1.6, color: "var(--dim)" }}>
+            National Informatics Team
+            <br />
+            2× medalist
+          </div>
         </div>
       </div>
       <div
@@ -201,16 +217,16 @@ export function VisorChrome({ content }: { content: Content }) {
         })}
       />
 
-      <div className="read" style={{ top: 64, left: 22 }}>
+      <div className="read" style={{ top: 72, left: 32 }}>
         <div className="on1">● available</div>
-        <div>
+        {/* <div>
           sys ▮▮▮▮▮ <b>100%</b>
-        </div>
+        </div> */}
         <div>
           exp <b>2+ yrs</b>
         </div>
       </div>
-      <div className="read" style={{ top: 64, right: 22, textAlign: "right" }}>
+      <div className="read" style={{ top: 72, right: 32, textAlign: "right" }}>
         <div>vienna → eindhoven</div>
         <div>
           available <b>aug 2026</b>
@@ -218,16 +234,17 @@ export function VisorChrome({ content }: { content: Content }) {
         <div>eu citizen</div>
       </div>
 
-      {/* flank radar dials echoing the reference HUD's side instruments */}
-      <div className="radar" style={{ top: 182, left: 30 }} aria-hidden="true">
+      {/* flank instrument dials - real readouts, not filler. LEFT = chess stat
+          dial (~1800 FIDE, a real fact, so it stays in the a11y tree); RIGHT =
+          Vienna→Eindhoven locator ping (reuses the real map, decorative). */}
+      <div className="radar live" style={{ top: 182, left: 30 }}>
         <span className="radar-sweep" />
-        <span className="radar-blip" />
-        <span className="radar-lbl">scan</span>
+        <ChessDial />
+        <span className="radar-lbl">chess</span>
       </div>
-      <div className="radar" style={{ top: 182, right: 30 }} aria-hidden="true">
-        <span className="radar-sweep" />
-        <span className="radar-blip" />
-        <span className="radar-lbl">net</span>
+      <div className="radar live" style={{ top: 182, right: 30 }} aria-hidden="true">
+        <LocationMap mini />
+        <span className="radar-lbl">location</span>
       </div>
 
       <div className="read" style={{ bottom: 40, left: 22, width: 150 }}>
@@ -281,14 +298,13 @@ export function ReactorChrome() {
   return (
     <>
       <div className="read" style={{ top: 58, left: 6 }}>
-        <div className="on1">● secure</div>
-        <div>2+ yrs prod</div>
-        <div>10+ modules</div>
+        <div className="on1">● available aug 2026</div>
+        <div>2+ yrs production</div>
+        <div>React · Node · PHP</div>
       </div>
       <div className="read" style={{ top: 58, right: 6, textAlign: "right" }}>
-        <div>available aug</div>
+        <div>Vienna→Eindhoven sept 2026</div>
         <div>eu citizen</div>
-        <div>no sponsor</div>
       </div>
 
       <svg

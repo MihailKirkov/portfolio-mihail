@@ -29,6 +29,7 @@ const B = ({ children }: { children: ReactNode }) => <b>{children}</b>;
 export function buildSections(content: Content): Section[] {
   const {
     profile,
+    identity,
     experiences,
     skill_groups,
     projects,
@@ -38,7 +39,7 @@ export function buildSections(content: Content): Section[] {
     timeline,
   } = content;
 
-  // proficiency per skill group — the same values the deck/visor gauges show
+  // proficiency per skill group - the same values the deck/visor gauges show
   const RADAR: { label: string; value: number }[] = [
     { label: "Frontend", value: 92 },
     { label: "Backend", value: 85 },
@@ -63,8 +64,14 @@ export function buildSections(content: Content): Section[] {
           <p>
             <B>Status:</B> {profile.availability}
           </p>
-          <p style={{ marginBottom: 8 }}>
+          <p>
             <B>Eligibility:</B> {profile.eligibility_note}
+          </p>
+          <p>
+            <B>About:</B> {identity.about}
+          </p>
+          <p className="funfact" style={{ marginBottom: 8 }}>
+            {identity.fun_fact}
           </p>
           <LocationMap />
         </div>
@@ -155,7 +162,7 @@ export function buildSections(content: Content): Section[] {
           <p style={{ marginTop: 0 }}>
             <B>Certifications</B>
           </p>
-          <ul style={{ margin: "0 0 12px", paddingLeft: 18 }}>
+          <ul style={{ margin: "0 0 12px", paddingLeft: 18, listStyleType: "circle" }}>
             {certifications.map((c) => (
               <li key={c.id}>
                 {c.name} — {c.issuer} ({c.date})
@@ -166,7 +173,7 @@ export function buildSections(content: Content): Section[] {
           <p style={{ margin: "0 0 4px" }}>
             <B>Education</B>
           </p>
-          <ul style={{ margin: "0 0 12px", paddingLeft: 18 }}>
+          <ul style={{ margin: "0 0 12px", paddingLeft: 18, listStyleType: "circle" }}>
             {education.map((ed) => (
               <li key={ed.id}>
                 {ed.institution} — {ed.focus}. {ed.credential_line} ({ed.period}

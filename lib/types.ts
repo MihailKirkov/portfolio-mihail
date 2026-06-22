@@ -18,6 +18,13 @@ export interface Profile {
   };
 }
 
+export interface Identity {
+  /** first-person "about me" paragraph shown in the Identity modal */
+  about: string;
+  /** styled one-liner fun fact */
+  fun_fact: string;
+}
+
 export interface Experience {
   id: string;
   company: string;
@@ -46,7 +53,7 @@ export interface Project {
   /** legacy single link, kept for backwards compat */
   link: string;
   links: { repo?: string; live?: string };
-  /** image paths under /public/projects/<slug>/ — may be empty */
+  /** image paths under /public/projects/<slug>/ - may be empty */
   gallery: string[];
   featured: boolean;
   sort_order: number;
@@ -103,6 +110,7 @@ export interface TerminalConfig {
 
 export interface Content {
   profile: Profile;
+  identity: Identity;
   experiences: Experience[];
   projects: Project[];
   skill_groups: SkillGroup[];

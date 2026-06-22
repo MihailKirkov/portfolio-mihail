@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
   const ip = getIp(req);
   if (rateLimited(ip)) {
-    return new Response("Too many messages — give me a moment.", {
+    return new Response("Too many messages - give me a moment.", {
       status: 429,
     });
   }
@@ -106,7 +106,7 @@ export async function POST(req: Request) {
       } catch {
         controller.enqueue(
           encoder.encode(
-            "Something glitched on my end — try again, or email me at mihailkirkov04@gmail.com."
+            "Something glitched on my end - try again, or email me at mihailkirkov04@gmail.com."
           )
         );
         controller.close();

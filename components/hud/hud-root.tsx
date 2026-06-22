@@ -35,11 +35,11 @@ export function HudRoot({ content }: { content: Content }) {
     try {
       localStorage.setItem(STORAGE_KEY, m);
     } catch {
-      /* storage unavailable — non-fatal */
+      /* storage unavailable - non-fatal */
     }
   }
 
-  // Scale the 1080×632 stage to *fill* the viewport — fit both axes and scale
+  // Scale the 1080×632 stage to *fill* the viewport - fit both axes and scale
   // up (capped) so the composition reaches the bottom instead of packing at the
   // top. The viewport is exactly one screen tall, so nothing overflows.
   useEffect(() => {

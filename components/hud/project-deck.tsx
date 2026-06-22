@@ -128,6 +128,54 @@ function ProjectCard({
   );
 }
 
+function isExternalImage(src: string) {
+  return src.startsWith("http://") || src.startsWith("https://");
+}
+
+function GalleryImage({
+  src,
+  alt,
+  fill,
+  sizes,
+  style,
+  loading = "lazy",
+}: {
+  src: string;
+  alt: string;
+  fill?: boolean;
+  sizes?: string;
+  style?: Record<string, string | number | undefined>;
+  loading?: "lazy" | "eager";
+}) {
+  if (isExternalImage(src)) {
+    console.log('external image: ', src)
+    return (
+      <img
+        src={src}
+        alt={alt}
+        loading={loading}
+        style={{
+          ...style,
+          width: fill ? "100%" : undefined,
+          height: fill ? "100%" : undefined,
+        }}
+      />
+    );
+  }
+  console.log ('not')
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill={fill}
+      sizes={sizes}
+      style={style}
+      loading={loading}
+    />
+  );
+}
+
 // ---- gallery carousel inside the detail view ------------------------------
 function Carousel({ title, gallery }: { title: string; gallery: string[] }) {
   const [i, setI] = useState(0);
@@ -163,7 +211,7 @@ function Carousel({ title, gallery }: { title: string; gallery: string[] }) {
   return (
     <div className="pcarousel">
       <div className="pdetail-stage">
-        <Image
+        <GalleryImage
           key={gallery[i]}
           src={gallery[i]}
           alt={`${title} screenshot ${i + 1} of ${count}`}
@@ -208,7 +256,7 @@ function Carousel({ title, gallery }: { title: string; gallery: string[] }) {
               className={`pcar-thumb${n === i ? " on" : ""}`}
               onClick={() => setI(n)}
             >
-              <Image
+              <GalleryImage
                 src={g}
                 alt=""
                 fill
@@ -279,6 +327,7 @@ function ProjectDetail({
           <div className="pdetail-links">
             {repo && (
               <a
+                style={{color: "red !important", borderColor: "red !important"}}
                 className="btn-ghost"
                 href={repo}
                 target="_blank"
