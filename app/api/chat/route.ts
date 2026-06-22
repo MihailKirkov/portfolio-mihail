@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // ---- abuse guards -----------------------------------------------------------
 const MAX_INPUT_CHARS = 500;
-const MAX_HISTORY_MESSAGES = 8;
+const MAX_HISTORY_MESSAGES = 10;
 const MAX_OUTPUT_TOKENS = 300;
 
 // simple in-memory per-IP rate limiter (sliding window).
