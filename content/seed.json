@@ -24,33 +24,20 @@
   },
   "experiences": [
     {
-      "id": "gutes-lead",
-      "company": "GuTeS-SET",
-      "role": "Lead Developer",
-      "location": "Vienna",
-      "start": "Sep 2025",
-      "end": "Present",
-      "bullets": [
-        "Drive feature development across the React/TypeScript and PHP ERM systems while staying hands-on.",
-        "Own the client-team relationship.",
-        "Run feature planning, deadline setting, and delivery coordination."
-      ],
-      "sort_order": 1
-    },
-    {
       "id": "gutes-fullstack",
       "company": "GuTeS-SET",
       "role": "Full-Stack Web Developer",
       "location": "Vienna",
       "start": "Feb 2024",
-      "end": "Sep 2025",
+      "end": "Present",
       "bullets": [
         "Built and maintained two production ERM systems on Dolibarr (10+ custom PHP modules total).",
         "Primary: an internal logistics ERM for the ~20-person parent company — built a new React/TypeScript UI and a Node.js real-time event server replacing legacy interfaces.",
-        "Second: a multi-frontend ERM (3 distinct React apps) for a German client supporting operations across ~50 partner companies.",
-        "Additional work in Next.js and Python."
+        "Second: a multi-frontend ERM (3 distinct React apps) for a German client, supporting operations across ~50 partner companies on shared software.",
+        "Additional work in Next.js, Python, CI/CD pipelines, and server + cronjob setups.",
+        "Since Sep 2025, also own feature planning, delivery coordination, and the client-team relationship."
       ],
-      "sort_order": 2
+      "sort_order": 1
     },
     {
       "id": "coding-giants",
@@ -64,7 +51,7 @@
         "Designed exercises.",
         "Provided individual support for varying skill levels."
       ],
-      "sort_order": 3
+      "sort_order": 2
     }
   ],
   "projects": [
@@ -112,7 +99,7 @@
       "description": "My web dev agency website showcasing my services, projects and experience, built with Next.js, TypeScript, and Tailwind CSS.",
       "shortDescription": "My web dev agency website showcasing my services, projects and experience, built with Next.js, TypeScript, and Tailwind CSS.",
       "longDescription": "My personal web dev agency website, built to showcase my services, projects, and experience. Built with Next.js, TypeScript, and Tailwind CSS, it features a clean design and responsive layout to highlight my portfolio and make it easy for potential clients to get in touch.",
-      "stack": ["React", "TypeScript", "Node.js", "Express", "WebSockets", "Docker"],
+      "stack": ["React", "TypeScript", "Three.js", "Next.js", "Tailwind CSS"],
       "link": "https://www.ignis-mls.com/en",
       "links": {"live": "https://www.ignis-mls.com/en", "repo": "https://github.com/MihailKirkov/ignis"},
       "gallery": ["/ignis/ignis-1.webp", "/ignis/ignis-2.webp", "/ignis/ignis-3.webp", "/ignis/ignis-4.webp", "/ignis/ignis-5.webp"],
