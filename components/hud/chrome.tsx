@@ -8,7 +8,11 @@
 import type { Content } from "@/lib/types";
 import { Gauge } from "@/components/hud/gauge";
 import { ChessDial } from "@/components/hud/chess-dial";
-import { LocationMap } from "@/components/hud/location-map";
+import { InformaticsDial } from "@/components/hud/informatics-dial";
+
+// Language levels that read as "not yet a working level" - rendered dim so the
+// panel's bright text is only ever native/fluent proficiency.
+const isEntryLevel = (level: string) => /basic|learning|\bA[12]\b/i.test(level);
 
 // ---- Flight Deck: gauge + status columns ---------------------------------
 export function DeckChrome({ content }: { content: Content }) {
@@ -62,8 +66,9 @@ export function DeckChrome({ content }: { content: Content }) {
               {l.name}{" "}
               <b
                 style={{
-                  color:
-                    l.level === "basic" ? "var(--dim)" : "var(--bright)",
+                  color: isEntryLevel(l.level)
+                    ? "var(--dim)"
+                    : "var(--bright)",
                   fontWeight: 400,
                 }}
               >
@@ -85,7 +90,6 @@ export function DeckChrome({ content }: { content: Content }) {
         <div>
           <span className="on1">●</span> available aug 2026
         </div>
-        <div>vienna → eindhoven · sept 2026</div>
       </div>
 
       <div
@@ -227,24 +231,24 @@ export function VisorChrome({ content }: { content: Content }) {
         </div>
       </div>
       <div className="read" style={{ top: 72, right: 32, textAlign: "right" }}>
-        <div>vienna → eindhoven</div>
         <div>
           available <b>aug 2026</b>
         </div>
         <div>eu citizen</div>
       </div>
 
-      {/* flank instrument dials - real readouts, not filler. LEFT = chess stat
-          dial (~1800 FIDE, a real fact, so it stays in the a11y tree); RIGHT =
-          Vienna→Eindhoven locator ping (reuses the real map, decorative). */}
+      {/* flank instrument dials - matched pair of real single-stat readouts, not
+          filler: LEFT = chess (~1800 FIDE), RIGHT = competitive informatics (5+
+          years). Both are real facts, so both stay in the a11y tree. */}
       <div className="radar live" style={{ top: 182, left: 30 }}>
         <span className="radar-sweep" />
         <ChessDial />
         <span className="radar-lbl">chess</span>
       </div>
-      <div className="radar live" style={{ top: 182, right: 30 }} aria-hidden="true">
-        <LocationMap mini />
-        <span className="radar-lbl">location</span>
+      <div className="radar live" style={{ top: 182, right: 30 }}>
+        <span className="radar-sweep" />
+        <InformaticsDial />
+        <span className="radar-lbl">informatics</span>
       </div>
 
       <div className="read" style={{ bottom: 40, left: 22, width: 150 }}>
@@ -303,8 +307,8 @@ export function ReactorChrome() {
         <div>React · Node · PHP</div>
       </div>
       <div className="read" style={{ top: 58, right: 6, textAlign: "right" }}>
-        <div>Vienna→Eindhoven sept 2026</div>
         <div>eu citizen</div>
+        <div>no sponsorship needed</div>
       </div>
 
       <svg

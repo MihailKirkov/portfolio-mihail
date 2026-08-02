@@ -4,8 +4,6 @@ export interface Profile {
   tagline: string;
   summary: string;
   pitch: string;
-  location_current: string;
-  location_target: string;
   availability: string;
   eligibility_note: string;
   email: string;
@@ -29,7 +27,6 @@ export interface Experience {
   id: string;
   company: string;
   role: string;
-  location: string;
   start: string;
   end: string;
   bullets: string[];

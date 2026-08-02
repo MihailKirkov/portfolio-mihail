@@ -14,7 +14,7 @@
 
 ## What this is
 
-I'm **Mihail Kirkov** - a full-stack developer (React/Next · Node · PHP) with hands-on AI-integration experience and 2+ years in production. EU citizen, relocating to **Eindhoven, NL in September 2026** and **available from August**.
+I'm **Mihail Kirkov** - a full-stack developer (React/Next · Node · PHP) with hands-on AI-integration experience and 2+ years in production. **EU citizen** (no sponsorship required) and **available from August 2026**.
 
 This site is my portfolio, built to do more than list a CV: it's a single-screen "spaceship cockpit" interface where each section opens as a hologram, and a built-in AI agent (grounded on my CV) lets a recruiter just *ask* - "what's your stack?", "why hire you?", "tell me about a project" - and get an instant answer. It's also, deliberately, a working demonstration of the frontend + AI-integration skills it describes.
 
@@ -29,7 +29,7 @@ This site is my portfolio, built to do more than list a CV: it's a single-screen
 
 ![Flight Deck](docs/screenshots/flight-deck.png)
 
-**Visor** - a helmet-view layout with flanking instrument dials (chess + a Vienna→Eindhoven locator).
+**Visor** - a helmet-view layout with flanking instrument dials (chess rating + competitive informatics).
 
 ![Visor](docs/screenshots/visor.png)
 
@@ -46,7 +46,7 @@ This site is my portfolio, built to do more than list a CV: it's a single-screen
 - **Three HUD modes that *morph* between each other.** The core, section nodes, and terminal are rendered once and physically glide/resize into the new arrangement (Framer Motion layout animations) - not a crossfade.
 - **An AI chat terminal I built end-to-end.** RAG-lite: grounded on my profile, served from a serverless route with the API key kept server-side, output/token caps, and per-IP rate limiting. The three suggested questions return instantly with zero network so the headline answers always work.
 - **3D reactor core** that tilts toward the cursor with parallaxed rings (CSS 3D transforms, no heavy 3D engine).
-- **Holographic section modals**, a career **timeline**, a skills **radar chart**, and a real **Vienna→Eindhoven map** for the relocation story.
+- **Holographic section modals**, a career **timeline**, and a skills **radar chart** (rendered full-size in the Stack modal and as a compact flank dial in the Visor).
 - **Accessible and motion-aware** - keyboard-navigable, focus-trapped modals, ARIA roles, and a full `prefers-reduced-motion` fallback.
 - **Mobile** collapses the cockpit to a clean, fully functional vertical stack.
 
@@ -56,7 +56,7 @@ This site is my portfolio, built to do more than list a CV: it's a single-screen
 - **Styling:** Tailwind CSS + hand-built HUD components (SVG / CSS, `clip-path`, backdrop-blur)
 - **Animation:** Framer Motion (mode morph), CSS keyframes
 - **AI:** Claude API (Haiku) via a serverless route
-- **Maps:** react-simple-maps with locally bundled topojson (no runtime map API)
+- **Charts:** hand-rolled SVG (radar, gauges, dials) - no charting library
 - **Hosting:** Vercel (static SSG + serverless function for chat)
 
 ## Architecture notes
@@ -94,7 +94,7 @@ Editing content: everything (profile, experience, projects, certs, timeline, ski
 - **GitHub:** https://github.com/MihailKirkov
 - **Portfolio:** https://portfolio-mihail.vercel.app/
 
-EU citizen - no visa, work permit, or sponsorship required. Open to on-site/hybrid roles in Eindhoven and remote-EU.
+EU citizen - no visa, work permit, or sponsorship required. Open to on-site, hybrid, and remote-EU roles. Available from August 2026.
 
 ---
 

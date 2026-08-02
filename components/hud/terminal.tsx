@@ -18,7 +18,7 @@ const CANNED: Record<string, string> = {
   "What's your stack?":
     "Frontend is React / Next.js / TypeScript; backend is Node.js, PHP and Python; plus real AI integration — Claude API, RAG, tool use and agents. Full-stack, shipped end to end.",
   "Why should we hire you?":
-    "I ship AI features end to end, not just demos. EU citizen, so zero sponsorship friction — relocating to Eindhoven in September, available August. A fast, low-risk hire who already builds in production.",
+    "I ship AI features end to end, not just demos. EU citizen, so zero sponsorship friction, and available from August 2026. A fast, low-risk hire who already builds in production.",
   "Tell me about a project":
     "Lead-HQ — a lead-management platform I built solo: Next.js 15 + Supabase, Apify for Google-Maps scraping, and an AI grader that scores every lead automatically. End-to-end, from scrape to scored pipeline.",
 };
