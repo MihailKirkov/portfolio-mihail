@@ -17,7 +17,7 @@
     }
   },
   "identity": {
-    "about": "I got into programming as a kid — I was into computers, good at maths and chess, and I spent 5+ years doing competitive informatics, solving algorithmic problems in C++ and competing in national olympiads (I made Bulgaria's national team and medaled twice). That background is still how I work: break the problem down, then build. These days I do full-stack work with React/Next and Node/PHP, and I've shipped real AI-integration features, not just demos. I like owning things end to end — I built Lead-HQ solo — and I'm at my best on a team when I actually care about what we're making. Outside work it's sports, training, and eating well to stay sharp, usually with music on.",
+    "about": "I got into programming as a kid — I was into computers, good at maths and chess, and I spent 5+ years doing competitive informatics, solving algorithmic problems in C++ and competing in national olympiads (I made Bulgaria's national team and medaled twice). That background is still how I work: break the problem down, then build. These days I do full-stack work with React/Next and Node/PHP, and I've shipped real AI-integration features, not just demos. I like owning things end to end — and I'm at my best on a team when I actually care about what we're making. Outside work it's sports, training, and eating well to stay sharp, usually with music on.",
     "fun_fact": "Fun fact: two-time national chess champion as a kid, ~1800 FIDE."
   },
   "experiences": [
