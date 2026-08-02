@@ -29,7 +29,7 @@ This site is my portfolio, built to do more than list a CV: it's a single-screen
 
 ![Flight Deck](docs/screenshots/flight-deck.png)
 
-**Visor** - a helmet-view layout with flanking instrument dials (chess rating + skills spider).
+**Visor** - a helmet-view layout with flanking instrument dials (chess rating + competitive informatics).
 
 ![Visor](docs/screenshots/visor.png)
 

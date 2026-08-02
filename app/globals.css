@@ -1036,7 +1036,7 @@ body {
   color: var(--dim);
 }
 
-/* instrument dials: real readouts (chess stat / skills spider) nested inside
+/* instrument dials: real readouts (chess stat / informatics stat) nested inside
    the circular frame instead of the synced filler sweep+blip. The crosshair
    ::before is dropped so it doesn't clash with the charts. */
 .radar.live::before {
@@ -1051,7 +1051,7 @@ body {
   opacity: 0.5;
 }
 .radar.live .radar-chart.mini,
-.radar.live .chess-dial {
+.radar.live .sdial {
   width: 84px;
   height: 84px;
   margin: 0 0 8px;
@@ -1059,47 +1059,58 @@ body {
   background: transparent;
 }
 
-/* chess stat dial - cosmetic ~70% arc, knight glyph + FIDE figure */
-.chess-dial {
+/* stat dials - shared skin for the two Visor flank readouts (chess, informatics):
+   cosmetic ~70% arc, a glyph up top, then figure + unit. */
+.sdial {
   display: block;
 }
-.chess-track {
+.sdial-track {
   fill: none;
   stroke: var(--line);
   stroke-width: 2;
   opacity: 0.6;
 }
-.chess-arc {
+.sdial-arc {
   fill: none;
   stroke: var(--accent);
   stroke-width: 2;
   stroke-linecap: round;
   filter: drop-shadow(0 0 3px var(--glow-accent));
-  stroke-dasharray: var(--chess-circ);
-  stroke-dashoffset: var(--chess-offset);
-  animation: chessArcIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  stroke-dasharray: var(--sdial-circ);
+  stroke-dashoffset: var(--sdial-offset);
+  animation: sdialArcIn 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-@keyframes chessArcIn {
+@keyframes sdialArcIn {
   from {
-    stroke-dashoffset: var(--chess-circ);
+    stroke-dashoffset: var(--sdial-circ);
   }
   to {
-    stroke-dashoffset: var(--chess-offset);
+    stroke-dashoffset: var(--sdial-offset);
   }
 }
-.chess-knight {
+/* text glyph (e.g. the ♞) */
+.sdial-glyph {
   fill: var(--accent);
   font-size: 24px;
   filter: drop-shadow(0 0 2px var(--glow-accent));
 }
-.chess-fig {
+/* stroked vector glyph (e.g. the trophy) - same weight as the arc */
+.sdial-mark {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px var(--glow-accent));
+}
+.sdial-fig {
   fill: var(--bright);
   font-size: 16px;
   font-weight: 300;
   letter-spacing: 0.04em;
   font-family: var(--font-share-tech), ui-monospace, monospace;
 }
-.chess-sub {
+.sdial-sub {
   fill: var(--dim);
   font-size: 7px;
   letter-spacing: 0.22em;

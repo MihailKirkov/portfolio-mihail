@@ -8,7 +8,11 @@
 import type { Content } from "@/lib/types";
 import { Gauge } from "@/components/hud/gauge";
 import { ChessDial } from "@/components/hud/chess-dial";
-import { SkillsRadar } from "@/components/hud/skills-radar";
+import { InformaticsDial } from "@/components/hud/informatics-dial";
+
+// Language levels that read as "not yet a working level" - rendered dim so the
+// panel's bright text is only ever native/fluent proficiency.
+const isEntryLevel = (level: string) => /basic|learning|\bA[12]\b/i.test(level);
 
 // ---- Flight Deck: gauge + status columns ---------------------------------
 export function DeckChrome({ content }: { content: Content }) {
@@ -62,8 +66,9 @@ export function DeckChrome({ content }: { content: Content }) {
               {l.name}{" "}
               <b
                 style={{
-                  color:
-                    l.level === "basic" ? "var(--dim)" : "var(--bright)",
+                  color: isEntryLevel(l.level)
+                    ? "var(--dim)"
+                    : "var(--bright)",
                   fontWeight: 400,
                 }}
               >
@@ -159,16 +164,6 @@ const PROFICIENCY = [
   { left: "ai integ", value: 78 },
 ];
 
-// same five axes (and values) the Stack modal's full radar plots - the flank
-// dial is the compact, label-less rendering of that same real data
-const SKILL_AXES = [
-  { label: "Frontend", value: 92 },
-  { label: "Backend", value: 85 },
-  { label: "Databases", value: 80 },
-  { label: "AI integration", value: 78 },
-  { label: "DevOps", value: 68 },
-];
-
 export function VisorChrome({ content }: { content: Content }) {
   const { profile } = content;
   const bracket = (s: React.CSSProperties): React.CSSProperties => ({
@@ -242,18 +237,18 @@ export function VisorChrome({ content }: { content: Content }) {
         <div>eu citizen</div>
       </div>
 
-      {/* flank instrument dials - real readouts, not filler. LEFT = chess stat
-          dial (~1800 FIDE, a real fact, so it stays in the a11y tree); RIGHT =
-          skills spider (same numbers as the Stack modal radar, decorative here
-          since the labelled chart carries them for screen readers). */}
+      {/* flank instrument dials - matched pair of real single-stat readouts, not
+          filler: LEFT = chess (~1800 FIDE), RIGHT = competitive informatics (5+
+          years). Both are real facts, so both stay in the a11y tree. */}
       <div className="radar live" style={{ top: 182, left: 30 }}>
         <span className="radar-sweep" />
         <ChessDial />
         <span className="radar-lbl">chess</span>
       </div>
-      <div className="radar live" style={{ top: 182, right: 30 }} aria-hidden="true">
-        <SkillsRadar axes={SKILL_AXES} mini />
-        <span className="radar-lbl">skills</span>
+      <div className="radar live" style={{ top: 182, right: 30 }}>
+        <span className="radar-sweep" />
+        <InformaticsDial />
+        <span className="radar-lbl">informatics</span>
       </div>
 
       <div className="read" style={{ bottom: 40, left: 22, width: 150 }}>
