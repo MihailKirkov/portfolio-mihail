@@ -45,7 +45,6 @@ export default function Image() {
     "2+ yrs production",
     "EU citizen",
     "available Aug 2026",
-    "Eindhoven",
   ];
 
   return new ImageResponse(

@@ -22,7 +22,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 const title =
   "Mihail Kirkov — Full-Stack Developer (React/Next · Node · PHP · AI)";
 const description =
-  "Full-stack developer with 2+ years production experience and hands-on AI integration. EU citizen relocating to Eindhoven, September 2026 — available August. React/Next, Node/PHP, and Claude-powered apps.";
+  "Full-stack developer with 2+ years production experience and hands-on AI integration. React/Next, Node/PHP, and Claude-powered apps. EU citizen, available August 2026.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

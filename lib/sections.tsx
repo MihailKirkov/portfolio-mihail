@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import type { Content } from "@/lib/types";
 import { SkillsRadar } from "@/components/hud/skills-radar";
 import { CareerTimeline } from "@/components/hud/career-timeline";
-import { LocationMap } from "@/components/hud/location-map";
 
 export type SectionKey =
   | "identity"
@@ -73,7 +72,6 @@ export function buildSections(content: Content): Section[] {
           <p className="funfact" style={{ marginBottom: 8 }}>
             {identity.fun_fact}
           </p>
-          <LocationMap />
         </div>
       ),
     },
@@ -91,7 +89,7 @@ export function buildSections(content: Content): Section[] {
                   {e.company} — {e.role}
                 </B>{" "}
                 <span style={{ color: "var(--dim)" }}>
-                  ({e.location}, {e.start}–{e.end})
+                  ({e.start}–{e.end})
                 </span>
               </div>
               <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>

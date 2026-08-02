@@ -8,7 +8,7 @@
 import type { Content } from "@/lib/types";
 import { Gauge } from "@/components/hud/gauge";
 import { ChessDial } from "@/components/hud/chess-dial";
-import { LocationMap } from "@/components/hud/location-map";
+import { SkillsRadar } from "@/components/hud/skills-radar";
 
 // ---- Flight Deck: gauge + status columns ---------------------------------
 export function DeckChrome({ content }: { content: Content }) {
@@ -85,7 +85,6 @@ export function DeckChrome({ content }: { content: Content }) {
         <div>
           <span className="on1">●</span> available aug 2026
         </div>
-        <div>vienna → eindhoven · sept 2026</div>
       </div>
 
       <div
@@ -160,6 +159,16 @@ const PROFICIENCY = [
   { left: "ai integ", value: 78 },
 ];
 
+// same five axes (and values) the Stack modal's full radar plots - the flank
+// dial is the compact, label-less rendering of that same real data
+const SKILL_AXES = [
+  { label: "Frontend", value: 92 },
+  { label: "Backend", value: 85 },
+  { label: "Databases", value: 80 },
+  { label: "AI integration", value: 78 },
+  { label: "DevOps", value: 68 },
+];
+
 export function VisorChrome({ content }: { content: Content }) {
   const { profile } = content;
   const bracket = (s: React.CSSProperties): React.CSSProperties => ({
@@ -227,7 +236,6 @@ export function VisorChrome({ content }: { content: Content }) {
         </div>
       </div>
       <div className="read" style={{ top: 72, right: 32, textAlign: "right" }}>
-        <div>vienna → eindhoven</div>
         <div>
           available <b>aug 2026</b>
         </div>
@@ -236,15 +244,16 @@ export function VisorChrome({ content }: { content: Content }) {
 
       {/* flank instrument dials - real readouts, not filler. LEFT = chess stat
           dial (~1800 FIDE, a real fact, so it stays in the a11y tree); RIGHT =
-          Vienna→Eindhoven locator ping (reuses the real map, decorative). */}
+          skills spider (same numbers as the Stack modal radar, decorative here
+          since the labelled chart carries them for screen readers). */}
       <div className="radar live" style={{ top: 182, left: 30 }}>
         <span className="radar-sweep" />
         <ChessDial />
         <span className="radar-lbl">chess</span>
       </div>
       <div className="radar live" style={{ top: 182, right: 30 }} aria-hidden="true">
-        <LocationMap mini />
-        <span className="radar-lbl">location</span>
+        <SkillsRadar axes={SKILL_AXES} mini />
+        <span className="radar-lbl">skills</span>
       </div>
 
       <div className="read" style={{ bottom: 40, left: 22, width: 150 }}>
@@ -303,8 +312,8 @@ export function ReactorChrome() {
         <div>React · Node · PHP</div>
       </div>
       <div className="read" style={{ top: 58, right: 6, textAlign: "right" }}>
-        <div>Vienna→Eindhoven sept 2026</div>
         <div>eu citizen</div>
+        <div>no sponsorship needed</div>
       </div>
 
       <svg
