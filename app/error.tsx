@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function Error({
   reset,
 }: {
@@ -15,12 +17,12 @@ export default function Error({
           unexpected error - a reload usually clears it.
         </p>
         <div className="status-actions">
-          <button className="btn-ghost" onClick={() => reset()}>
+          <button className="btn" onClick={() => reset()}>
             ↻ reboot system
           </button>
-          <a className="btn-ghost" href="/">
+          <Link className="btn" href="/">
             ← return to base
-          </a>
+          </Link>
         </div>
       </div>
     </main>

@@ -1,187 +1,151 @@
 import type { ReactNode } from "react";
 import type { Content } from "@/lib/types";
-import { SkillsRadar } from "@/components/hud/skills-radar";
-import { CareerTimeline } from "@/components/hud/career-timeline";
 
-export type SectionKey =
-  | "identity"
-  | "experience"
-  | "stack"
-  | "projects"
-  | "timeline"
-  | "credentials";
+// Renderers for the compact static sections below the projects. Every value
+// comes from seed.json; nothing here may add facts of its own.
+
+export type SectionKey = "stack" | "experience" | "credentials";
 
 export interface Section {
   key: SectionKey;
-  /** node label shown on the HUD */
+  /** mono label shown above the heading */
   label: string;
-  /** small sublabel used by some layouts */
-  sub: string;
-  /** modal heading */
   title: string;
-  /** modal body */
   body: ReactNode;
 }
 
-const B = ({ children }: { children: ReactNode }) => <b>{children}</b>;
+const byOrder = <T extends { sort_order: number }>(xs: T[]) =>
+  [...xs].sort((a, b) => a.sort_order - b.sort_order);
 
 export function buildSections(content: Content): Section[] {
   const {
-    profile,
     identity,
     experiences,
     skill_groups,
-    projects,
     certifications,
     education,
     competitive,
     timeline,
+    languages,
   } = content;
-
-  // proficiency per skill group - the same values the deck/visor gauges show
-  const RADAR: { label: string; value: number }[] = [
-    { label: "Frontend", value: 92 },
-    { label: "Backend", value: 85 },
-    { label: "Databases", value: 80 },
-    { label: "AI integration", value: 78 },
-    { label: "DevOps", value: 68 },
-  ];
 
   return [
     {
-      key: "identity",
-      label: "identity",
-      sub: "who · pitch",
-      title: "Identity",
+      key: "stack",
+      label: "03 / stack",
+      title: "Stack",
       body: (
-        <div>
-          <p style={{ marginTop: 0 }}>{profile.pitch}</p>
-          <p>
-            <B>AI integration:</B> hands-on — Claude API, RAG, tool use and
-            agents, shipped in production (not demos).
-          </p>
-          <p>
-            <B>Status:</B> {profile.availability}
-          </p>
-          <p>
-            <B>Eligibility:</B> {profile.eligibility_note}
-          </p>
-          <p>
-            <B>About:</B> {identity.about}
-          </p>
-          <p className="funfact" style={{ marginBottom: 8 }}>
-            {identity.fun_fact}
-          </p>
-        </div>
+        <dl className="grid-list">
+          {byOrder(skill_groups).map((g) => (
+            <div key={g.id} className="grid-row" data-agent-id={`stack:${g.id}`}>
+              <dt className="label">{g.label}</dt>
+              <dd>
+                <ul className="tags">
+                  {g.items.map((s) => (
+                    <li key={s} className="tag">
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </dd>
+            </div>
+          ))}
+        </dl>
       ),
     },
     {
       key: "experience",
-      label: "experience",
-      sub: "gutes-set",
+      label: "04 / experience",
       title: "Experience",
       body: (
-        <div>
-          {experiences.map((e) => (
-            <div key={e.id} style={{ marginBottom: 14 }}>
-              <div>
-                <B>
-                  {e.company} — {e.role}
-                </B>{" "}
-                <span style={{ color: "var(--dim)" }}>
-                  ({e.start}–{e.end})
-                </span>
-              </div>
-              <ul style={{ margin: "6px 0 0", paddingLeft: 18 }}>
-                {e.bullets.map((b, i) => (
-                  <li key={i}>{b}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <div style={{ color: "var(--dim)" }}>
-            Competitive: {competitive.lines.join(" ")}
+        <>
+          <div className="about">
+            <p>{identity.about}</p>
+            <p className="muted">{identity.fun_fact}</p>
           </div>
-        </div>
+          <div className="grid-list">
+            {byOrder(experiences).map((e) => (
+              <article key={e.id} className="grid-row" data-agent-id={`experience:${e.id}`}>
+                <p className="label">
+                  {e.start} - {e.end}
+                </p>
+                <div>
+                  <h3 className="row-title">
+                    {e.role} <span className="muted">/ {e.company}</span>
+                  </h3>
+                  <ul className="bullets">
+                    {e.bullets.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+                </div>
+              </article>
+            ))}
+          </div>
+          <h3 className="sub-head label">timeline</h3>
+          <ol className="timeline">
+            {byOrder(timeline).map((t) => (
+              <li key={t.id}>
+                <span className="label">{t.date}</span>
+                <span>{t.label}</span>
+              </li>
+            ))}
+          </ol>
+        </>
       ),
-    },
-    {
-      key: "stack",
-      label: "stack",
-      sub: "full-stack",
-      title: "Stack",
-      body: (
-        <div>
-          <SkillsRadar axes={RADAR} />
-          {skill_groups.map((g) => (
-            <p key={g.id} style={{ margin: "0 0 8px" }}>
-              <B>{g.label}</B> - {g.items.join(", ")}
-            </p>
-          ))}
-        </div>
-      ),
-    },
-    {
-      key: "projects",
-      label: "projects",
-      sub: `${projects.length} builds`,
-      title: "Projects",
-      body: (
-        <div>
-          {projects.map((p) => (
-            <div key={p.id} style={{ marginBottom: 14 }}>
-              <div>
-                <B>{p.name}</B>{" "}
-                <span style={{ color: "var(--dim)" }}>({p.period})</span>
-              </div>
-              <div>{p.description}</div>
-              <div style={{ color: "var(--dim)", marginTop: 3 }}>
-                {p.stack.join(" · ")}
-              </div>
-            </div>
-          ))}
-        </div>
-      ),
-    },
-    {
-      key: "timeline",
-      label: "timeline",
-      sub: "2004 → now",
-      title: "Career Timeline",
-      body: <CareerTimeline items={timeline} />,
     },
     {
       key: "credentials",
-      label: "credentials",
-      sub: "certs · infos",
+      label: "05 / credentials",
       title: "Credentials",
       body: (
-        <div>
-          <p style={{ marginTop: 0 }}>
-            <B>Certifications</B>
-          </p>
-          <ul style={{ margin: "0 0 12px", paddingLeft: 18, listStyleType: "circle" }}>
-            {certifications.map((c) => (
-              <li key={c.id}>
-                {c.name} — {c.issuer} ({c.date})
-                {c.note ? ` · ${c.note}` : ""}
-              </li>
-            ))}
-          </ul>
-          <p style={{ margin: "0 0 4px" }}>
-            <B>Education</B>
-          </p>
-          <ul style={{ margin: "0 0 12px", paddingLeft: 18, listStyleType: "circle" }}>
-            {education.map((ed) => (
-              <li key={ed.id}>
-                {ed.institution} — {ed.focus}. {ed.credential_line} ({ed.period}
-                )
-              </li>
-            ))}
-          </ul>
-          <p style={{ margin: 0 }}>
-            <B>Competitive</B> — {competitive.lines.join(" ")}
-          </p>
+        <div className="grid-list">
+          <div className="grid-row">
+            <h3 className="label">certifications</h3>
+            <ul className="plain">
+              {byOrder(certifications).map((c) => (
+                <li key={c.id}>
+                  <span className="row-title">{c.name}</span>
+                  <span className="muted">
+                    {" "}
+                    / {c.issuer}, {c.date}
+                    {c.note ? ` - ${c.note}` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="grid-row">
+            <h3 className="label">education</h3>
+            <ul className="plain">
+              {byOrder(education).map((ed) => (
+                <li key={ed.id}>
+                  <span className="row-title">{ed.institution}</span>
+                  <span className="muted"> / {ed.period}</span>
+                  <br />
+                  {ed.focus}. <span className="muted">{ed.credential_line}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="grid-row">
+            <h3 className="label">competitive</h3>
+            <ul className="plain">
+              {competitive.lines.map((l, i) => (
+                <li key={i}>{l}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="grid-row">
+            <h3 className="label">languages</h3>
+            <ul className="plain">
+              {byOrder(languages).map((l) => (
+                <li key={l.id}>
+                  {l.name} <span className="muted">/ {l.level}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       ),
     },

@@ -1,28 +1,28 @@
 import type { Metadata, Viewport } from "next";
-import { Orbitron, Share_Tech_Mono } from "next/font/google";
+import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
-import { Background } from "@/components/hud/background";
+import { seedContent } from "@/lib/content";
 
-const orbitron = Orbitron({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
   weight: ["400", "500", "700"],
-  variable: "--font-orbitron",
+  variable: "--font-space-grotesk",
   display: "swap",
 });
 
-const shareTechMono = Share_Tech_Mono({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-share-tech",
+  weight: ["400", "500"],
+  variable: "--font-jetbrains-mono",
   display: "swap",
 });
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
-const title =
-  "Mihail Kirkov — Full-Stack Developer (React/Next · Node · PHP · AI)";
-const description =
-  "Full-stack developer with 2+ years production experience and hands-on AI integration. React/Next, Node/PHP, and Claude-powered apps. EU citizen, available August 2026.";
+// Title and description come from seed.json so a content edit updates them too.
+const { profile } = seedContent;
+const title = `${profile.name} - ${profile.title}`;
+const description = profile.pitch;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title,
     description,
     url: siteUrl,
-    siteName: "Mihail Kirkov",
+    siteName: profile.name,
     type: "website",
     locale: "en_US",
   },
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#04080f",
+  themeColor: "#0a0b0d",
   width: "device-width",
   initialScale: 1,
 };
@@ -58,13 +58,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${orbitron.variable} ${shareTechMono.variable}`}>
-      <body>
-        <Background />
-        {children}
-        <div className="fx-vignette" aria-hidden="true" />
-        <div className="fx-scanline" aria-hidden="true" />
-      </body>
+    <html
+      lang="en"
+      className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+    >
+      <body>{children}</body>
     </html>
   );
 }

@@ -1,5 +1,9 @@
 export interface Profile {
   name: string;
+  /** hero headline */
+  headline: string;
+  /** hero sub copy under the headline */
+  subhead: string;
   title: string;
   tagline: string;
   summary: string;

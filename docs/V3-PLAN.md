@@ -1,0 +1,164 @@
+# Portfolio v3 - build plan
+
+Concept: **Operator**. The site is operated by an AI agent. A visitor types a
+request, the agent answers AND drives the interface with a visible cursor
+(scrolls, opens a project, highlights the stack). A short "swarm" boot intro
+assembles the hero on first load. Projects are scroll-driven depth chapters.
+
+Audience: future recruiters and potential freelance clients.
+Reference sketches: the "Portfolio v3 directions" canvas (A Operator, B Swarm, C Depth).
+
+## Non-negotiables
+
+- The page is complete, static, server-rendered HTML underneath. Every
+  animation is a layer on top. With JS off, reduced motion on, or the motion
+  code failing, all content is readable and all links work.
+- `content/seed.json` stays the single content source. No runtime DB.
+- The chat keeps its guards: server-side key, input/history/output caps,
+  per-IP rate limit, graceful failure text.
+- The three suggestion chips keep working with zero network (canned answer +
+  canned action script).
+- `prefers-reduced-motion`: no cursor flight, no intro, no scroll 3D. Actions
+  still happen (instant scroll/open), just without choreography.
+- Mobile is the same site, not a "lite view". Delete the lite-view note.
+- One phase per branch commit. `npm run build` and `npm run lint` pass at the
+  end of every phase.
+
+## Visual identity (new)
+
+- Ground `#0a0b0d`, panel `#111317`, hairline `#23272e`, border `#3a3f47`,
+  text `#e8eaed`, muted `#a3a9b3`.
+- ONE accent, defined once as `--accent` (default `#c8f542`, OPEN DECISION,
+  must be a one-line change). Accent is reserved for agent activity: the
+  cursor, the active tool call, the element being acted on, the primary CTA.
+- Type: Space Grotesk (UI + display), JetBrains Mono (labels, tool calls).
+  Load with `next/font`.
+- Square corners, 1px lines, no glow stacks, no gradient washes, no particle
+  field. The old blue HUD chrome, mode tabs and three layouts are removed.
+
+## Page structure (one scrolling page)
+
+1. **Hero** (100svh): top bar, headline, core, command bar + suggestion chips,
+   tool-call log, streamed answer line.
+2. **Projects**: 5 depth chapters (job-cc, lead-hq, ignis, ignight, izlei).
+3. **Stack**, **Experience**, **Credentials**: compact static sections reusing
+   the renderers in `lib/sections.tsx`.
+4. **Contact**: CV, email, GitHub, LinkedIn.
+
+The command bar docks to the bottom of the viewport after the hero and stays
+available on every section.
+
+## Architecture
+
+### Agent targets
+Any element the agent can act on carries `data-agent-id="..."`
+(`section:projects`, `project:job-cc`, `stack:ai`, `cta:cv`, ...). A small
+registry (`lib/agent/targets.ts`) resolves an id to an element.
+
+### Action registry - `lib/agent/actions.ts`
+Typed, closed set. Nothing outside this list can ever run.
+
+| action | params | effect |
+|---|---|---|
+| `scroll_to` | `section`: hero, projects, stack, experience, credentials, contact | smooth scroll |
+| `open_project` | `slug` (one of the seed slugs) | scroll to chapter, expand detail |
+| `highlight` | `target` (a known agent id) | accent outline pulse for ~2s |
+| `filter_projects` | `tag` (from seed stacks) | dim non-matching chapters |
+| `show_gallery` | `slug` | open that project's gallery |
+| `offer_cv` | none | highlight + focus the CV button (never auto-download) |
+| `offer_contact` | none | scroll to contact, highlight email |
+
+Each action = `{ name, validate(params), run(ctx) }`. `validate` rejects
+anything not in the enums built from `seed.json`.
+
+### Cursor engine - `components/agent/cursor.tsx` + `lib/agent/choreo.ts`
+One engine, two users (agent actions and the boot intro).
+- A queue of steps: `moveTo(targetId)`, `click()`, `type(el, text)`,
+  `drag(from, to)`, `wait(ms)`.
+- Fixed-position SVG arrow + label, animated with Framer Motion along a
+  curved path, 350-600ms per move, eased. Supports N cursors with a role
+  label and color (agent uses one; the intro uses four).
+- Running an action = cursor moves to the target, clicks, THEN the action
+  effect fires. A dotted trail is optional polish, not phase 1.
+- Any user input (scroll, click, key) cancels the queue immediately. The
+  agent never fights the visitor.
+
+### API - `app/api/chat/route.ts`
+- Add Claude tool use: one tool per action above, with JSON schemas whose
+  enums are generated from `seed.json`.
+- Single model call per message. Tools are UI directives executed on the
+  client; there is no tool-result round trip.
+- Response becomes NDJSON, one event per line:
+  `{"t":"text","d":"..."}`, `{"t":"action","name":"open_project","params":{...}}`, `{"t":"done"}`.
+- Server validates every tool call against the registry before emitting it.
+  Max 4 actions per reply. Keep model, caps and rate limiter as they are.
+- System prompt (`lib/chat-context.ts`): keep the fact rules; add "when the
+  visitor asks to see something, call the matching tool and keep the text to
+  1-2 sentences"; broaden audience to recruiters and freelance clients.
+
+### Client - replaces `components/hud/terminal.tsx`
+- `components/agent/command-bar.tsx`: input, chips, streamed answer, tool log.
+- Parses NDJSON, appends text, pushes actions into the cursor queue in order.
+- Canned chips: `CANNED` gains an `actions` array per question so they run a
+  full scripted demo offline.
+
+### Core - `components/core/`
+- React Three Fiber, GLSL shader material on an icosphere + 2-3 orbit rings.
+  `three`/`@react-three/fiber`/`drei` are already in package.json and unused.
+- WebGLRenderer only. No WebGPU/TSL in this version.
+- `next/dynamic` with `ssr:false`; the existing CSS core
+  (`reactor-core.tsx`, restyled) is the SSR placeholder and the fallback for
+  reduced motion, no WebGL, or `navigator.hardwareConcurrency <= 4`.
+- One `uState` uniform driven by agent state: idle, thinking (request in
+  flight), executing (cursor queue non-empty). Pointer tilt stays.
+- Pause rendering when the hero is off-screen or the tab is hidden.
+
+### Boot intro - `components/intro/`
+- Hero only, ~4s, four role cursors (layout, copy, media, style): frames
+  draw, headline types, core drops in, CTA gets its accent.
+- Implemented as a reveal over the real, already-rendered hero (clip/opacity
+  on the real elements), not a second copy of the DOM.
+- "Skip intro" button from frame 1. Runs once per session (sessionStorage).
+  Skipped entirely under reduced motion.
+
+### Project depth chapters - `components/projects/`
+- CSS 3D + Framer Motion `useScroll`, NOT WebGL. A sticky stage with
+  `perspective`; each project slab moves along Z with scroll progress; the
+  next slab is visible small in the distance. Chapter rail on the left.
+- Reuse gallery logic from `components/hud/project-deck.tsx`.
+- Under 768px or reduced motion: plain vertical cards, same content.
+
+## Keep / change / delete
+
+- Keep: `content/seed.json`, `lib/content.ts`, `lib/types.ts`,
+  `lib/sections.tsx` (renderers), chat guards, canned answers, OG/icon routes
+  (restyle), gallery logic.
+- Change: `route.ts`, `chat-context.ts`, `globals.css` (rewrite against new
+  tokens; it is 2059 lines of HUD css), `app/page.tsx`, `app/layout.tsx`.
+- Delete after phase 0: `mode-tabs`, `chrome`, `stage`, `frame`, `background`,
+  `lib/layout.ts`, `mobile-view`, dials/gauges not reused, `cockpit-mockups.html`.
+
+## Content fixes (owner must supply wording)
+
+- `profile.pitch`, `profile.availability`, layout metadata description and
+  README still say "available August 2026". Replace with
+  [CURRENT STATUS LINE - owner to write].
+- Hero headline and sub copy in the sketches are placeholders.
+
+## Phases
+
+0. **Foundation** - branch `v3`; tokens + fonts; scrolling page skeleton with
+   all sections static and styled; remove HUD modes; content fixes. Site is
+   shippable and plain at the end of this phase.
+1. **Cursor engine + actions** - targets, action registry, cursor engine,
+   command bar UI, canned chips running scripted actions. No API change.
+2. **Real agent** - tool use + NDJSON in the route, client parsing, validation,
+   updated system prompt.
+3. **Boot intro** - four-cursor hero assembly on the same engine.
+4. **Shader core** - R3F core with agent-state uniform and fallbacks.
+5. **Depth chapters** - scroll-driven projects section.
+6. **Hardening** - mobile pass at 390px, keyboard + screen-reader pass,
+   Lighthouse (target: perf >= 90 mobile, LCP < 2.5s, three.js in its own lazy
+   chunk), new OG image, README + screenshots.
+
+Phases 0-2 are the product. 3-5 are independent and can ship in any order.

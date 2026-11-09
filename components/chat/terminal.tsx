@@ -12,35 +12,24 @@ interface Msg {
 
 // Hardcoded, polished answers for the three suggestion chips. These render with
 // the same typewriter effect but NEVER hit the network, so the headline answers
-// always work — no API key, rate limit, or outage can break them. Only questions
+// always work - no API key, rate limit, or outage can break them. Only questions
 // the visitor free-types go to /api/chat. Keys must match config.suggestions.
 const CANNED: Record<string, string> = {
   "What's your stack?":
-    "Frontend is React / Next.js / TypeScript; backend is Node.js, PHP and Python; plus real AI integration — Claude API, RAG, tool use and agents. Full-stack, shipped end to end.",
+    "Frontend is React / Next.js / TypeScript; backend is Node.js, PHP and Python; plus real AI integration - Claude API, RAG, tool use and agents. Full-stack, shipped end to end.",
   "Why should we hire you?":
-    "I ship AI features end to end, not just demos. EU citizen, so zero sponsorship friction, and available from August 2026. A fast, low-risk hire who already builds in production.",
+    "I ship AI features end to end, not just demos. EU citizen, so zero sponsorship friction. A fast, low-risk hire who already builds in production.",
   "Tell me about a project":
-    "Lead-HQ — a lead-management platform I built solo: Next.js 15 + Supabase, Apify for Google-Maps scraping, and an AI grader that scores every lead automatically. End-to-end, from scrape to scored pipeline.",
+    "Lead-HQ - a lead-management platform I built solo: Next.js 15 + Supabase, Apify for Google-Maps scraping, and an AI grader that scores every lead automatically. End-to-end, from scrape to scored pipeline.",
 };
-
-// Faint ambient statuses the idle agent slowly cycles through, so the empty
-// terminal reads as a live presence rather than a dead box.
-const AMBIENT = ["listening…", "context: cv loaded", "awaiting query", "standby"];
 
 export function Terminal({ config }: { config: TerminalConfig }) {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [booted, setBooted] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [tick, setTick] = useState(0);
   const logRef = useRef<HTMLDivElement>(null);
   const typingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // slow ambient ticker (the "system log" feel)
-  useEffect(() => {
-    const id = setInterval(() => setTick((t) => t + 1), 3400);
-    return () => clearInterval(id);
-  }, []);
 
   // Type out the greeting once per mount. A cancelled flag (not a ref guard)
   // is used so the effect survives StrictMode's mount→cleanup→remount in dev
@@ -147,7 +136,7 @@ export function Terminal({ config }: { config: TerminalConfig }) {
         const next = [...prev];
         next[next.length - 1] = {
           role: "assistant",
-          text: "Connection dropped — try again in a moment, or reach me by email.",
+          text: "Connection dropped - try again in a moment, or reach me by email.",
           pending: false,
         };
         return next;
@@ -157,7 +146,7 @@ export function Terminal({ config }: { config: TerminalConfig }) {
     }
   }
 
-  // Type a known answer into the last assistant bubble — used by the canned
+  // Type a known answer into the last assistant bubble - used by the canned
   // suggestion chips. No network. Respects reduced motion (renders instantly).
   function typeInto(text: string) {
     return new Promise<void>((resolve) => {
@@ -209,34 +198,25 @@ export function Terminal({ config }: { config: TerminalConfig }) {
   }
 
   return (
-    <>
-      <div className="tt">
-        <span
-          className="agent"
-          data-state={busy ? "gen" : "idle"}
-          aria-hidden="true"
-        >
-          <span className="agent-eye" />
-        </span>
-        <span className="tt-name">ask-mihail.exe</span>
-        <span className="tt-status" aria-hidden="true">
-          // {busy ? "generating…" : AMBIENT[tick % AMBIENT.length]}
+    <div className="chat" data-agent-id="chat">
+      <div className="chat-head">
+        <span className="label">ask-mihail</span>
+        <span className="label" data-busy={busy}>
+          {busy ? "generating" : "idle"}
         </span>
       </div>
-      <p className="tt-caption">
-        an AI agent I built — <b>Claude API + RAG</b>. Ask anything.
+      <p className="chat-caption">
+        an AI agent I built - Claude API + RAG. Ask anything.
       </p>
-      <div className="log" ref={logRef} aria-live="polite">
+      <div className="chat-log" ref={logRef} aria-live="polite">
         {messages.map((m, i) => (
-          <div key={i} style={{ margin: "3px 0" }}>
-            {m.role === "user" ? (
-              <span className="me">› you: </span>
-            ) : (
-              <span className="ai">mihail: </span>
-            )}
-            {m.text}
-            {m.pending && <span className="cur">▋</span>}
-          </div>
+          <p key={i} className={`chat-msg ${m.role}`}>
+            <span className="label">{m.role === "user" ? "you" : "mihail"}</span>
+            <span>
+              {m.text}
+              {m.pending && <span className="chat-caret" aria-hidden="true" />}
+            </span>
+          </p>
         ))}
       </div>
       {booted && messages.length <= 1 && (
@@ -253,7 +233,7 @@ export function Terminal({ config }: { config: TerminalConfig }) {
           ))}
         </div>
       )}
-      <form className="inrow" onSubmit={onSubmit}>
+      <form className="chat-input" onSubmit={onSubmit}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -262,10 +242,10 @@ export function Terminal({ config }: { config: TerminalConfig }) {
           maxLength={500}
           disabled={busy}
         />
-        <button type="submit" aria-label="Send" disabled={busy}>
+        <button type="submit" className="btn" aria-label="Send" disabled={busy}>
           ↵
         </button>
       </form>
-    </>
+    </div>
   );
 }

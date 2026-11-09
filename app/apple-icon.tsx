@@ -14,14 +14,12 @@ export default function AppleIcon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background:
-            "radial-gradient(120% 120% at 50% 0%, #0a1626 0%, #04080f 65%)",
-          color: "#5ad6ff",
+          background: "#0a0b0d",
+          color: "#e8eaed",
           fontSize: 92,
           fontWeight: 700,
           fontFamily: "sans-serif",
           letterSpacing: 4,
-          textShadow: "0 0 24px #5ad6ff66",
         }}
       >
         MK
