@@ -68,11 +68,11 @@ async function main() {
   const { runActions, remainingCalls, replayRemaining } = await import("@/lib/agent/runner");
 
   // records every flight; a flight takes its full duration unless aborted
-  const moves: { to: Point; aborted: boolean }[] = [];
+  const moves: { cursor: string; to: Point; ms: number; straight: boolean; aborted: boolean }[] = [];
   let clicks = 0;
   const driver: CursorDriver = {
-    move(_cursor, to, ms, signal) {
-      const move = { to, aborted: false };
+    move(cursor, to, ms, signal, opts) {
+      const move = { cursor, to, ms, straight: !!opts?.straight, aborted: false };
       moves.push(move);
       return new Promise<void>((resolve) => {
         const t = setTimeout(resolve, ms);
@@ -303,6 +303,67 @@ async function main() {
       ]
     );
     assert.deepEqual(remainingCalls(log), [], "nothing left to offer");
+  });
+
+  // ---- boot intro options --------------------------------------------------
+
+  await test("intro: a no-scroll step skips an off-screen target instead of scrolling", async () => {
+    // a fake element has no scrollIntoView, so any attempt to scroll would throw
+    const below = fakeElement(2000);
+    let ran = 0;
+    const done = await choreo.enqueue([
+      { kind: "moveTo", cursor: "media", target: below as unknown as HTMLElement, scroll: false },
+      { kind: "run", fn: () => void ran++ },
+    ]);
+    assert.equal(done, true);
+    assert.equal(moves.length, 0, "no flight to an off-screen target");
+    assert.equal(ran, 1, "the effect after it still runs");
+  });
+
+  await test("intro: custom aim and duration; a move to where the cursor is is free", async () => {
+    const el = fakeElement(300);
+    const corner = (r: DOMRect) => ({ x: r.left, y: r.top });
+    const target = el as unknown as HTMLElement;
+    assert.equal(
+      await choreo.enqueue([
+        { kind: "moveTo", cursor: "layout", target, scroll: false, aim: corner, ms: 123 },
+        { kind: "moveTo", cursor: "layout", target, scroll: false, aim: corner },
+      ]),
+      true
+    );
+    assert.equal(moves.length, 1, "second move is a no-op");
+    assert.deepEqual(moves[0].to, { x: 100, y: 300 });
+    assert.equal(moves[0].ms, 123);
+    assert.equal(moves[0].cursor, "layout");
+  });
+
+  await test("intro: a drag's pressed leg is straight and timed; parallel tracks fly separate cursors", async () => {
+    const a = fakeElement(100) as unknown as HTMLElement;
+    const b = fakeElement(400) as unknown as HTMLElement;
+    assert.equal(
+      await choreo.enqueue([
+        {
+          kind: "parallel",
+          tracks: [
+            [{ kind: "drag", cursor: "layout", from: a, to: b, ms: 200, scroll: false }],
+            [{ kind: "moveTo", cursor: "copy", target: b, scroll: false }],
+          ],
+        },
+      ]),
+      true
+    );
+    const layout = moves.filter((m) => m.cursor === "layout");
+    assert.equal(layout.length, 2);
+    assert.equal(layout[0].straight, false, "the approach is a normal curved flight");
+    assert.equal(layout[1].straight, true);
+    assert.equal(layout[1].ms, 200);
+    assert.equal(moves.filter((m) => m.cursor === "copy").length, 1);
+  });
+
+  await test("intro: waitForDriver resolves at once when a driver is attached", async () => {
+    const t = performance.now();
+    assert.equal(await choreo.waitForDriver(1000), true);
+    assert.ok(performance.now() - t < 50);
   });
 
   console.log(`\n${passed} choreo tests passed`);

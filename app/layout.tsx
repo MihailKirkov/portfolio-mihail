@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { seedContent } from "@/lib/content";
+import { IntroBootScript } from "@/components/intro/boot-script";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -61,7 +62,12 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+      // the boot script may set data-intro before hydration
+      suppressHydrationWarning
     >
+      <head>
+        <IntroBootScript />
+      </head>
       <body>{children}</body>
     </html>
   );

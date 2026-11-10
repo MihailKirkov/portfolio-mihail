@@ -6,6 +6,7 @@ import { Section } from "@/components/site/section";
 import { Contact } from "@/components/site/contact";
 import { ProjectList } from "@/components/projects/project-list";
 import { CursorLayer } from "@/components/agent/cursor-lazy";
+import { BootIntro } from "@/components/intro/intro-lazy";
 
 // Statically generated at build time; content is baked into the HTML.
 export const dynamic = "force-static";
@@ -30,6 +31,7 @@ export default async function Home() {
         <Contact profile={content.profile} />
       </main>
       <CursorLayer />
+      <BootIntro />
     </>
   );
 }

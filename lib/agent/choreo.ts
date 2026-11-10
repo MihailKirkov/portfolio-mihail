@@ -8,8 +8,8 @@ import {
 } from "@/lib/agent/targets";
 import { setAgentState } from "@/lib/agent/store";
 
-// Cursor engine. One queue of steps shared by agent actions and (phase 3) the
-// boot intro. The visual side is a CursorDriver registered by
+// Cursor engine. One queue of steps shared by agent actions and the boot
+// intro (components/intro). The visual side is a CursorDriver registered by
 // components/agent/cursor.tsx; without one (reduced motion, not mounted) the
 // engine still runs every effect, just with no flight and no waits.
 //
@@ -30,11 +30,37 @@ export interface Point {
 /** an agent id, an element, or a resolver evaluated when the step runs */
 export type Target = string | HTMLElement | (() => HTMLElement | null);
 
+/** where on the target the cursor tip lands, from its viewport rect */
+export type Aim = (rect: DOMRect) => Point;
+
+export interface MoveOptions {
+  /**
+   * false: never scroll the page to reach the target; an off-screen target is
+   * skipped instead (the boot intro must not move the page)
+   */
+  scroll?: boolean;
+  aim?: Aim;
+  /** flight time; default scales with distance */
+  ms?: number;
+  /** no bow in the path, linear timing (a drag, a caret tracking typed text) */
+  straight?: boolean;
+}
+
 export type Step =
-  | { kind: "moveTo"; target: Target; cursor?: string }
+  | ({ kind: "moveTo"; target: Target; cursor?: string } & MoveOptions)
   | { kind: "click"; cursor?: string }
   | { kind: "type"; el: HTMLInputElement | HTMLTextAreaElement; text: string; cursor?: string }
-  | { kind: "drag"; from: Target; to: Target; cursor?: string }
+  | {
+      kind: "drag";
+      from: Target;
+      to: Target;
+      cursor?: string;
+      fromAim?: Aim;
+      toAim?: Aim;
+      /** duration of the pressed leg */
+      ms?: number;
+      scroll?: boolean;
+    }
   | { kind: "wait"; ms: number }
   | {
       kind: "run";
@@ -45,7 +71,14 @@ export type Step =
   | { kind: "parallel"; tracks: Step[][] };
 
 export interface CursorDriver {
-  move(cursor: string, to: Point, ms: number, signal: AbortSignal): Promise<void>;
+  /** `straight`: no bow in the path (the pressed leg of a drag) */
+  move(
+    cursor: string,
+    to: Point,
+    ms: number,
+    signal: AbortSignal,
+    opts?: { straight?: boolean }
+  ): Promise<void>;
   click(cursor: string, signal: AbortSignal): Promise<void>;
   press(cursor: string, down: boolean): void;
   hideAll(): void;
@@ -93,7 +126,8 @@ export function prefersReducedMotion() {
  * heading) if there is one, else the element - its centre, or near the
  * top-left of big blocks
  */
-function aimPoint(target: HTMLElement): Point {
+function aimPoint(target: HTMLElement, aim?: Aim): Point {
+  if (aim) return aim(target.getBoundingClientRect());
   const el = target.querySelector<HTMLElement>("[data-agent-aim]") ?? target;
   const r = el.getBoundingClientRect();
   return {
@@ -130,11 +164,30 @@ class Choreo {
   private target: Target | null = null;
   private positions = new Map<string, Point>();
 
+  private driverWaiters: (() => void)[] = [];
+
   attach(driver: CursorDriver) {
     this.driver = driver;
+    this.driverWaiters.splice(0).forEach((wake) => wake());
     return () => {
       if (this.driver === driver) this.driver = null;
     };
+  }
+
+  /** resolves true once a driver is attached, false if none comes within `ms` */
+  waitForDriver(ms: number): Promise<boolean> {
+    if (this.driver) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      const wake = () => {
+        clearTimeout(t);
+        resolve(true);
+      };
+      const t = setTimeout(() => {
+        this.driverWaiters = this.driverWaiters.filter((w) => w !== wake);
+        resolve(false);
+      }, ms);
+      this.driverWaiters.push(wake);
+    });
   }
 
   get busy() {
@@ -265,7 +318,7 @@ class Choreo {
 
     switch (step.kind) {
       case "moveTo":
-        await this.moveTo(cursor, step.target, reduced, signal);
+        await this.moveTo(cursor, step.target, reduced, signal, step);
         return;
       case "click":
         if (!reduced) await this.driver!.click(cursor, signal);
@@ -291,10 +344,18 @@ class Choreo {
         return;
       }
       case "drag":
-        await this.moveTo(cursor, step.from, reduced, signal);
+        await this.moveTo(cursor, step.from, reduced, signal, {
+          aim: step.fromAim,
+          scroll: step.scroll,
+        });
         if (reduced || signal.aborted) return;
         this.driver!.press(cursor, true);
-        await this.moveTo(cursor, step.to, reduced, signal);
+        await this.moveTo(cursor, step.to, reduced, signal, {
+          aim: step.toAim,
+          ms: step.ms,
+          scroll: step.scroll,
+          straight: true,
+        });
         this.driver?.press(cursor, false);
         return;
       case "parallel":
@@ -302,20 +363,30 @@ class Choreo {
     }
   }
 
-  private async moveTo(cursor: string, target: Target, reduced: boolean, signal: AbortSignal) {
+  private async moveTo(
+    cursor: string,
+    target: Target,
+    reduced: boolean,
+    signal: AbortSignal,
+    opts: MoveOptions = {}
+  ) {
     this.target = target;
     const el = resolve(target);
     if (!el) return;
-    if (!isComfortablyVisible(el)) {
+    if (opts.scroll === false) {
+      if (!inViewport(el)) return;
+    } else if (!isComfortablyVisible(el)) {
       await scrollToElement(el, { instant: reduced, signal });
     }
     if (reduced || signal.aborted) return;
 
-    const to = aimPoint(el);
+    const to = aimPoint(el, opts.aim);
     const from = this.positions.get(cursor);
     const dist = from ? Math.hypot(to.x - from.x, to.y - from.y) : 400;
-    const ms = Math.min(MOVE_MAX_MS, Math.max(MOVE_MIN_MS, MOVE_MIN_MS + dist * 0.25));
-    await this.driver!.move(cursor, to, ms, signal);
+    if (dist < 1) return; // already there
+    const ms =
+      opts.ms ?? Math.min(MOVE_MAX_MS, Math.max(MOVE_MIN_MS, MOVE_MIN_MS + dist * 0.25));
+    await this.driver!.move(cursor, to, ms, signal, { straight: opts.straight });
     this.positions.set(cursor, to);
   }
 }

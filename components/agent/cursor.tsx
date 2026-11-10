@@ -12,18 +12,28 @@ import { agentId, resolveTarget } from "@/lib/agent/targets";
 
 // Visual side of the cursor engine: fixed-position SVG arrows with a role
 // label, flown along a curved path by Framer Motion. The agent uses one; the
-// phase 3 intro registers four more roles here. Decorative only (aria-hidden):
-// the tool log in the command bar is the accessible record of what ran.
+// boot intro uses the four role cursors. Decorative only (aria-hidden): the
+// tool log in the command bar is the accessible record of what ran.
 
 export interface CursorRole {
   id: string;
   label: string;
   color: string;
+  /** where the cursor enters when it is not on screen yet (default: command input) */
+  spawn?: (vw: number, vh: number) => Point;
 }
 
+// All accent: the intro is the same agent working as four roles, and the
+// accent stays reserved for agent activity. The label tells them apart.
 export const CURSOR_ROLES: CursorRole[] = [
   { id: "agent", label: "agent", color: "var(--accent)" },
+  { id: "layout", label: "layout", color: "var(--accent)", spawn: (_, vh) => ({ x: -24, y: vh * 0.85 }) },
+  { id: "copy", label: "copy", color: "var(--accent)", spawn: (_, vh) => ({ x: -24, y: vh * 0.15 }) },
+  { id: "media", label: "media", color: "var(--accent)", spawn: (vw, vh) => ({ x: vw * 0.6, y: vh + 24 }) },
+  { id: "style", label: "style", color: "var(--accent)", spawn: (vw, vh) => ({ x: vw + 24, y: vh * 0.4 }) },
 ];
+
+const ROLE_BY_ID = new Map(CURSOR_ROLES.map((r) => [r.id, r]));
 
 interface Handle {
   x: MotionValue<number>;
@@ -35,8 +45,10 @@ interface Handle {
 
 const EASE = [0.45, 0, 0.2, 1] as const;
 
-/** spawn point for a cursor that is not on screen yet: the command bar input */
-function spawnPoint(): Point {
+/** spawn point for a cursor that is not on screen yet */
+function spawnPoint(id: string): Point {
+  const spawn = ROLE_BY_ID.get(id)?.spawn;
+  if (spawn) return spawn(window.innerWidth, window.innerHeight);
   const input = resolveTarget(agentId.commandInput());
   if (input) {
     const r = input.getBoundingClientRect();
@@ -46,10 +58,10 @@ function spawnPoint(): Point {
 }
 
 // quadratic bezier with the control point bowed off the straight line
-function curve(from: Point, to: Point) {
+function curve(from: Point, to: Point, bow = 0.18) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  const c = { x: from.x + dx / 2 - dy * 0.18, y: from.y + dy / 2 + dx * 0.18 };
+  const c = { x: from.x + dx / 2 - dy * bow, y: from.y + dy / 2 + dx * bow };
   return (t: number): Point => ({
     x: (1 - t) ** 2 * from.x + 2 * (1 - t) * t * c.x + t ** 2 * to.x,
     y: (1 - t) ** 2 * from.y + 2 * (1 - t) * t * c.y + t ** 2 * to.y,
@@ -126,21 +138,22 @@ export function CursorLayer() {
     const get = (id: string) => handles.current.get(id) ?? handles.current.get("agent")!;
 
     const driver: CursorDriver = {
-      async move(id, to, ms, signal) {
+      async move(id, to, ms, signal, opts) {
         const h = get(id);
         if (h.opacity.get() === 0) {
-          const s = spawnPoint();
+          const s = spawnPoint(id);
           h.x.set(s.x);
           h.y.set(s.y);
         }
         // also cancels a pending fade-out if a new batch starts right away
         animate(h.opacity, 1, { duration: 0.15 });
-        const path = curve({ x: h.x.get(), y: h.y.get() }, to);
+        const path = curve({ x: h.x.get(), y: h.y.get() }, to, opts?.straight ? 0 : 0.18);
         await play(
           (done) =>
             animate(0, 1, {
               duration: ms / 1000,
-              ease: EASE,
+              // a straight (drag) leg is linear so it can track a reveal edge
+              ease: opts?.straight ? "linear" : EASE,
               onUpdate: (t) => {
                 const p = path(t);
                 h.x.set(p.x);

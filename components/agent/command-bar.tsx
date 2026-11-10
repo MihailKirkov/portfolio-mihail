@@ -264,7 +264,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
 
   return (
     <>
-      <div className="cmd" ref={panelRef} data-agent-id="chat">
+      <div className="cmd" ref={panelRef} data-agent-id="chat" data-intro-part="frame">
         <div className="cmd-head">
           <span className="label">ask-mihail</span>
           <span className="label cmd-status" data-status={status}>

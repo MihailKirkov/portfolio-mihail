@@ -932,6 +932,34 @@ main {
 }
 
 /* ============================================================
+   Boot intro. Only while <html data-intro> is set (by the head
+   script, first visit per session, never under reduced motion)
+   are the hero parts held in their "before" state; the intro
+   animates each real element out of it. No attribute = no intro.
+   ============================================================ */
+html[data-intro] [data-intro-part] {
+  opacity: 0;
+}
+/* the CTA stays visible, it only waits for its accent */
+html[data-intro] [data-intro-part="cta"] {
+  opacity: 1;
+  border-color: var(--border);
+  background: transparent;
+  color: var(--text);
+}
+.intro-skip {
+  display: none;
+}
+html[data-intro] .intro-skip {
+  position: fixed;
+  right: var(--gutter);
+  bottom: calc(var(--gutter) + env(safe-area-inset-bottom, 0px));
+  z-index: 70; /* above the cursors */
+  display: inline-flex;
+  background: var(--ground);
+}
+
+/* ============================================================
    Responsive: same site, stacked
    ============================================================ */
 @media (max-width: 900px) {
