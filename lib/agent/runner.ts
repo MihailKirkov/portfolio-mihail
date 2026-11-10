@@ -61,9 +61,11 @@ export function startActionRun(onUpdate: (log: ToolLogEntry[]) => void): ActionR
         { kind: "click" },
         {
           kind: "run",
+          target: () => resolveFirst(def.lands?.(params) ?? def.targets(params)),
           fn: async (signal) => {
             await def.run(params, { instant: prefersReducedMotion(), signal });
-            // cut short: a pause runs this step again, a cancel leaves it
+            // cut short: a pause runs this step again if its target is still
+            // on screen when the visitor stops scrolling; a cancel leaves it
             // "running" so it is logged as cancelled
             if (!signal.aborted) set(i, "done");
           },

@@ -34,6 +34,8 @@ export interface ActionDef<P> {
   name: ActionName;
   validate(params: unknown): P | null;
   targets(params: P): string[];
+  /** ids the effect brings into view, when that is not the cursor's target */
+  lands?(params: P): string[];
   run(params: P, ctx: ActionContext): void | Promise<void>;
 }
 
@@ -57,6 +59,7 @@ const scroll_to: ActionDef<{ section: SectionId }> = {
   name: "scroll_to",
   validate: validator("scroll_to"),
   targets: ({ section }) => [agentId.nav(section), agentId.section(section)],
+  lands: ({ section }) => [agentId.section(section)],
   run: ({ section }, ctx) => scrollTo(agentId.section(section), ctx),
 };
 

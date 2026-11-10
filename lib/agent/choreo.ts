@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  inViewport,
   isComfortablyVisible,
   resolveTarget,
   scrollToElement,
@@ -16,8 +17,10 @@ import { setAgentState } from "@/lib/agent/store";
 // the whole queue immediately. Scrolling (wheel or touch) only pauses it: the
 // step in flight is stopped, and RESUME_AFTER_MS after the last scroll event it
 // is run again from scratch, so the target is re-resolved and the cursor path
-// recomputed against the viewport the visitor left. Scrolling for longer than
-// MAX_PAUSE_MS counts as a cancel.
+// recomputed against the viewport the visitor left. That only happens while
+// the step's target is still on screen: if the visitor scrolled it away, the
+// queue is cancelled rather than dragging the page back. Scrolling for longer
+// than MAX_PAUSE_MS counts as a cancel too.
 
 export interface Point {
   x: number;
@@ -33,7 +36,12 @@ export type Step =
   | { kind: "type"; el: HTMLInputElement | HTMLTextAreaElement; text: string; cursor?: string }
   | { kind: "drag"; from: Target; to: Target; cursor?: string }
   | { kind: "wait"; ms: number }
-  | { kind: "run"; fn: (signal: AbortSignal) => void | Promise<void> }
+  | {
+      kind: "run";
+      fn: (signal: AbortSignal) => void | Promise<void>;
+      /** what the effect acts on, for the on-screen check after a pause */
+      target?: Target;
+    }
   | { kind: "parallel"; tracks: Step[][] };
 
 export interface CursorDriver {
@@ -56,6 +64,11 @@ const CANCEL_EVENTS = ["pointerdown", "keydown", "click"] as const;
 const SCROLL_EVENTS = ["wheel", "touchmove", "scroll"] as const;
 export const RESUME_AFTER_MS = 500;
 export const MAX_PAUSE_MS = 4000;
+
+function resolve(target: Target): HTMLElement | null {
+  if (typeof target === "string") return resolveTarget(target);
+  return typeof target === "function" ? target() : target;
+}
 
 function sleep(ms: number, signal: AbortSignal) {
   return new Promise<void>((resolve) => {
@@ -113,6 +126,8 @@ class Choreo {
   private resumeTimer: ReturnType<typeof setTimeout> | undefined;
   private pauseLimitTimer: ReturnType<typeof setTimeout> | undefined;
   private waiters: (() => void)[] = [];
+  /** the target of the step in flight, or of the last step that had one */
+  private target: Target | null = null;
   private positions = new Map<string, Point>();
 
   attach(driver: CursorDriver) {
@@ -163,8 +178,15 @@ class Choreo {
       this.pauseLimitTimer = setTimeout(this.cancel, MAX_PAUSE_MS);
     }
     clearTimeout(this.resumeTimer);
-    this.resumeTimer = setTimeout(this.endPause, RESUME_AFTER_MS);
+    this.resumeTimer = setTimeout(this.resume, RESUME_AFTER_MS);
   }
+
+  /** the visitor stopped scrolling: carry on, unless they scrolled the target away */
+  private resume = () => {
+    const el = this.target && resolve(this.target);
+    if (el && !inViewport(el)) this.cancel();
+    else this.endPause();
+  };
 
   /** leave the paused state and wake the step loop (to retry, or to see a cancel) */
   private endPause = () => {
@@ -188,6 +210,7 @@ class Choreo {
       const batch = this.queue.shift()!;
       const controller = new AbortController();
       this.controller = controller;
+      this.target = null;
       await this.runSteps(batch.steps, controller.signal);
       batch.resolve(!controller.signal.aborted);
     }
@@ -201,6 +224,7 @@ class Choreo {
     this.endPause();
     this.controller = null;
     this.attempt = null;
+    this.target = null;
     this.running = false;
     this.driver?.hideAll();
     this.positions.clear();
@@ -250,6 +274,7 @@ class Choreo {
         if (!reduced) await sleep(step.ms, signal);
         return;
       case "run":
+        if (step.target) this.target = step.target;
         await step.fn(signal);
         return;
       case "type": {
@@ -278,12 +303,8 @@ class Choreo {
   }
 
   private async moveTo(cursor: string, target: Target, reduced: boolean, signal: AbortSignal) {
-    const el =
-      typeof target === "string"
-        ? resolveTarget(target)
-        : typeof target === "function"
-          ? target()
-          : target;
+    this.target = target;
+    const el = resolve(target);
     if (!el) return;
     if (!isComfortablyVisible(el)) {
       await scrollToElement(el, { instant: reduced, signal });

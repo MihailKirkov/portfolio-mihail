@@ -25,7 +25,8 @@ import { agentId } from "@/lib/agent/targets";
 // for the cursor queue (pushed as each one arrives) and text deltas for the
 // answer line. Either way the agent acts first and talks while it moves.
 //
-// If the visitor cancels a reply's actions, a "Show me" button offers to play
+// If the visitor cancels a reply's actions, or scrolls the agent's current
+// target off screen, a "Show me" button offers to play
 // the ones that did not run. One use per reply; the next question clears it.
 
 interface Turn {

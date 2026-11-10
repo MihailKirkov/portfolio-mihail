@@ -30,9 +30,18 @@ function fire(type: string, extra: Record<string, unknown> = {}) {
   [...(listeners.get(type) ?? [])].forEach((fn) => fn({ type, isTrusted: true, ...extra }));
 }
 
+/** elements the fake document can find, by agent id */
+const rendered = new Map<string, unknown>();
+
 Object.assign(globalThis, {
   window: fakeWindow,
-  document: { querySelectorAll: () => [] },
+  document: {
+    querySelectorAll(selector: string) {
+      const id = /data-agent-id="(.*)"\]$/.exec(selector)?.[1];
+      const el = id ? rendered.get(id) : undefined;
+      return el ? [el] : [];
+    },
+  },
   CSS: { escape: (s: string) => s },
   requestAnimationFrame: (fn: (t: number) => void) => setTimeout(() => fn(performance.now()), 16),
 });
@@ -43,7 +52,10 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 function fakeElement(top: number) {
   const el = {
     top,
+    offsetWidth: 400,
     querySelector: () => null,
+    setAttribute() {},
+    removeAttribute() {},
     getBoundingClientRect() {
       return { left: 100, top: el.top, width: 400, height: 40, right: 500, bottom: el.top + 40 };
     },
@@ -138,6 +150,47 @@ async function main() {
     assert.equal(moves.length, 2, "the interrupted move is flown again");
     assert.equal(moves[1].aborted, false);
     assert.equal(moves[1].to.y - firstAim.y, 200, "path recomputed from the current viewport");
+  });
+
+  await test("a target scrolled out of view stops the queue instead of scrolling back", async () => {
+    const el = fakeElement(300);
+    let ran = 0;
+    const run = start([
+      { kind: "moveTo", target: el as unknown as HTMLElement },
+      { kind: "run", fn: () => void ran++ },
+    ]);
+    const queued = choreo.enqueue([{ kind: "run", fn: () => void ran++ }]);
+    await sleep(100);
+    fire("wheel");
+    el.top = -400; // scrolled off the top of the viewport
+    const lastEvent = performance.now();
+    assert.equal(await run.done, false, "stopped, not resumed");
+    assert.equal(await queued, false, "the rest of the queue is dropped");
+    const took = performance.now() - lastEvent;
+    assert.ok(took >= RESUME_AFTER_MS - 20 && took < RESUME_AFTER_MS + 300, `stopped after ${took}ms`);
+    assert.equal(moves.length, 1, "no second flight, so no scroll back to the target");
+    assert.equal(ran, 0);
+  });
+
+  await test("an off-screen stop leaves the actions for Show me", async () => {
+    const stackAi = fakeElement(300);
+    rendered.set("stack:ai", stackAi);
+    let log: ToolLogEntry[] = [];
+    const done = runActions(
+      [{ name: "highlight", params: { target: "stack:ai" } }, { name: "offer_cv" }],
+      (next) => (log = next)
+    );
+    await sleep(100); // cursor is flying to stack:ai
+    fire("wheel");
+    stackAi.top = 2000; // scrolled below the viewport
+    assert.equal(await done, false);
+    assert.deepEqual(log.map((e) => e.status), ["cancelled", "cancelled"]);
+    assert.equal(remainingCalls(log).length, 2, "both offered by Show me");
+
+    stackAi.top = 300;
+    assert.equal(await replayRemaining(log, (next) => (log = next)), true);
+    assert.deepEqual(log.map((e) => e.status), ["done", "done"]);
+    rendered.delete("stack:ai");
   });
 
   await test("a scroll event outside a pause is ignored (the agent's own scrolling)", async () => {

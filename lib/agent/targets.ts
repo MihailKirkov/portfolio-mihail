@@ -51,7 +51,8 @@ export const HIGHLIGHT_TARGETS: string[] = [
 
 // ---- DOM ----------------------------------------------------------------------
 
-function inViewport(el: HTMLElement) {
+/** at least partly inside the viewport */
+export function inViewport(el: HTMLElement) {
   const r = el.getBoundingClientRect();
   return (
     r.width > 0 &&

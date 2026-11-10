@@ -85,6 +85,9 @@ One engine, two users (agent actions and the boot intro).
 - Scroll and touch-scroll pause the queue instead: the step in flight stops,
   and about 500ms after the last scroll event the queue resumes, re-running
   that step so the cursor path is recomputed from the current viewport.
+  It only auto-resumes when the current target is still on screen. If the
+  visitor's scroll moved it out of view, the agent does not scroll back: the
+  queue stops and the "Show me" button is offered instead.
   Scrolling for more than about 4 seconds is treated as a cancel.
 - Tested without a browser against a fake window and driver:
   `npm run test:choreo` (pause, resume, cancel, replay).
@@ -115,7 +118,8 @@ One engine, two users (agent actions and the boot intro).
   full scripted demo offline. Like streamed replies they act first and talk
   during: the actions start immediately while the answer types.
 - "Show me": when a reply's actions were cancelled or are still pending once
-  playback has stopped, the command bar shows a "Show me" button that replays
+  playback has stopped (including a stop because the target was scrolled out
+  of view), the command bar shows a "Show me" button that replays
   the remaining actions. It disappears after use or on the next question.
 
 ### Core - `components/core/`
