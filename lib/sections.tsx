@@ -74,11 +74,13 @@ export function buildSections(content: Content): Section[] {
                   <h3 className="row-title">
                     {e.role} <span className="muted">/ {e.company}</span>
                   </h3>
-                  <ul className="bullets">
-                    {e.bullets.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
-                  </ul>
+                  {e.bullets.length > 0 && (
+                    <ul className="bullets">
+                      {e.bullets.map((b, i) => (
+                        <li key={i}>{b}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </article>
             ))}

@@ -26,7 +26,7 @@ export const CANNED: Record<string, CannedReply> = {
     text: "I ship AI features end to end, not just demos. A fast, low-risk hire who already builds in production.",
     actions: [
       { name: "scroll_to", params: { section: "experience" } },
-      { name: "highlight", params: { target: "experience:gutes-fullstack" } },
+      { name: "highlight", params: { target: "experience:zuid-fullstack" } },
       { name: "offer_cv" },
     ],
   },

@@ -24,6 +24,15 @@
   },
   "experiences": [
     {
+      "id": "zuid-fullstack",
+      "company": "ZUID, Tilburg",
+      "role": "Full-stack developer",
+      "start": "Sep 2026",
+      "end": "Present",
+      "bullets": [],
+      "sort_order": 0
+    },
+    {
       "id": "gutes-fullstack",
       "company": "GuTeS-SET",
       "role": "Full-Stack Web Developer",
@@ -229,7 +238,8 @@
     { "id": "gutes-fullstack", "date": "Feb 2024", "label": "GuTeS-SET - Full-Stack Developer", "sort_order": 4 },
     { "id": "shipped-2025", "date": "2025", "label": "Shipped Izlei and Ignight", "sort_order": 5 },
     { "id": "gutes-lead", "date": "Sep 2025", "label": "GuTeS-SET - Lead Developer", "sort_order": 6 },
-    { "id": "lead-hq", "date": "Apr–May 2026", "label": "Built Lead-HQ", "sort_order": 7 }
+    { "id": "lead-hq", "date": "Apr–May 2026", "label": "Built Lead-HQ", "sort_order": 7 },
+    { "id": "zuid-fullstack", "date": "Sep 2026", "label": "ZUID - Full-stack developer", "sort_order": 8 }
   ],
   "languages": [
     { "id": "english", "name": "English", "level": "fluent", "sort_order": 1 },
