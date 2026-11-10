@@ -63,7 +63,8 @@ export function startActionRun(onUpdate: (log: ToolLogEntry[]) => void): ActionR
           kind: "run",
           fn: async (signal) => {
             await def.run(params, { instant: prefersReducedMotion(), signal });
-            // cut short by a cancel: left "running" so it is logged as cancelled
+            // cut short: a pause runs this step again, a cancel leaves it
+            // "running" so it is logged as cancelled
             if (!signal.aborted) set(i, "done");
           },
         },
@@ -89,6 +90,22 @@ export function runActions(
   const run = startActionRun(onUpdate);
   calls.forEach((call) => run.push(call));
   return run.settled();
+}
+
+/** calls that were accepted but did not finish: what "Show me" replays */
+export function remainingCalls(log: ToolLogEntry[]): ActionCall[] {
+  return log
+    .filter((e) => e.status !== "done" && e.status !== "rejected")
+    .map((e) => e.call);
+}
+
+/** run the unfinished calls of a log again, keeping its finished rows */
+export function replayRemaining(
+  log: ToolLogEntry[],
+  onUpdate: (log: ToolLogEntry[]) => void
+): Promise<boolean> {
+  const kept = log.filter((e) => e.status === "done" || e.status === "rejected");
+  return runActions(remainingCalls(log), (next) => onUpdate([...kept, ...next]));
 }
 
 // Dev-only console hook for exercising actions by hand, e.g.

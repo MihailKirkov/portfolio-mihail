@@ -402,6 +402,16 @@ a {
   opacity: 0.5;
   cursor: default;
 }
+/* replay the actions a cancel left unrun */
+.chip.showme {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.dock-top .chip.showme {
+  margin-left: auto;
+}
 
 /* tool log: one mono row per action call; the running one is accent */
 .toollog {

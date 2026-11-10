@@ -80,8 +80,14 @@ One engine, two users (agent actions and the boot intro).
   label and color (agent uses one; the intro uses four).
 - Running an action = cursor moves to the target, clicks, THEN the action
   effect fires. A dotted trail is optional polish, not phase 1.
-- Any user input (scroll, click, key) cancels the queue immediately. The
-  agent never fights the visitor.
+- The agent never fights the visitor. A click, tap or key press cancels the
+  queue immediately.
+- Scroll and touch-scroll pause the queue instead: the step in flight stops,
+  and about 500ms after the last scroll event the queue resumes, re-running
+  that step so the cursor path is recomputed from the current viewport.
+  Scrolling for more than about 4 seconds is treated as a cancel.
+- Tested without a browser against a fake window and driver:
+  `npm run test:choreo` (pause, resume, cancel, replay).
 
 ### API - `app/api/chat/route.ts`
 - Add Claude tool use: one tool per action above, with JSON schemas whose
@@ -106,7 +112,11 @@ One engine, two users (agent actions and the boot intro).
 - `components/agent/command-bar.tsx`: input, chips, streamed answer, tool log.
 - Parses NDJSON, appends text, pushes actions into the cursor queue in order.
 - Canned chips: `CANNED` gains an `actions` array per question so they run a
-  full scripted demo offline.
+  full scripted demo offline. Like streamed replies they act first and talk
+  during: the actions start immediately while the answer types.
+- "Show me": when a reply's actions were cancelled or are still pending once
+  playback has stopped, the command bar shows a "Show me" button that replays
+  the remaining actions. It disappears after use or on the next question.
 
 ### Core - `components/core/`
 - React Three Fiber, GLSL shader material on an icosphere + 2-3 orbit rings.
@@ -162,9 +172,13 @@ One engine, two users (agent actions and the boot intro).
    updated system prompt.
 3. **Boot intro** - four-cursor hero assembly on the same engine.
 4. **Shader core** - R3F core with agent-state uniform and fallbacks.
+   Pointer effects: a soft spotlight that follows the pointer across the
+   background, magnetic pull on the primary buttons, and the core reacting to
+   pointer distance. All off under reduced motion and on touch devices.
 5. **Depth chapters** - scroll-driven projects section.
 6. **Hardening** - mobile pass at 390px, keyboard + screen-reader pass,
    Lighthouse (target: perf >= 90 mobile, LCP < 2.5s, three.js in its own lazy
-   chunk), new OG image, README + screenshots.
+   chunk), new OG image, README + screenshots. Set a monthly spend limit in
+   the Anthropic console before going live.
 
 Phases 0-2 are the product. 3-5 are independent and can ship in any order.

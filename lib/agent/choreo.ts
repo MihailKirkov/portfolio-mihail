@@ -12,8 +12,12 @@ import { setAgentState } from "@/lib/agent/store";
 // components/agent/cursor.tsx; without one (reduced motion, not mounted) the
 // engine still runs every effect, just with no flight and no waits.
 //
-// Any trusted visitor input (wheel, touch, pointer, key) cancels the whole
-// queue immediately: the agent never fights the visitor.
+// The agent never fights the visitor. A trusted click, tap or key press cancels
+// the whole queue immediately. Scrolling (wheel or touch) only pauses it: the
+// step in flight is stopped, and RESUME_AFTER_MS after the last scroll event it
+// is run again from scratch, so the target is re-resolved and the cursor path
+// recomputed against the viewport the visitor left. Scrolling for longer than
+// MAX_PAUSE_MS counts as a cancel.
 
 export interface Point {
   x: number;
@@ -44,7 +48,14 @@ export const DEFAULT_CURSOR = "agent";
 const MOVE_MIN_MS = 350;
 const MOVE_MAX_MS = 600;
 const TYPE_CHAR_MS = 35;
-const CANCEL_EVENTS = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+// `click` is how a touch tap cancels: a touch pointerdown may be the start of a
+// scroll, so it is ignored and the tap is caught when it completes
+const CANCEL_EVENTS = ["pointerdown", "keydown", "click"] as const;
+// `scroll` only counts while already paused (momentum after a touch flick);
+// otherwise it could be the agent's own smooth scroll
+const SCROLL_EVENTS = ["wheel", "touchmove", "scroll"] as const;
+export const RESUME_AFTER_MS = 500;
+export const MAX_PAUSE_MS = 4000;
 
 function sleep(ms: number, signal: AbortSignal) {
   return new Promise<void>((resolve) => {
@@ -93,8 +104,15 @@ interface Batch {
 class Choreo {
   private driver: CursorDriver | null = null;
   private queue: Batch[] = [];
+  /** the current batch: aborted by a cancel */
   private controller: AbortController | null = null;
+  /** the current try at a step: aborted by a cancel and by a pause */
+  private attempt: AbortController | null = null;
   private running = false;
+  private paused = false;
+  private resumeTimer: ReturnType<typeof setTimeout> | undefined;
+  private pauseLimitTimer: ReturnType<typeof setTimeout> | undefined;
+  private waiters: (() => void)[] = [];
   private positions = new Map<string, Point>();
 
   attach(driver: CursorDriver) {
@@ -119,19 +137,51 @@ class Choreo {
   /** stop everything now: current animation, current batch, all queued batches */
   cancel = () => {
     this.controller?.abort();
+    this.attempt?.abort();
     const dropped = this.queue.splice(0);
     dropped.forEach((b) => b.resolve(false));
+    this.endPause();
   };
 
-  private onVisitorInput = (e: Event) => {
-    if (e.isTrusted) this.cancel();
+  private onCancelInput = (e: Event) => {
+    if (!e.isTrusted) return;
+    if (e.type === "pointerdown" && (e as PointerEvent).pointerType === "touch") return;
+    this.cancel();
+  };
+
+  private onScrollInput = (e: Event) => {
+    if (!e.isTrusted) return;
+    if (e.type === "scroll" && !this.paused) return;
+    this.pause();
+  };
+
+  /** hold the queue; every scroll event pushes the resume back */
+  private pause() {
+    if (!this.paused) {
+      this.paused = true;
+      this.attempt?.abort();
+      this.pauseLimitTimer = setTimeout(this.cancel, MAX_PAUSE_MS);
+    }
+    clearTimeout(this.resumeTimer);
+    this.resumeTimer = setTimeout(this.endPause, RESUME_AFTER_MS);
+  }
+
+  /** leave the paused state and wake the step loop (to retry, or to see a cancel) */
+  private endPause = () => {
+    clearTimeout(this.resumeTimer);
+    clearTimeout(this.pauseLimitTimer);
+    this.paused = false;
+    this.waiters.splice(0).forEach((wake) => wake());
   };
 
   private async drain() {
     this.running = true;
     setAgentState({ executing: true });
     CANCEL_EVENTS.forEach((t) =>
-      window.addEventListener(t, this.onVisitorInput, { capture: true, passive: true })
+      window.addEventListener(t, this.onCancelInput, { capture: true, passive: true })
+    );
+    SCROLL_EVENTS.forEach((t) =>
+      window.addEventListener(t, this.onScrollInput, { capture: true, passive: true })
     );
 
     while (this.queue.length) {
@@ -143,19 +193,45 @@ class Choreo {
     }
 
     CANCEL_EVENTS.forEach((t) =>
-      window.removeEventListener(t, this.onVisitorInput, { capture: true })
+      window.removeEventListener(t, this.onCancelInput, { capture: true })
     );
+    SCROLL_EVENTS.forEach((t) =>
+      window.removeEventListener(t, this.onScrollInput, { capture: true })
+    );
+    this.endPause();
     this.controller = null;
+    this.attempt = null;
     this.running = false;
     this.driver?.hideAll();
     this.positions.clear();
     setAgentState({ executing: false });
   }
 
-  private async runSteps(steps: Step[], signal: AbortSignal) {
+  /**
+   * Run steps in order. `batch` aborts on cancel. Each step runs against the
+   * current attempt signal, which a pause aborts too: a step cut short by a
+   * pause is run again once the visitor stops scrolling.
+   */
+  private async runSteps(steps: Step[], batch: AbortSignal) {
     for (const step of steps) {
-      if (signal.aborted) return;
-      await this.runStep(step, signal);
+      for (;;) {
+        while (this.paused && !batch.aborted) {
+          await new Promise<void>((wake) => this.waiters.push(wake));
+        }
+        if (batch.aborted) return;
+        if (step.kind === "parallel") {
+          // each track pauses and retries its own steps
+          await Promise.all(step.tracks.map((t) => this.runSteps(t, batch)));
+          break;
+        }
+        if (!this.attempt || this.attempt.signal.aborted) {
+          this.attempt = new AbortController();
+        }
+        const signal = this.attempt.signal;
+        await this.runStep(step, signal);
+        if (batch.aborted) return;
+        if (!signal.aborted) break;
+      }
     }
   }
 
@@ -194,11 +270,10 @@ class Choreo {
         if (reduced || signal.aborted) return;
         this.driver!.press(cursor, true);
         await this.moveTo(cursor, step.to, reduced, signal);
-        this.driver!.press(cursor, false);
+        this.driver?.press(cursor, false);
         return;
       case "parallel":
-        await Promise.all(step.tracks.map((t) => this.runSteps(t, signal)));
-        return;
+        return; // handled by runSteps
     }
   }
 

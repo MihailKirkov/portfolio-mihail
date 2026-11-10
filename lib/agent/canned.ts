@@ -1,7 +1,8 @@
 import type { ActionCall } from "@/lib/agent/actions";
 
 // Hardcoded answers + action scripts for the three suggestion chips. They run
-// the full agent demo (typed answer, then cursor + actions) and NEVER hit the
+// the full agent demo (cursor + actions start at once, the answer types
+// meanwhile) and NEVER hit the
 // network, so no API key, rate limit, or outage can break them. Only questions
 // the visitor free-types go to /api/chat. Keys must match terminal.suggestions
 // in seed.json.

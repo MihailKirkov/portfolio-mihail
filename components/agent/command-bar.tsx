@@ -5,7 +5,13 @@ import type { TerminalConfig } from "@/lib/types";
 import { CANNED } from "@/lib/agent/canned";
 import { formatCall, type ActionCall } from "@/lib/agent/actions";
 import { choreo, prefersReducedMotion } from "@/lib/agent/choreo";
-import { runActions, startActionRun, type ToolLogEntry } from "@/lib/agent/runner";
+import {
+  remainingCalls,
+  replayRemaining,
+  runActions,
+  startActionRun,
+  type ToolLogEntry,
+} from "@/lib/agent/runner";
 import { setAgentState, statusOf, useAgentState } from "@/lib/agent/store";
 import { agentId } from "@/lib/agent/targets";
 
@@ -17,7 +23,10 @@ import { agentId } from "@/lib/agent/targets";
 // Chips play a canned answer + canned action script (no network). Free-typed
 // questions go to /api/chat, which streams NDJSON events: validated actions
 // for the cursor queue (pushed as each one arrives) and text deltas for the
-// answer line, so the agent acts first and talks while it moves.
+// answer line. Either way the agent acts first and talks while it moves.
+//
+// If the visitor cancels a reply's actions, a "Show me" button offers to play
+// the ones that did not run. One use per reply; the next question clears it.
 
 interface Turn {
   role: "user" | "assistant";
@@ -53,6 +62,8 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
   const [log, setLog] = useState<ToolLogEntry[]>([]);
   const [input, setInput] = useState("");
   const [docked, setDocked] = useState(false);
+  const [replayed, setReplayed] = useState(false);
+  const executing = useAgentState((s) => s.executing);
   const status = useAgentState(statusOf);
   const requesting = useAgentState((s) => s.requesting);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -78,6 +89,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     setAnswer("");
     setPending(true);
     setLog([]);
+    setReplayed(false);
     setAgentState({ requesting: true });
     return turn;
   }
@@ -119,9 +131,19 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     const reply = CANNED[q];
     if (!reply || requesting) return;
     const turn = begin(q);
+    // act first: the cursor starts now and the answer types while it moves
+    const acting = runActions(reply.actions, (next) => {
+      if (turn === turnRef.current) setLog(next);
+    });
     await typeOut(turn, reply.text);
-    if (!finish(turn, q, reply.text)) return;
-    await runActions(reply.actions, (next) => {
+    finish(turn, q, reply.text);
+    await acting;
+  }
+
+  function showMe() {
+    const turn = turnRef.current;
+    setReplayed(true);
+    void replayRemaining(log, (next) => {
       if (turn === turnRef.current) setLog(next);
     });
   }
@@ -227,6 +249,16 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     </div>
   );
 
+  // playback stopped with actions left over (the visitor cancelled)
+  const showMeButton = !replayed &&
+    !requesting &&
+    !executing &&
+    remainingCalls(log).length > 0 && (
+      <button type="button" className="chip showme" onClick={showMe}>
+        Show me
+      </button>
+    );
+
   const caret = pending && <span className="cmd-caret" aria-hidden="true" />;
 
   return (
@@ -256,6 +288,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
             </span>
           </p>
           <ToolLog log={log} />
+          {showMeButton}
         </div>
         {chips}
         {form}
@@ -276,6 +309,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
               {answer}
               {caret}
             </p>
+            {showMeButton}
           </div>
           {status !== "idle" && <ToolLog log={log} />}
           <div className="dock-chips">{chips}</div>
