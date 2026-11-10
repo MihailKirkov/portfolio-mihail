@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
+import { agentId } from "@/lib/agent/targets";
 
 // Project screenshot carousel. Extracted from the v2 project deck; arrow keys
 // are scoped to the focused carousel (not the document) because several
-// galleries now live on one page.
+// galleries now live on one page. "view larger" opens the same carousel in a
+// native <dialog>; it is also the agent's show_gallery target.
 
 function isExternalImage(src: string) {
   return src.startsWith("http://") || src.startsWith("https://");
@@ -45,8 +47,68 @@ function GalleryImage({
   );
 }
 
-export function Gallery({ title, gallery }: { title: string; gallery: string[] }) {
+function Stage({
+  title,
+  gallery,
+  i,
+  go,
+  sizes,
+}: {
+  title: string;
+  gallery: string[];
+  i: number;
+  go: (n: number) => void;
+  sizes: string;
+}) {
+  const count = gallery.length;
+  return (
+    <div className="gallery-stage">
+      <GalleryImage
+        key={gallery[i]}
+        src={gallery[i]}
+        alt={`${title} screenshot ${i + 1} of ${count}`}
+        sizes={sizes}
+        fit="contain"
+      />
+      {count > 1 && (
+        <>
+          <button
+            type="button"
+            className="gallery-nav prev"
+            onClick={() => go(-1)}
+            aria-label="Previous image"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            className="gallery-nav next"
+            onClick={() => go(1)}
+            aria-label="Next image"
+          >
+            ›
+          </button>
+          <span className="gallery-count" aria-live="polite">
+            {i + 1} / {count}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+export function Gallery({
+  slug,
+  title,
+  gallery,
+}: {
+  slug: string;
+  title: string;
+  gallery: string[];
+}) {
   const [i, setI] = useState(0);
+  const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
   const count = gallery.length;
   const go = useCallback(
     (n: number) => setI((p) => (count ? (p + n + count) % count : 0)),
@@ -66,6 +128,11 @@ export function Gallery({ title, gallery }: { title: string; gallery: string[] }
     }
   }
 
+  function openLarge() {
+    setOpen(true);
+    dialogRef.current?.showModal();
+  }
+
   return (
     <div
       className="gallery"
@@ -74,54 +141,65 @@ export function Gallery({ title, gallery }: { title: string; gallery: string[] }
       aria-label={`${title} screenshots`}
       onKeyDown={onKeyDown}
     >
-      <div className="gallery-stage">
-        <GalleryImage
-          key={gallery[i]}
-          src={gallery[i]}
-          alt={`${title} screenshot ${i + 1} of ${count}`}
-          sizes="(max-width: 768px) 100vw, 60vw"
-          fit="contain"
-        />
+      <Stage
+        title={title}
+        gallery={gallery}
+        i={i}
+        go={go}
+        sizes="(max-width: 768px) 100vw, 60vw"
+      />
+      <div className="gallery-bar">
         {count > 1 && (
-          <>
-            <button
-              type="button"
-              className="gallery-nav prev"
-              onClick={() => go(-1)}
-              aria-label="Previous image"
-            >
-              ‹
-            </button>
-            <button
-              type="button"
-              className="gallery-nav next"
-              onClick={() => go(1)}
-              aria-label="Next image"
-            >
-              ›
-            </button>
-            <span className="gallery-count" aria-live="polite">
-              {i + 1} / {count}
-            </span>
-          </>
+          <div className="gallery-thumbs">
+            {gallery.map((g, n) => (
+              <button
+                key={g}
+                type="button"
+                aria-pressed={n === i}
+                aria-label={`Show image ${n + 1}`}
+                className="gallery-thumb"
+                onClick={() => setI(n)}
+              >
+                <GalleryImage src={g} alt="" sizes="80px" fit="cover" />
+              </button>
+            ))}
+          </div>
         )}
+        <button
+          type="button"
+          className="btn gallery-open"
+          onClick={openLarge}
+          data-agent-id={agentId.gallery(slug)}
+        >
+          view larger
+        </button>
       </div>
-      {count > 1 && (
-        <div className="gallery-thumbs">
-          {gallery.map((g, n) => (
-            <button
-              key={g}
-              type="button"
-              aria-pressed={n === i}
-              aria-label={`Show image ${n + 1}`}
-              className="gallery-thumb"
-              onClick={() => setI(n)}
-            >
-              <GalleryImage src={g} alt="" sizes="80px" fit="cover" />
-            </button>
-          ))}
+
+      <dialog
+        ref={dialogRef}
+        className="gallery-dialog"
+        aria-label={`${title} screenshots`}
+        onClose={() => setOpen(false)}
+        onClick={(e) => {
+          // a click on the backdrop lands on the dialog element itself
+          if (e.target === e.currentTarget) dialogRef.current?.close();
+        }}
+      >
+        <div className="gallery-dialog-head">
+          <span className="label">{title}</span>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => dialogRef.current?.close()}
+            aria-label="Close gallery"
+          >
+            close
+          </button>
         </div>
-      )}
+        {open && (
+          <Stage title={title} gallery={gallery} i={i} go={go} sizes="100vw" />
+        )}
+      </dialog>
     </div>
   );
 }

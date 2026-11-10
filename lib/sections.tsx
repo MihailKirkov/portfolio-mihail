@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Content } from "@/lib/types";
+import { agentId } from "@/lib/agent/targets";
 
 // Renderers for the compact static sections below the projects. Every value
 // comes from seed.json; nothing here may add facts of its own.
@@ -37,7 +38,7 @@ export function buildSections(content: Content): Section[] {
       body: (
         <dl className="grid-list">
           {byOrder(skill_groups).map((g) => (
-            <div key={g.id} className="grid-row" data-agent-id={`stack:${g.id}`}>
+            <div key={g.id} className="grid-row" data-agent-id={agentId.stack(g.id)}>
               <dt className="label">{g.label}</dt>
               <dd>
                 <ul className="tags">
@@ -65,7 +66,7 @@ export function buildSections(content: Content): Section[] {
           </div>
           <div className="grid-list">
             {byOrder(experiences).map((e) => (
-              <article key={e.id} className="grid-row" data-agent-id={`experience:${e.id}`}>
+              <article key={e.id} className="grid-row" data-agent-id={agentId.experience(e.id)}>
                 <p className="label">
                   {e.start} - {e.end}
                 </p>

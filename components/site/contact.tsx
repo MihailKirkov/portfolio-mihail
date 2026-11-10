@@ -6,6 +6,7 @@ import {
   LinkedinIcon,
 } from "@/components/site/icons";
 import { Section } from "@/components/site/section";
+import { agentId } from "@/lib/agent/targets";
 
 export function Contact({ profile }: { profile: Profile }) {
   return (
@@ -18,11 +19,11 @@ export function Contact({ profile }: { profile: Profile }) {
           className="btn btn-primary"
           href={profile.cv_url}
           download="Mihail-Kirkov-CV.pdf"
-          data-agent-id="cta:cv-contact"
+          data-agent-id={agentId.cta("cv-contact")}
         >
           <DownloadIcon /> CV
         </a>
-        <a className="btn" href={`mailto:${profile.email}`} data-agent-id="cta:email">
+        <a className="btn" href={`mailto:${profile.email}`} data-agent-id={agentId.cta("email")}>
           <EmailIcon /> {profile.email}
         </a>
         <a
@@ -30,7 +31,7 @@ export function Contact({ profile }: { profile: Profile }) {
           href={profile.social.github}
           target="_blank"
           rel="noopener noreferrer"
-          data-agent-id="cta:github"
+          data-agent-id={agentId.cta("github")}
         >
           <GithubIcon /> GitHub
         </a>
@@ -39,7 +40,7 @@ export function Contact({ profile }: { profile: Profile }) {
           href={profile.social.linkedin}
           target="_blank"
           rel="noopener noreferrer"
-          data-agent-id="cta:linkedin"
+          data-agent-id={agentId.cta("linkedin")}
         >
           <LinkedinIcon /> LinkedIn
         </a>

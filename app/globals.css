@@ -19,6 +19,7 @@
 
   --gutter: clamp(16px, 4vw, 48px);
   --max: 1200px;
+  --topbar-h: 64px;
 }
 
 @theme inline {
@@ -169,20 +170,27 @@ a {
 .hero {
   display: flex;
   flex-direction: column;
-  min-height: 100svh;
+  min-height: calc(100svh - var(--topbar-h));
   padding: 0 var(--gutter) var(--gutter);
   border-bottom: 1px solid var(--hairline);
 }
 
+/* sticky across the page so nav + CV stay reachable for visitor and agent */
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  padding: 0 var(--gutter);
+  border-bottom: 1px solid var(--hairline);
+  background: var(--ground);
+}
+.topbar-inner {
   display: flex;
   align-items: center;
   gap: 24px;
-  width: 100%;
   max-width: var(--max);
+  height: var(--topbar-h);
   margin: 0 auto;
-  padding: 16px 0;
-  border-bottom: 1px solid var(--hairline);
 }
 .topbar-brand {
   display: flex;
@@ -305,9 +313,9 @@ a {
 }
 
 /* ============================================================
-   Chat (lives in the hero until the phase 1 command bar)
+   Command bar (hero panel) + dock (same state, bottom of viewport)
    ============================================================ */
-.chat {
+.cmd {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -316,39 +324,40 @@ a {
   border: 1px solid var(--border);
   background: var(--panel);
 }
-.chat-head {
+.cmd-head {
   display: flex;
   justify-content: space-between;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--hairline);
 }
-.chat-head [data-busy="true"] {
+.cmd-status[data-status="thinking"],
+.cmd-status[data-status="executing"] {
   color: var(--accent);
 }
-.chat-caption {
+.cmd-caption {
   font-size: 14px;
   color: var(--muted);
 }
-.chat-log {
+.cmd-answer {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: clamp(160px, 28vh, 280px);
+  height: clamp(150px, 26vh, 260px);
   overflow-y: auto;
   font-size: 15px;
 }
-.chat-msg {
+.cmd-line {
   display: grid;
   grid-template-columns: 56px 1fr;
   gap: 8px;
 }
-.chat-msg .label {
+.cmd-line .label {
   padding-top: 3px;
 }
-.chat-msg.user {
+.cmd-line.user {
   color: var(--muted);
 }
-.chat-caret {
+.cmd-caret {
   display: inline-block;
   width: 7px;
   height: 1em;
@@ -362,14 +371,15 @@ a {
     opacity: 0;
   }
 }
-.chat-input {
+.cmd-input {
   display: flex;
   border: 1px solid var(--border);
+  background: var(--ground);
 }
-.chat-input:focus-within {
+.cmd-input:focus-within {
   border-color: var(--text);
 }
-.chat-input input {
+.cmd-input input {
   flex: 1;
   min-width: 0;
   padding: 10px 12px;
@@ -379,20 +389,209 @@ a {
   font: inherit;
   font-size: 15px;
 }
-.chat-input input:focus {
+.cmd-input input:focus {
   outline: none;
 }
-.chat-input input::placeholder {
+.cmd-input input::placeholder {
   color: var(--muted);
 }
-.chat-input .btn {
+.cmd-input .btn {
   border-width: 0 0 0 1px;
+}
+.chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* tool log: one mono row per action call; the running one is accent */
+.toollog {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--hairline);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.toollog-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--muted);
+}
+.toollog-call {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.toollog-call::before {
+  content: "> ";
+  color: var(--border);
+}
+.toollog-row[data-status="running"] {
+  color: var(--accent);
+}
+.toollog-row[data-status="running"] .toollog-call::before {
+  color: var(--accent);
+}
+.toollog-row[data-status="done"] .toollog-call {
+  color: var(--text);
+}
+.toollog-row[data-status="cancelled"],
+.toollog-row[data-status="rejected"] {
+  text-decoration: line-through;
+  text-decoration-color: var(--border);
+}
+
+.dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  padding: 0 var(--gutter) 12px;
+  pointer-events: none;
+  opacity: 0;
+  translate: 0 16px;
+  transition: opacity 0.2s, translate 0.2s;
+}
+.dock[data-docked="true"] {
+  pointer-events: auto;
+  opacity: 1;
+  translate: 0 0;
+}
+.dock-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+.dock-top {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+}
+.dock-top .cmd-status {
+  flex: 0 0 auto;
+  width: 72px;
+}
+.dock-answer {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.dock .toollog {
+  max-height: 84px;
+  overflow-y: auto;
+}
+
+/* room for the dock below the last section */
+main {
+  padding-bottom: 168px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============================================================
+   Agent cursor + effects. Accent = agent activity only.
+   ============================================================ */
+.agent-cursors {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+.agent-cursor {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+.agent-cursor svg {
+  display: block;
+}
+.agent-cursor-label {
+  position: absolute;
+  top: 20px;
+  left: 14px;
+  padding: 1px 6px;
+  background: var(--cursor-color);
+  color: var(--ground);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.agent-cursor-ripple {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--cursor-color);
+  animation: ripple 0.45s ease-out forwards;
+}
+@keyframes ripple {
+  from {
+    opacity: 1;
+    scale: 0.4;
+  }
+  to {
+    opacity: 0;
+    scale: 2.2;
+  }
+}
+
+/* the element being acted on: accent outline pulse (~2s) */
+[data-agent-active] {
+  outline: 1px solid var(--accent);
+  outline-offset: 6px;
+  animation: agent-pulse 2s ease-out forwards;
+}
+@keyframes agent-pulse {
+  0% {
+    outline-offset: 14px;
+    outline-color: transparent;
+  }
+  15% {
+    outline-offset: 6px;
+    outline-color: var(--accent);
+  }
+  70% {
+    outline-color: var(--accent);
+  }
+  100% {
+    outline-offset: 6px;
+    outline-color: transparent;
+  }
 }
 
 /* ============================================================
    Sections
    ============================================================ */
 .section {
+  scroll-margin-top: var(--topbar-h);
   padding: clamp(64px, 10vw, 128px) var(--gutter);
   border-bottom: 1px solid var(--hairline);
 }
@@ -494,7 +693,50 @@ a {
   list-style: none;
 }
 .project {
-  scroll-margin-top: 24px;
+  scroll-margin-top: calc(var(--topbar-h) + 24px);
+  transition: opacity 0.3s;
+}
+/* filter_projects: non-matching chapters dim, they never disappear */
+.project[data-dimmed] {
+  opacity: 0.28;
+}
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 32px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--border);
+}
+.filter-tag {
+  color: var(--text);
+}
+.project-detail summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  list-style: none;
+}
+.project-detail summary::-webkit-details-marker {
+  display: none;
+}
+.project-detail summary::before {
+  content: "+";
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+.project-detail[open] summary::before {
+  content: "-";
+}
+.project-detail summary:hover .label {
+  color: var(--text);
+}
+.project-detail p + p,
+.project-detail summary + p {
+  margin-top: 12px;
 }
 .project-head {
   display: flex;
@@ -580,10 +822,44 @@ a {
   font-size: 11px;
   color: var(--muted);
 }
+.gallery-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
 .gallery-thumbs {
   display: flex;
   gap: 6px;
+  min-width: 0;
   overflow-x: auto;
+}
+.gallery-open {
+  flex: 0 0 auto;
+  min-height: 45px;
+  margin-left: auto;
+}
+.gallery-dialog {
+  width: min(1280px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100svh - 32px);
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+}
+.gallery-dialog::backdrop {
+  background: rgb(10 11 13 / 0.88);
+}
+.gallery-dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.gallery-dialog .gallery-stage {
+  aspect-ratio: auto;
+  height: min(76svh, calc((100vw - 58px) * 0.625));
 }
 .gallery-thumb {
   position: relative;
@@ -674,6 +950,12 @@ a {
 }
 
 @media (max-width: 640px) {
+  .dock-chips {
+    display: none;
+  }
+  .dock {
+    padding: 0 8px 8px;
+  }
   .grid-row,
   .timeline li {
     grid-template-columns: minmax(0, 1fr);
