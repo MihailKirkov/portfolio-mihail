@@ -92,6 +92,12 @@ One engine, two users (agent actions and the boot intro).
   `{"t":"text","d":"..."}`, `{"t":"action","name":"open_project","params":{...}}`, `{"t":"done"}`.
 - Server validates every tool call against the registry before emitting it.
   Max 4 actions per reply. Keep model, caps and rate limiter as they are.
+- Act first: a model turn ends at its tool calls, so answer text cannot follow
+  them in one call. Replies that drive the page carry their answer in one
+  extra tool, `say`, called last; the server streams it out as `text` events.
+  `say` is not an action and is never emitted as one.
+- Output cap is 450 tokens (text + tool calls). A tool call cut off by the cap
+  is dropped, never emitted partially; `done` is always sent.
 - System prompt (`lib/chat-context.ts`): keep the fact rules; add "when the
   visitor asks to see something, call the matching tool and keep the text to
   1-2 sentences"; broaden audience to recruiters and freelance clients.

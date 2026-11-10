@@ -1,5 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { buildSystemPrompt } from "@/lib/chat-context";
+import { seedContent } from "@/lib/content";
+import { SAY_TOOL, toChatEvents } from "@/lib/agent/chat-stream";
+import { toolSchemas } from "@/lib/agent/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,7 +10,8 @@ export const dynamic = "force-dynamic";
 // ---- abuse guards -----------------------------------------------------------
 const MAX_INPUT_CHARS = 500;
 const MAX_HISTORY_MESSAGES = 10;
-const MAX_OUTPUT_TOKENS = 300;
+// covers the answer text AND the tool calls, which count as output tokens
+const MAX_OUTPUT_TOKENS = 450;
 
 // simple in-memory per-IP rate limiter (sliding window).
 // Survives within a warm serverless instance; good enough to stop a bored
@@ -29,6 +33,13 @@ function getIp(req: Request): string {
   if (fwd) return fwd.split(",")[0].trim();
   return req.headers.get("x-real-ip") ?? "unknown";
 }
+
+// One tool per action in the registry, enums generated from seed.json. Tools
+// are UI directives the browser executes; nothing runs on the server and there
+// is no tool-result round trip.
+// `say` is the one exception: not an action, just the channel the answer text
+// arrives on when the model acts first (see lib/agent/chat-stream.ts).
+const TOOLS: Anthropic.Tool[] = [...toolSchemas(), SAY_TOOL];
 
 interface IncomingMessage {
   role: "user" | "assistant";
@@ -75,8 +86,10 @@ export async function POST(req: Request) {
         .slice(-MAX_HISTORY_MESSAGES)
         .map((m) => ({
           role: m.role,
-          content: m.content.slice(0, MAX_INPUT_CHARS),
+          content: m.content.slice(0, MAX_INPUT_CHARS).trim(),
         }))
+        // the API rejects empty turns
+        .filter((m) => m.content)
     : [];
 
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -89,34 +102,30 @@ export async function POST(req: Request) {
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      try {
-        const ai = client.messages.stream({
-          model: "claude-haiku-4-5",
-          max_tokens: MAX_OUTPUT_TOKENS,
-          system: buildSystemPrompt(),
-          messages,
-        });
-
-        ai.on("text", (delta) => {
-          controller.enqueue(encoder.encode(delta));
-        });
-
-        await ai.finalMessage();
-        controller.close();
-      } catch {
-        controller.enqueue(
-          encoder.encode(
-            "Something glitched on my end - try again, or email me at mihailkirkov04@gmail.com."
-          )
-        );
-        controller.close();
+      // NDJSON: one event per line. toChatEvents validates every tool call
+      // against the registry, drops truncated ones, caps the count, and
+      // always ends with `done`.
+      const events = toChatEvents(
+        () =>
+          client.messages.stream({
+            model: "claude-haiku-4-5",
+            max_tokens: MAX_OUTPUT_TOKENS,
+            system: buildSystemPrompt(),
+            messages,
+            tools: TOOLS,
+          }),
+        `Something glitched on my end - try again, or email me at ${seedContent.profile.email}.`
+      );
+      for await (const event of events) {
+        controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
       }
+      controller.close();
     },
   });
 
   return new Response(stream, {
     headers: {
-      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Type": "application/x-ndjson; charset=utf-8",
       "Cache-Control": "no-store",
     },
   });

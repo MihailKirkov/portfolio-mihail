@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "snapshot": "tsx scripts/snapshot.ts"
+    "snapshot": "tsx scripts/snapshot.ts",
+    "test:chat": "tsx scripts/test-chat-stream.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",

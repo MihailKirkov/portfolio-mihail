@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import type { TerminalConfig } from "@/lib/types";
 import { CANNED } from "@/lib/agent/canned";
-import { formatCall } from "@/lib/agent/actions";
+import { formatCall, type ActionCall } from "@/lib/agent/actions";
 import { choreo, prefersReducedMotion } from "@/lib/agent/choreo";
-import { runActions, type ToolLogEntry } from "@/lib/agent/runner";
+import { runActions, startActionRun, type ToolLogEntry } from "@/lib/agent/runner";
 import { setAgentState, statusOf, useAgentState } from "@/lib/agent/store";
 import { agentId } from "@/lib/agent/targets";
 
@@ -15,7 +15,9 @@ import { agentId } from "@/lib/agent/targets";
 // scrolls away - so the conversation is the same wherever the visitor is.
 //
 // Chips play a canned answer + canned action script (no network). Free-typed
-// questions go to /api/chat (plain text stream until phase 2).
+// questions go to /api/chat, which streams NDJSON events: validated actions
+// for the cursor queue (pushed as each one arrives) and text deltas for the
+// answer line, so the agent acts first and talks while it moves.
 
 interface Turn {
   role: "user" | "assistant";
@@ -26,6 +28,8 @@ const MAX_HISTORY = 10;
 const TYPE_MS = 16;
 const FAILURE_TEXT =
   "Connection dropped - try again in a moment, or reach me by email.";
+// shown when the model drove the page but wrote no text
+const ACTION_ONLY_TEXT = "Here, take a look.";
 
 function ToolLog({ log }: { log: ToolLogEntry[] }) {
   if (!log.length) return null;
@@ -127,7 +131,35 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     if (!q || requesting) return;
     const prior = history.current;
     const turn = begin(q);
-    let acc = "";
+    let text = "";
+    let acted = false;
+    // actions start playing the moment they arrive, while text still streams
+    const run = startActionRun((next) => {
+      if (turn === turnRef.current) setLog(next);
+    });
+
+    // one NDJSON event; anything malformed or unknown is skipped
+    function onLine(line: string) {
+      if (!line.trim()) return;
+      let event: unknown;
+      try {
+        event = JSON.parse(line);
+      } catch {
+        return;
+      }
+      if (!event || typeof event !== "object") return;
+      const e = event as Record<string, unknown>;
+      if (e.t === "text" && typeof e.d === "string") {
+        text += e.d;
+        if (turn === turnRef.current) setAnswer(text);
+      } else if (e.t === "action" && typeof e.name === "string") {
+        if (turn !== turnRef.current) return;
+        acted = true;
+        // re-validated against the registry by the run before anything plays
+        run.push({ name: e.name, params: e.params as ActionCall["params"] });
+      }
+    }
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -137,16 +169,22 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
       if (!res.ok || !res.body) throw new Error(`bad response: ${res.status}`);
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        acc += decoder.decode(value, { stream: true });
-        if (turn === turnRef.current) setAnswer(acc);
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        lines.forEach(onLine);
       }
+      onLine(buffer + decoder.decode());
     } catch {
-      acc = FAILURE_TEXT;
+      text = FAILURE_TEXT;
     }
-    finish(turn, q, acc || FAILURE_TEXT);
+
+    finish(turn, q, text.trim() || (acted ? ACTION_ONLY_TEXT : FAILURE_TEXT));
+    await run.settled();
   }
 
   function onSubmit(e: React.FormEvent) {
