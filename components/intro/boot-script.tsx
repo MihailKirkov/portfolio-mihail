@@ -9,6 +9,8 @@
 //     which works from the first frame, before React or the intro chunk load
 //   - failsafes: if the intro has not started 2.5s in it is dropped, and
 //     nothing stays hidden past 9s
+//   - ending (any way) snaps: data-intro-snap turns transitions off for two
+//     frames, so grey text and the CTA jump to their final colours at once
 // components/intro/boot-intro.tsx takes over once loaded (data-intro="running")
 // and calls window.__introEnd when it finishes.
 
@@ -29,7 +31,9 @@ function end(){
 clearTimeout(a);clearTimeout(b);
 evs.forEach(function(t){removeEventListener(t,end,o)});
 document.removeEventListener("visibilitychange",end);
+h.setAttribute("data-intro-snap","");
 h.removeAttribute("data-intro");
+requestAnimationFrame(function(){requestAnimationFrame(function(){h.removeAttribute("data-intro-snap")})});
 }
 evs.forEach(function(t){addEventListener(t,end,o)});
 document.addEventListener("visibilitychange",end);

@@ -68,7 +68,12 @@ export type Step =
       /** what the effect acts on, for the on-screen check after a pause */
       target?: Target;
     }
-  | { kind: "parallel"; tracks: Step[][] };
+  | { kind: "parallel"; tracks: Step[][] }
+  /**
+   * several cursors become one: `cursors` fade into `into`, which appears at
+   * the target's aim point (the intro's role cursors handing over to the agent)
+   */
+  | { kind: "merge"; cursors: string[]; into: string; target: Target; aim?: Aim };
 
 export interface CursorDriver {
   /** `straight`: no bow in the path (the pressed leg of a drag) */
@@ -81,6 +86,7 @@ export interface CursorDriver {
   ): Promise<void>;
   click(cursor: string, signal: AbortSignal): Promise<void>;
   press(cursor: string, down: boolean): void;
+  merge(cursors: string[], into: string, at: Point, signal: AbortSignal): Promise<void>;
   hideAll(): void;
 }
 
@@ -358,6 +364,16 @@ class Choreo {
         });
         this.driver?.press(cursor, false);
         return;
+      case "merge": {
+        this.target = step.target;
+        const el = resolve(step.target);
+        if (reduced || !el) return;
+        const at = aimPoint(el, step.aim);
+        await this.driver!.merge(step.cursors, step.into, at, signal);
+        step.cursors.forEach((c) => this.positions.delete(c));
+        this.positions.set(step.into, at);
+        return;
+      }
       case "parallel":
         return; // handled by runSteps
     }

@@ -27,7 +27,7 @@ export function TopBar({ profile }: { profile: Profile }) {
           href={profile.cv_url}
           download="Mihail-Kirkov-CV.pdf"
           data-agent-id={agentId.cta("cv")}
-          data-intro-part="cta"
+          data-intro-tone="cta"
         >
           <DownloadIcon /> CV
         </a>

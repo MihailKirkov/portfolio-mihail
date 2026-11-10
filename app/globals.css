@@ -14,6 +14,15 @@
   --accent: #c8f542;
   --on-accent: #0a0b0d;
 
+  /* Boot intro ONLY: the four role cursors (all >= 8:1 on --ground) and the
+     grey wireframe state. Everywhere else --accent is the only accent. */
+  --intro-layout: #4cc9f0;
+  --intro-copy: #ff8fab;
+  --intro-media: #ffb547;
+  --intro-style: #b39dff;
+  --intro-grey: #7a808a;
+  --intro-grey-line: #2c3037;
+
   --font-sans: var(--font-space-grotesk), system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
@@ -162,6 +171,10 @@ a {
 }
 .chip:hover {
   border-color: var(--text);
+}
+/* its own box, so the boot intro can type it without clipping the border */
+.chip-label {
+  display: inline-block;
 }
 
 /* ============================================================
@@ -937,15 +950,35 @@ main {
    are the hero parts held in their "before" state; the intro
    animates each real element out of it. No attribute = no intro.
    ============================================================ */
-html[data-intro] [data-intro-part] {
+/* hidden until revealed (drawn, typed, dropped, faded) */
+html[data-intro] [data-intro-part],
+html[data-intro] [data-intro-type] {
   opacity: 0;
 }
-/* the CTA stays visible, it only waits for its accent */
-html[data-intro] [data-intro-part="cta"] {
-  opacity: 1;
-  border-color: var(--border);
-  background: transparent;
-  color: var(--text);
+/* grey wireframe until the style cursor sweeps it (data-intro-styled) */
+html[data-intro] [data-intro-tone]:not([data-intro-styled]),
+html[data-intro] [data-intro-tone]:not([data-intro-styled]) * {
+  border-color: var(--intro-grey-line);
+  background-color: transparent;
+  color: var(--intro-grey);
+}
+html[data-intro] [data-intro-tone]:not([data-intro-styled]) ::placeholder {
+  color: var(--intro-grey);
+}
+html[data-intro] [data-intro-tone],
+html[data-intro] [data-intro-tone] *,
+html[data-intro] [data-intro-tone] ::placeholder {
+  transition:
+    color 0.4s ease-out,
+    border-color 0.4s ease-out,
+    background-color 0.4s ease-out;
+}
+/* ending early or late: land on the final look with no transition */
+html[data-intro-snap] *,
+html[data-intro-snap] *::before,
+html[data-intro-snap] *::after,
+html[data-intro-snap] ::placeholder {
+  transition: none !important;
 }
 .intro-skip {
   display: none;

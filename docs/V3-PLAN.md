@@ -31,6 +31,10 @@ Reference sketches: the "Portfolio v3 directions" canvas (A Operator, B Swarm, C
 - ONE accent, defined once as `--accent` (default `#c8f542`, OPEN DECISION,
   must be a one-line change). Accent is reserved for agent activity: the
   cursor, the active tool call, the element being acted on, the primary CTA.
+- The one exception is the boot intro: its four role cursors have their own
+  colours (`--intro-layout/-copy/-media/-style`, each >= 8:1 on the ground) and
+  the hero starts in a grey wireframe (`--intro-grey`). These tokens are used
+  nowhere else; the intro ends by merging into the single accent agent cursor.
 - Type: Space Grotesk (UI + display), JetBrains Mono (labels, tool calls).
   Load with `next/font`.
 - Square corners, 1px lines, no glow stacks, no gradient washes, no particle
@@ -134,12 +138,24 @@ One engine, two users (agent actions and the boot intro).
 - Pause rendering when the hero is off-screen or the tab is hidden.
 
 ### Boot intro - `components/intro/`
-- Hero only, ~4s, four role cursors (layout, copy, media, style): frames
-  draw, headline types, core drops in, CTA gets its accent.
+- Hero only, ~4s, four role cursors, each in its own colour. All hero text
+  starts in a neutral grey wireframe state.
+  - layout: drags the command panel's frame out from its corner.
+  - copy: types the headline line by line, then the panel's greeting, chip
+    labels and input placeholder, the cursor riding the typed text.
+  - media: drops the core in.
+  - style: sweeps the hero in order - headline, subhead, status line, command
+    panel - bringing each from grey to its final colours (it waits for copy to
+    finish the panel), and finishes with the CV button's accent fill.
+  - Then the four fly together and merge into the one accent agent cursor,
+    which settles by the command bar.
 - Implemented as a reveal over the real, already-rendered hero (clip/opacity
-  on the real elements), not a second copy of the DOM.
+  on the real elements, colours via a CSS hold state released per element),
+  not a second copy of the DOM. Runs on the cursor engine (`parallel` tracks,
+  `merge` step).
 - "Skip intro" button from frame 1. Runs once per session (sessionStorage).
-  Skipped entirely under reduced motion.
+  Skipped entirely under reduced motion. Skip, scroll, click or key ends it
+  and everything, colours included, jumps straight to the final look.
 
 ### Project depth chapters - `components/projects/`
 - CSS 3D + Framer Motion `useScroll`, NOT WebGL. A sticky stage with

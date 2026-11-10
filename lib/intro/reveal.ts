@@ -1,15 +1,17 @@
 "use client";
 
-// Reveal effects for the boot intro. Each one animates a REAL hero element
-// (opacity / clip-path / transform / colour) with the Web Animations API; there
-// is never a second copy of the DOM. While <html data-intro> is set, CSS holds
-// every [data-intro-part] in its "before" state; an animation's `fill: both`
-// carries the element from there to its final look. `stopReveals` cancels
-// everything at once, and because it runs in the same task that removes
-// data-intro, the elements land on their natural (fully visible) styles with
-// no flash in between.
+// Reveal effects for the boot intro, all on the REAL hero elements; there is
+// never a second copy of the DOM. While <html data-intro> is set, CSS holds:
+//   [data-intro-part] / [data-intro-type]  hidden (opacity 0) until a Web
+//       Animation (`fill: both`) carries it to visible - clip, fade, drop, type
+//   [data-intro-tone]  in the grey wireframe look until the style cursor sets
+//       data-intro-styled on it; a CSS transition then brings its real colours
+// `stopReveals` cancels every animation and clears data-intro-styled. It runs
+// in the same task that removes data-intro (with transitions snapped off), so
+// the hero lands on its natural, final styles with no flash in between.
 
-export type IntroPart = "label" | "headline" | "sub" | "status" | "core" | "frame" | "cta";
+export type IntroPart = "label" | "headline" | "sub" | "status" | "core" | "frame";
+export type IntroTone = "label" | "headline" | "sub" | "status" | "panel" | "cta";
 
 const running = new Set<Animation>();
 
@@ -33,9 +35,21 @@ function play(
   });
 }
 
+export function introTone(name: IntroTone): HTMLElement | null {
+  return document.querySelector<HTMLElement>(`[data-intro-tone="${name}"]`);
+}
+
+/** grey wireframe -> its real colours (a CSS transition, see globals.css) */
+export function styleIn(el: HTMLElement | null) {
+  el?.setAttribute("data-intro-styled", "");
+}
+
 export function stopReveals() {
   running.forEach((a) => a.cancel());
   running.clear();
+  document
+    .querySelectorAll("[data-intro-styled]")
+    .forEach((el) => el.removeAttribute("data-intro-styled"));
 }
 
 const EASE_OUT = "cubic-bezier(0.2, 0, 0, 1)";
@@ -80,22 +94,6 @@ export function dropIn(el: HTMLElement | null, ms: number, signal?: AbortSignal)
   );
 }
 
-/** neutral button -> its accent fill (the CSS hold state is the neutral look) */
-export function accentIn(el: HTMLElement | null, ms: number, signal?: AbortSignal) {
-  const root = getComputedStyle(document.documentElement);
-  const v = (name: string, fallback: string) => root.getPropertyValue(name).trim() || fallback;
-  const accent = v("--accent", "#c8f542");
-  return play(
-    el,
-    [
-      { backgroundColor: "transparent", color: v("--text", "#e8eaed"), borderColor: v("--border", "#3a3f47") },
-      { backgroundColor: accent, color: v("--on-accent", "#0a0b0d"), borderColor: accent },
-    ],
-    { duration: ms, easing: EASE_OUT },
-    signal
-  );
-}
-
 // ---- typing -------------------------------------------------------------------
 
 /** one rendered line of a text block, in px relative to the block's box */
@@ -129,6 +127,23 @@ export function lineBoxes(el: HTMLElement): LineBox[] {
     }
   }
   return lines;
+}
+
+/**
+ * An <input>'s placeholder as one line box. It has no text node for a Range
+ * to measure, so the text is measured with the input's own font.
+ */
+export function inputLines(input: HTMLInputElement): LineBox[] {
+  const cs = getComputedStyle(input);
+  const left = parseFloat(cs.paddingLeft) || 0;
+  const inner = input.clientWidth - left;
+  const ctx = cs.font ? document.createElement("canvas").getContext("2d") : null;
+  let width = inner;
+  if (ctx) {
+    ctx.font = cs.font;
+    width = Math.min(inner, ctx.measureText(input.placeholder).width);
+  }
+  return [{ top: 0, bottom: input.offsetHeight, left, right: left + width }];
 }
 
 /**

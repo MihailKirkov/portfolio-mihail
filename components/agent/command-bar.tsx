@@ -227,6 +227,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
         maxLength={500}
         disabled={requesting}
         data-agent-id={agentId.commandInput()}
+        data-intro-type="placeholder"
       />
       <button type="submit" className="btn" aria-label="Send" disabled={requesting}>
         ↵
@@ -244,7 +245,9 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
           disabled={requesting}
           onClick={() => void askCanned(s)}
         >
-          {s}
+          <span className="chip-label" data-intro-type="chip">
+            {s}
+          </span>
         </button>
       ))}
     </div>
@@ -264,7 +267,13 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
 
   return (
     <>
-      <div className="cmd" ref={panelRef} data-agent-id="chat" data-intro-part="frame">
+      <div
+        className="cmd"
+        ref={panelRef}
+        data-agent-id="chat"
+        data-intro-part="frame"
+        data-intro-tone="panel"
+      >
         <div className="cmd-head">
           <span className="label">ask-mihail</span>
           <span className="label cmd-status" data-status={status}>
@@ -283,7 +292,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
           )}
           <p className="cmd-line">
             <span className="label">mihail</span>
-            <span>
+            <span data-intro-type="greeting">
               {answer}
               {caret}
             </span>

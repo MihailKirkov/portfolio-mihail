@@ -23,14 +23,15 @@ export interface CursorRole {
   spawn?: (vw: number, vh: number) => Point;
 }
 
-// All accent: the intro is the same agent working as four roles, and the
-// accent stays reserved for agent activity. The label tells them apart.
+// The four intro roles each have their own colour (--intro-* tokens, used
+// nowhere else); at the end of the intro they merge into the one accent-coloured
+// agent cursor, which is the only cursor the rest of the site ever shows.
 export const CURSOR_ROLES: CursorRole[] = [
   { id: "agent", label: "agent", color: "var(--accent)" },
-  { id: "layout", label: "layout", color: "var(--accent)", spawn: (_, vh) => ({ x: -24, y: vh * 0.85 }) },
-  { id: "copy", label: "copy", color: "var(--accent)", spawn: (_, vh) => ({ x: -24, y: vh * 0.15 }) },
-  { id: "media", label: "media", color: "var(--accent)", spawn: (vw, vh) => ({ x: vw * 0.6, y: vh + 24 }) },
-  { id: "style", label: "style", color: "var(--accent)", spawn: (vw, vh) => ({ x: vw + 24, y: vh * 0.4 }) },
+  { id: "layout", label: "layout", color: "var(--intro-layout)", spawn: (_, vh) => ({ x: -24, y: vh * 0.85 }) },
+  { id: "copy", label: "copy", color: "var(--intro-copy)", spawn: (_, vh) => ({ x: -24, y: vh * 0.15 }) },
+  { id: "media", label: "media", color: "var(--intro-media)", spawn: (vw, vh) => ({ x: vw * 0.6, y: vh + 24 }) },
+  { id: "style", label: "style", color: "var(--intro-style)", spawn: (vw, vh) => ({ x: vw + 24, y: vh * 0.4 }) },
 ];
 
 const ROLE_BY_ID = new Map(CURSOR_ROLES.map((r) => [r.id, r]));
@@ -175,6 +176,26 @@ export function CursorLayer() {
       },
       press(id, down) {
         animate(get(id).scale, down ? 0.85 : 1, { duration: 0.12 });
+      },
+      async merge(ids, into, at, signal) {
+        const target = get(into);
+        ids.forEach((id) => {
+          const h = handles.current.get(id);
+          if (!h || h === target) return;
+          animate(h.opacity, 0, { duration: 0.2 });
+          // shrink into the point, then reset for the next time it appears
+          animate(h.scale, 0.5, { duration: 0.2, onComplete: () => h.scale.set(1) });
+        });
+        target.x.set(at.x);
+        target.y.set(at.y);
+        target.scale.set(0.5);
+        animate(target.opacity, 1, { duration: 0.12 });
+        // grows out of the merged cursors with a small overshoot, then settles
+        await play(
+          (done) =>
+            animate(target.scale, [0.5, 1.18, 1], { duration: 0.32, ease: EASE, onComplete: done }),
+          signal
+        );
       },
       hideAll() {
         handles.current.forEach((h) => animate(h.opacity, 0, { duration: 0.4, delay: 0.5 }));
