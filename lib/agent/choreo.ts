@@ -44,6 +44,8 @@ export interface MoveOptions {
   ms?: number;
   /** no bow in the path, linear timing (a drag, a caret tracking typed text) */
   straight?: boolean;
+  /** which side the path bows to: 1 the default side, -1 the other */
+  bowSide?: 1 | -1;
 }
 
 export type Step =
@@ -70,23 +72,24 @@ export type Step =
     }
   | { kind: "parallel"; tracks: Step[][] }
   /**
-   * several cursors become one: `cursors` fade into `into`, which appears at
-   * the target's aim point (the intro's role cursors handing over to the agent)
+   * `cursor` docks into `into` at the target's aim point: it fades into it, and
+   * `into` appears there if it is not on screen yet (the intro's role cursors
+   * handing over to the agent, one at a time as each finishes)
    */
-  | { kind: "merge"; cursors: string[]; into: string; target: Target; aim?: Aim };
+  | { kind: "dock"; cursor: string; into: string; target: Target; aim?: Aim };
 
 export interface CursorDriver {
-  /** `straight`: no bow in the path (the pressed leg of a drag) */
+  /** `straight`: no bow in the path (the pressed leg of a drag); `bowSide` flips the bow */
   move(
     cursor: string,
     to: Point,
     ms: number,
     signal: AbortSignal,
-    opts?: { straight?: boolean }
+    opts?: { straight?: boolean; bowSide?: 1 | -1 }
   ): Promise<void>;
   click(cursor: string, signal: AbortSignal): Promise<void>;
   press(cursor: string, down: boolean): void;
-  merge(cursors: string[], into: string, at: Point, signal: AbortSignal): Promise<void>;
+  dock(cursor: string, into: string, at: Point, signal: AbortSignal): Promise<void>;
   hideAll(): void;
 }
 
@@ -364,13 +367,13 @@ class Choreo {
         });
         this.driver?.press(cursor, false);
         return;
-      case "merge": {
+      case "dock": {
         this.target = step.target;
         const el = resolve(step.target);
         if (reduced || !el) return;
         const at = aimPoint(el, step.aim);
-        await this.driver!.merge(step.cursors, step.into, at, signal);
-        step.cursors.forEach((c) => this.positions.delete(c));
+        await this.driver!.dock(step.cursor, step.into, at, signal);
+        this.positions.delete(step.cursor);
         this.positions.set(step.into, at);
         return;
       }
@@ -402,7 +405,7 @@ class Choreo {
     if (dist < 1) return; // already there
     const ms =
       opts.ms ?? Math.min(MOVE_MAX_MS, Math.max(MOVE_MIN_MS, MOVE_MIN_MS + dist * 0.25));
-    await this.driver!.move(cursor, to, ms, signal, { straight: opts.straight });
+    await this.driver!.move(cursor, to, ms, signal, { straight: opts.straight, bowSide: opts.bowSide });
     this.positions.set(cursor, to);
   }
 }

@@ -70,7 +70,7 @@ async function main() {
   // records every flight; a flight takes its full duration unless aborted
   const moves: { cursor: string; to: Point; ms: number; straight: boolean; aborted: boolean }[] = [];
   let clicks = 0;
-  const merges: { cursors: string[]; into: string; at: Point }[] = [];
+  const docks: { cursor: string; into: string; at: Point }[] = [];
   const driver: CursorDriver = {
     move(cursor, to, ms, signal, opts) {
       const move = { cursor, to, ms, straight: !!opts?.straight, aborted: false };
@@ -88,8 +88,8 @@ async function main() {
       clicks++;
     },
     press() {},
-    async merge(cursors, into, at) {
-      merges.push({ cursors, into, at });
+    async dock(cursor, into, at) {
+      docks.push({ cursor, into, at });
     },
     hideAll() {},
   };
@@ -364,28 +364,35 @@ async function main() {
     assert.equal(moves.filter((m) => m.cursor === "copy").length, 1);
   });
 
-  await test("intro: role cursors converge and merge into the agent cursor", async () => {
-    merges.length = 0;
+  await test("intro: each role cursor docks into the agent on its own, as it finishes", async () => {
+    docks.length = 0;
     const bar = fakeElement(600) as unknown as HTMLElement;
-    const roles = ["layout", "copy", "media", "style"];
     const spot = (r: DOMRect) => ({ x: r.left + 24, y: r.top + 20 });
+    // the work each role has before it heads for the bar
+    const work: Record<string, number> = { media: 40, layout: 120, style: 200, copy: 320 };
     assert.equal(
       await choreo.enqueue([
         {
           kind: "parallel",
-          tracks: roles.map((c) => [
-            { kind: "moveTo", cursor: c, target: bar, scroll: false, aim: spot, ms: 100 } as Step,
+          tracks: Object.entries(work).map(([c, ms]) => [
+            { kind: "wait", ms } as Step,
+            { kind: "moveTo", cursor: c, target: bar, scroll: false, aim: spot, ms: 60 } as Step,
+            { kind: "dock", cursor: c, into: "agent", target: bar, aim: spot } as Step,
           ]),
         },
-        { kind: "merge", cursors: roles, into: "agent", target: bar, aim: spot },
-        // the agent is already at the merge point, so this is not a flight
+        // the agent is already at the dock, so this is not a flight
         { kind: "moveTo", cursor: "agent", target: bar, scroll: false, aim: spot },
       ]),
       true
     );
-    assert.equal(moves.length, 4, "one converging flight per role, none for the agent");
-    assert.ok(moves.every((m) => m.to.x === 124 && m.to.y === 620), "all meet at one point");
-    assert.deepEqual(merges, [{ cursors: roles, into: "agent", at: { x: 124, y: 620 } }]);
+    assert.equal(moves.length, 4, "one flight to the bar per role, none for the agent");
+    assert.ok(moves.every((m) => m.to.x === 124 && m.to.y === 620), "all dock at one point");
+    assert.deepEqual(
+      docks.map((d) => d.cursor),
+      ["media", "layout", "style", "copy"],
+      "docked one by one, in the order they finished"
+    );
+    assert.ok(docks.every((d) => d.into === "agent" && d.at.x === 124 && d.at.y === 620));
   });
 
   await test("intro: waitForDriver resolves at once when a driver is attached", async () => {

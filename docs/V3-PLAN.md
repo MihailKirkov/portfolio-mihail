@@ -138,24 +138,39 @@ One engine, two users (agent actions and the boot intro).
 - Pause rendering when the hero is off-screen or the tab is hidden.
 
 ### Boot intro - `components/intro/`
-- Hero only, ~4s, four role cursors, each in its own colour. All hero text
-  starts in a neutral grey wireframe state.
-  - layout: drags the command panel's frame out from its corner.
-  - copy: types the headline line by line, then the panel's greeting, chip
-    labels and input placeholder, the cursor riding the typed text.
-  - media: drops the core in.
-  - style: sweeps the hero in order - headline, subhead, status line, command
-    panel - bringing each from grey to its final colours (it waits for copy to
-    finish the panel), and finishes with the CV button's accent fill.
-  - Then the four fly together and merge into the one accent agent cursor,
-    which settles by the command bar.
+- Hero only, up to about 6s, four role cursors, each in its own colour. All
+  hero text starts in a neutral grey wireframe state.
+  - layout: drags the command panel's frame out from its corner, then sets its
+    controls: the suggestion chips and the input field.
+  - copy: types the headline line by line, then the panel's greeting, gliding
+    along each line on one linear move (never a move per character), with a
+    linear carriage return between lines. Readable pace (about 32ms/char on
+    the headline, 21ms/char on the greeting).
+  - media: drops the core in (no cursor when the core is hidden, on phones).
+  - style: gives the CV button its accent, then sweeps the hero from grey to
+    its real colours: the headline stack (the headline sits grey for at least
+    1s after copy finishes it), then the panel once copy has left it. Style
+    never colours a piece copy is still on.
+  - Endings are independent: each cursor, as soon as its own work is done,
+    flies to the command bar and docks into the one accent agent cursor
+    there. The agent appears with the first dock and stays; copy has the most
+    to do and arrives last.
+- Motion rules: no flight shorter than 450ms; longer flights are slower so no
+  cursor moves more than 60px in a 60Hz frame; paths bow into the page, never
+  out past its edge. Every target is measured once, after fonts load and
+  before anything moves; typed elements are clipped, never resized, so nothing
+  reflows and no cursor re-aims mid-flight.
 - Implemented as a reveal over the real, already-rendered hero (clip/opacity
   on the real elements, colours via a CSS hold state released per element),
   not a second copy of the DOM. Runs on the cursor engine (`parallel` tracks,
-  `merge` step).
+  `dock` step).
 - "Skip intro" button from frame 1. Runs once per session (sessionStorage).
   Skipped entirely under reduced motion. Skip, scroll, click or key ends it
   and everything, colours included, jumps straight to the final look.
+- Browser checks: `npm run test:intro` (needs `npm run build`) plays it at
+  1440x900 and 390x844 in Chrome and checks the budget, flight times, per-frame
+  steps, one glide per typed line, dock order, reflow and the copy/style
+  handoffs.
 
 ### Project depth chapters - `components/projects/`
 - CSS 3D + Framer Motion `useScroll`, NOT WebGL. A sticky stage with

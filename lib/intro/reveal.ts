@@ -179,7 +179,10 @@ function typedPolygon(el: HTMLElement, lines: LineBox[], i: number, x: number) {
     .join(", ")})`;
 }
 
-/** types line `i` of a block: a stepped clip reveal, one step per character */
+/**
+ * types line `i` of a block: a stepped clip reveal, one step per character.
+ * `chars` 0: a smooth wipe instead (a field being drawn, not typed).
+ */
 export function typeLine(
   el: HTMLElement,
   lines: LineBox[],
@@ -195,7 +198,7 @@ export function typeLine(
       { opacity: 1, clipPath: typedPolygon(el, lines, i, lines[i].left - pad) },
       { opacity: 1, clipPath: typedPolygon(el, lines, i, lines[i].right + pad) },
     ],
-    { duration: ms, easing: `steps(${Math.max(1, chars)}, end)` },
+    { duration: ms, easing: chars > 0 ? `steps(${chars}, end)` : "linear" },
     signal
   );
 }

@@ -24,8 +24,9 @@ export interface CursorRole {
 }
 
 // The four intro roles each have their own colour (--intro-* tokens, used
-// nowhere else); at the end of the intro they merge into the one accent-coloured
+// nowhere else); at the end of the intro they dock into the one accent-coloured
 // agent cursor, which is the only cursor the rest of the site ever shows.
+// Each docks into it on its own, as soon as its work is done.
 export const CURSOR_ROLES: CursorRole[] = [
   { id: "agent", label: "agent", color: "var(--accent)" },
   { id: "layout", label: "layout", color: "var(--intro-layout)", spawn: (_, vh) => ({ x: -24, y: vh * 0.85 }) },
@@ -46,6 +47,26 @@ interface Handle {
 
 const EASE = [0.45, 0, 0.2, 1] as const;
 
+// Opt-in trace for the browser checks (scripts/test-intro.ts): when a page sets
+// window.__cursorTrace to an array, every flight and dock is recorded in it.
+export interface CursorTraceEntry {
+  kind: "move" | "dock";
+  id: string;
+  t: number;
+  ms?: number;
+  straight?: boolean;
+  from?: Point;
+  to: Point;
+}
+declare global {
+  interface Window {
+    __cursorTrace?: CursorTraceEntry[];
+  }
+}
+function trace(e: Omit<CursorTraceEntry, "t">) {
+  window.__cursorTrace?.push({ ...e, t: performance.now() });
+}
+
 /** spawn point for a cursor that is not on screen yet */
 function spawnPoint(id: string): Point {
   const spawn = ROLE_BY_ID.get(id)?.spawn;
@@ -59,10 +80,14 @@ function spawnPoint(id: string): Point {
 }
 
 // quadratic bezier with the control point bowed off the straight line
-function curve(from: Point, to: Point, bow = 0.18) {
+export const BOW = 0.18;
+export function bowControl(from: Point, to: Point, bow = BOW): Point {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
-  const c = { x: from.x + dx / 2 - dy * bow, y: from.y + dy / 2 + dx * bow };
+  return { x: from.x + dx / 2 - dy * bow, y: from.y + dy / 2 + dx * bow };
+}
+function curve(from: Point, to: Point, bow = BOW) {
+  const c = bowControl(from, to, bow);
   return (t: number): Point => ({
     x: (1 - t) ** 2 * from.x + 2 * (1 - t) * t * c.x + t ** 2 * to.x,
     y: (1 - t) ** 2 * from.y + 2 * (1 - t) * t * c.y + t ** 2 * to.y,
@@ -78,6 +103,18 @@ function play(
     const controls = run(resolve);
     signal.addEventListener("abort", () => {
       controls.stop();
+      resolve();
+    });
+  });
+}
+
+/** wait `ms`, or less if aborted (for effects another call may interrupt) */
+function hold(ms: number, signal: AbortSignal) {
+  return new Promise<void>((resolve) => {
+    if (signal.aborted) return resolve();
+    const t = setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => {
+      clearTimeout(t);
       resolve();
     });
   });
@@ -148,7 +185,9 @@ export function CursorLayer() {
         }
         // also cancels a pending fade-out if a new batch starts right away
         animate(h.opacity, 1, { duration: 0.15 });
-        const path = curve({ x: h.x.get(), y: h.y.get() }, to, opts?.straight ? 0 : 0.18);
+        const from = { x: h.x.get(), y: h.y.get() };
+        trace({ kind: "move", id, ms, straight: !!opts?.straight, from, to });
+        const path = curve(from, to, opts?.straight ? 0 : BOW * (opts?.bowSide ?? 1));
         await play(
           (done) =>
             animate(0, 1, {
@@ -177,25 +216,30 @@ export function CursorLayer() {
       press(id, down) {
         animate(get(id).scale, down ? 0.85 : 1, { duration: 0.12 });
       },
-      async merge(ids, into, at, signal) {
+      async dock(id, into, at, signal) {
+        const h = get(id);
         const target = get(into);
-        ids.forEach((id) => {
-          const h = handles.current.get(id);
-          if (!h || h === target) return;
-          animate(h.opacity, 0, { duration: 0.2 });
+        trace({ kind: "dock", id, to: at });
+        if (h !== target) {
           // shrink into the point, then reset for the next time it appears
-          animate(h.scale, 0.5, { duration: 0.2, onComplete: () => h.scale.set(1) });
-        });
-        target.x.set(at.x);
-        target.y.set(at.y);
-        target.scale.set(0.5);
-        animate(target.opacity, 1, { duration: 0.12 });
-        // grows out of the merged cursors with a small overshoot, then settles
-        await play(
-          (done) =>
-            animate(target.scale, [0.5, 1.18, 1], { duration: 0.32, ease: EASE, onComplete: done }),
-          signal
-        );
+          animate(h.opacity, 0, { duration: 0.22 });
+          animate(h.scale, 0.5, { duration: 0.22, onComplete: () => h.scale.set(1) });
+        }
+        // timed by the clock, not the animation: a cursor docking right after
+        // restarts the agent's scale, and the earlier one must still finish
+        if (target.opacity.get() < 0.5) {
+          // the first to dock: the agent grows out of it with a small overshoot
+          target.x.set(at.x);
+          target.y.set(at.y);
+          target.scale.set(0.5);
+          animate(target.opacity, 1, { duration: 0.12 });
+          animate(target.scale, [0.5, 1.18, 1], { duration: 0.32, ease: EASE });
+          await hold(320, signal);
+          return;
+        }
+        // later ones are absorbed: the agent stays put and pulses once
+        animate(target.scale, [1, 1.12, 1], { duration: 0.26, ease: EASE });
+        await hold(260, signal);
       },
       hideAll() {
         handles.current.forEach((h) => animate(h.opacity, 0, { duration: 0.4, delay: 0.5 }));

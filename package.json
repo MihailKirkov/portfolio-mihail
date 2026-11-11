@@ -9,7 +9,8 @@
     "lint": "next lint",
     "snapshot": "tsx scripts/snapshot.ts",
     "test:chat": "tsx scripts/test-chat-stream.ts",
-    "test:choreo": "tsx scripts/test-choreo.ts"
+    "test:choreo": "tsx scripts/test-choreo.ts",
+    "test:intro": "tsx scripts/test-intro.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
@@ -30,6 +31,7 @@
     "@types/three": "^0.184.1",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.19",
+    "playwright": "^1.58.2",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.22.4",
     "typescript": "^5.7.0"

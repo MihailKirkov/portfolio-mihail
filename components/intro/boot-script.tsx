@@ -8,7 +8,7 @@
 //   - any click (the Skip button included), key, wheel or touch scroll ends it,
 //     which works from the first frame, before React or the intro chunk load
 //   - failsafes: if the intro has not started 2.5s in it is dropped, and
-//     nothing stays hidden past 9s
+//     nothing stays hidden past 12s
 //   - ending (any way) snaps: data-intro-snap turns transitions off for two
 //     frames, so grey text and the CTA jump to their final colours at once
 // components/intro/boot-intro.tsx takes over once loaded (data-intro="running")
@@ -38,7 +38,7 @@ requestAnimationFrame(function(){requestAnimationFrame(function(){h.removeAttrib
 evs.forEach(function(t){addEventListener(t,end,o)});
 document.addEventListener("visibilitychange",end);
 a=setTimeout(function(){if(h.getAttribute("data-intro")==="pending")end()},2500);
-b=setTimeout(end,9000);
+b=setTimeout(end,12000);
 window.__introEnd=end;
 })();`;
 
