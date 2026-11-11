@@ -7,6 +7,7 @@ import {
   scrollToElement,
 } from "@/lib/agent/targets";
 import { setAgentState } from "@/lib/agent/store";
+import { sleep } from "@/lib/agent/clock";
 
 // Cursor engine. One queue of steps shared by agent actions and the boot
 // intro (components/intro). The visual side is a CursorDriver registered by
@@ -112,17 +113,6 @@ function resolve(target: Target): HTMLElement | null {
   return typeof target === "function" ? target() : target;
 }
 
-function sleep(ms: number, signal: AbortSignal) {
-  return new Promise<void>((resolve) => {
-    if (signal.aborted) return resolve();
-    const t = setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      clearTimeout(t);
-      resolve();
-    });
-  });
-}
-
 export function prefersReducedMotion() {
   return (
     typeof window !== "undefined" &&
@@ -155,6 +145,16 @@ function setNativeValue(el: HTMLInputElement | HTMLTextAreaElement, value: strin
 interface Batch {
   steps: Step[];
   resolve: (completed: boolean) => void;
+  /** the caller handles visitor input itself (the boot intro): no pause or cancel here */
+  ownInput: boolean;
+}
+
+export interface EnqueueOptions {
+  /**
+   * true: the engine leaves visitor input alone while this batch runs; the
+   * caller decides what clicks, keys and scrolls do (and cancels if needed)
+   */
+  ownInput?: boolean;
 }
 
 class Choreo {
@@ -162,6 +162,7 @@ class Choreo {
   private queue: Batch[] = [];
   /** the current batch: aborted by a cancel */
   private controller: AbortController | null = null;
+  private current: Batch | null = null;
   /** the current try at a step: aborted by a cancel and by a pause */
   private attempt: AbortController | null = null;
   private running = false;
@@ -204,9 +205,9 @@ class Choreo {
   }
 
   /** queue steps; resolves true once they all ran, false if cancelled */
-  enqueue(steps: Step[]): Promise<boolean> {
+  enqueue(steps: Step[], opts: EnqueueOptions = {}): Promise<boolean> {
     return new Promise((resolve) => {
-      this.queue.push({ steps, resolve });
+      this.queue.push({ steps, resolve, ownInput: !!opts.ownInput });
       if (!this.running) void this.drain();
     });
   }
@@ -221,13 +222,13 @@ class Choreo {
   };
 
   private onCancelInput = (e: Event) => {
-    if (!e.isTrusted) return;
+    if (!e.isTrusted || this.current?.ownInput) return;
     if (e.type === "pointerdown" && (e as PointerEvent).pointerType === "touch") return;
     this.cancel();
   };
 
   private onScrollInput = (e: Event) => {
-    if (!e.isTrusted) return;
+    if (!e.isTrusted || this.current?.ownInput) return;
     if (e.type === "scroll" && !this.paused) return;
     this.pause();
   };
@@ -272,6 +273,7 @@ class Choreo {
       const batch = this.queue.shift()!;
       const controller = new AbortController();
       this.controller = controller;
+      this.current = batch;
       this.target = null;
       await this.runSteps(batch.steps, controller.signal);
       batch.resolve(!controller.signal.aborted);
@@ -285,6 +287,7 @@ class Choreo {
     );
     this.endPause();
     this.controller = null;
+    this.current = null;
     this.attempt = null;
     this.target = null;
     this.running = false;

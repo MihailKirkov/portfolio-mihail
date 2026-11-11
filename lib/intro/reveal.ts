@@ -1,5 +1,7 @@
 "use client";
 
+import { getRate, onRate } from "@/lib/agent/clock";
+
 // Reveal effects for the boot intro, all on the REAL hero elements; there is
 // never a second copy of the DOM. While <html data-intro> is set, CSS holds:
 //   [data-intro-part] / [data-intro-type]  hidden (opacity 0) until a Web
@@ -15,6 +17,9 @@ export type IntroTone = "label" | "headline" | "sub" | "status" | "panel" | "cta
 
 const running = new Set<Animation>();
 
+// reveals run at the choreography clock's rate, like the cursors (fast-forward)
+onRate((rate) => running.forEach((a) => a.playState !== "finished" && a.updatePlaybackRate(rate)));
+
 export function introPart(name: IntroPart): HTMLElement | null {
   return document.querySelector<HTMLElement>(`[data-intro-part="${name}"]`);
 }
@@ -28,6 +33,7 @@ function play(
 ): Promise<void> {
   if (!el || signal?.aborted) return Promise.resolve();
   const a = el.animate(keyframes, { fill: "both", ...opts });
+  if (getRate() !== 1) a.playbackRate = getRate();
   running.add(a);
   return new Promise((resolve) => {
     a.finished.then(() => resolve(), () => resolve());

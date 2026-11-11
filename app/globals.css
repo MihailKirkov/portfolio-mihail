@@ -973,6 +973,12 @@ html[data-intro] [data-intro-tone] ::placeholder {
     border-color 0.4s ease-out,
     background-color 0.4s ease-out;
 }
+/* fast-forward (the visitor scrolled): colours keep pace with the sped-up cursors */
+html[data-intro-ff] [data-intro-tone],
+html[data-intro-ff] [data-intro-tone] *,
+html[data-intro-ff] [data-intro-tone] ::placeholder {
+  transition-duration: 0.1s;
+}
 /* ending early or late: land on the final look with no transition */
 html[data-intro-snap] *,
 html[data-intro-snap] *::before,

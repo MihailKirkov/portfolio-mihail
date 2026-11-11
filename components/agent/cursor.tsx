@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { animate, motion, useMotionValue, type MotionValue } from "framer-motion";
+import {
+  animate as rawAnimate,
+  motion,
+  useMotionValue,
+  type AnimationPlaybackControls,
+  type MotionValue,
+} from "framer-motion";
+import { getRate, onRate, sleep } from "@/lib/agent/clock";
 import {
   choreo,
   prefersReducedMotion,
@@ -108,17 +115,25 @@ function play(
   });
 }
 
-/** wait `ms`, or less if aborted (for effects another call may interrupt) */
-function hold(ms: number, signal: AbortSignal) {
-  return new Promise<void>((resolve) => {
-    if (signal.aborted) return resolve();
-    const t = setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      clearTimeout(t);
-      resolve();
-    });
-  });
-}
+/** wait `ms` on the choreography clock, or less if aborted */
+const hold = (ms: number, signal: AbortSignal) => sleep(ms, signal);
+
+// Every cursor animation runs at the choreography clock's rate (lib/agent/
+// clock.ts), including ones already in flight when it changes: the intro's
+// fast-forward speeds up a flight mid-air instead of letting it finish slowly.
+const live = new Set<AnimationPlaybackControls>();
+const prune = () => live.forEach((c) => c.state === "finished" && live.delete(c));
+onRate((rate) => {
+  prune();
+  live.forEach((c) => (c.speed = rate));
+});
+const animate = ((...args: unknown[]) => {
+  const c = (rawAnimate as (...a: unknown[]) => AnimationPlaybackControls)(...args);
+  c.speed = getRate();
+  if (live.size > 32) prune();
+  live.add(c);
+  return c;
+}) as typeof rawAnimate;
 
 function OneCursor({
   role,

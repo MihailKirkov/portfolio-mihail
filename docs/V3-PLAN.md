@@ -165,12 +165,26 @@ One engine, two users (agent actions and the boot intro).
   not a second copy of the DOM. Runs on the cursor engine (`parallel` tracks,
   `dock` step).
 - "Skip intro" button from frame 1. Runs once per session (sessionStorage).
-  Skipped entirely under reduced motion. Skip, scroll, click or key ends it
-  and everything, colours included, jumps straight to the final look.
+  Skipped entirely under reduced motion, with JS off and on a #section deep
+  link. Skip, click, tap or Escape ends it at once: everything, colours
+  included, jumps straight to the final look.
+- Scrolling does not end it, it fast-forwards it. The first wheel, touch
+  scroll or other key (arrows, space, page keys) is absorbed, and the rest of
+  the choreography plays to the end at high speed - cursors still fly and
+  dock - within at most 1.2s, however much was left. Every scroll during the
+  fast-forward is absorbed too and dropped, never replayed, so the page does
+  not lurch when the hold ends; then scrolling is released. The hold can never
+  exceed 1.2s: if anything stalls, the head script releases scroll and jumps
+  to the final state. How: one rate-adjustable clock (`lib/agent/clock.ts`)
+  times every wait, flight and reveal in the intro; fast-forward raises its
+  rate so what the plan has left fits the hold. The head script owns visitor
+  input for the intro (the engine runs the intro batch with `ownInput`).
 - Browser checks: `npm run test:intro` (needs `npm run build`) plays it at
   1440x900 and 390x844 in Chrome and checks the budget, flight times, per-frame
   steps, one glide per typed line, dock order, reflow and the copy/style
-  handoffs.
+  handoffs; then scroll at 0.2s and at 3s, more scrolling and keys during the
+  fast-forward, an arrow key, a touch scroll on a phone, the 1.2s cap with a
+  stalled fast-forward, and Escape.
 
 ### Project depth chapters - `components/projects/`
 - CSS 3D + Framer Motion `useScroll`, NOT WebGL. A sticky stage with

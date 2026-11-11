@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { existsSync } from "node:fs";
 import { createServer } from "node:net";
-import { chromium, type Browser } from "playwright";
+import { chromium, type Browser, type CDPSession, type Page } from "playwright";
 
 // Browser checks for the boot intro. Plays it once per viewport (1440x900 and
 // 390x844) in real Chrome, records every cursor's position on every frame plus
@@ -18,6 +18,17 @@ import { chromium, type Browser } from "playwright";
 //   - nothing reflows while the intro runs (layout boxes, not transforms)
 //   - style never colours what copy is still on: the headline sits grey for at
 //     least a second after it is typed, the panel waits for copy to leave
+//   - no fast-forward or scroll hold unless the visitor scrolled
+// Then scroll during the intro (1440 unless noted):
+//   - a wheel at 0.2s and at 3s: absorbed; the rest fast-forwards and ends on
+//     its own (every cursor still docks) within the 1.2s hold; the page never
+//     scrolls during it or lurches after it; scrolling works again after
+//   - more wheels and scroll keys during the fast-forward: all absorbed, none
+//     replayed, the hold is not extended
+//   - an arrow key fast-forwards; Escape still ends at once
+//   - a touch scroll at 0.2s on a 390 phone with touch: same as a wheel
+//   - the cap: with the fast-forward stalled, the hold is released at 1.2s
+//     and the hero jumps to its final state
 // Needs a production build: npm run build && npm run test:intro
 // INTRO_URL=http://localhost:3000/ uses a server that is already running.
 
@@ -28,6 +39,9 @@ const MAX_STEP_PX = 60; // per 60Hz frame
 const MIN_CHAR_MS = 20;
 const HEADLINE_GREY_MS = 1000;
 const DOCK_GAP_MS = 150;
+const HOLD_MS = 1200;
+/** timer slack when checking the hold's end */
+const HOLD_SLACK_MS = 80;
 
 const VIEWPORTS = [
   { width: 1440, height: 900 },
@@ -36,6 +50,8 @@ const VIEWPORTS = [
 
 interface Sample {
   t: number;
+  /** window.scrollY */
+  y: number;
   intro: string | null;
   cursors: Record<string, { x: number; y: number; o: number }>;
   boxes: string;
@@ -50,6 +66,16 @@ interface TraceEntry {
   to: { x: number; y: number };
 }
 interface Recording {
+  /** when data-intro went away (the intro ended, any way) */
+  gone: number;
+  /** scrollY after the release check (a scroll once the intro is over), if run */
+  releasedY: number | null;
+  /** when Escape was pressed, if it was */
+  escAt: number;
+  /** scroll input (wheel, touchmove, keys) the page absorbed while the intro ran */
+  absorbed: number;
+  /** what is not in its final state once the intro is over (empty: all good) */
+  final: string[];
   samples: Sample[];
   trace: TraceEntry[];
   marks: Record<string, number>;
@@ -96,8 +122,52 @@ async function launch(): Promise<Browser> {
   }
 }
 
-async function record(browser: Browser, url: string, width: number, height: number): Promise<Recording> {
-  const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
+interface Act {
+  page: Page;
+  /** resolves once the intro has run `ms` since its start mark */
+  at: (ms: number) => Promise<void>;
+  /** a trusted wheel over the middle of the page */
+  wheel: (dy?: number) => Promise<void>;
+  /** a trusted one-finger swipe up (scrolls the page down), via CDP */
+  swipe: () => Promise<void>;
+}
+
+interface PlayOptions {
+  touch?: boolean;
+  /** what the visitor does once the intro has started */
+  act?: (a: Act) => Promise<void>;
+  /** after the intro: scroll once to check scrolling was released */
+  release?: boolean;
+}
+
+async function swipeOn(cdp: CDPSession, x: number, y0: number, y1: number) {
+  const steps = 8;
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y: y0 }] });
+  for (let i = 1; i <= steps; i++) {
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x, y: y0 + ((y1 - y0) * i) / steps }],
+    });
+    await new Promise((r) => setTimeout(r, 16));
+  }
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+}
+
+async function record(
+  browser: Browser,
+  url: string,
+  width: number,
+  height: number,
+  opts: PlayOptions = {}
+): Promise<Recording> {
+  const context = await browser.newContext({
+    viewport: { width, height },
+    deviceScaleFactor: 1,
+    hasTouch: !!opts.touch,
+    isMobile: !!opts.touch,
+  });
+  const page = await context.newPage();
+  const cdp = opts.touch ? await context.newCDPSession(page) : null;
   // tsx compiles with keepNames, which wraps functions passed to the page in a
   // __name() helper that only exists in Node
   await page.addInitScript("globalThis.__name = (f) => f;");
@@ -106,7 +176,32 @@ async function record(browser: Browser, url: string, width: number, height: numb
     w.__cursorTrace = [];
     const samples: unknown[] = [];
     const styled: Record<string, number> = {};
-    w.__introRec = { samples, styled };
+    const rec: Record<string, unknown> = { samples, styled, gone: 0, escAt: 0, absorbed: 0 };
+    // bubble phase: runs after the boot script's capture listeners have had their say
+    ["wheel", "touchmove", "keydown"].forEach((type) =>
+      addEventListener(
+        type,
+        (e) => {
+          if (e.defaultPrevented && document.documentElement.hasAttribute("data-intro")) {
+            rec.absorbed = (rec.absorbed as number) + 1;
+          }
+        },
+        { passive: true }
+      )
+    );
+    addEventListener(
+      "keydown",
+      (e) => {
+        if (e.key === "Escape" && !rec.escAt) rec.escAt = performance.now();
+      },
+      true
+    );
+    w.__introRec = rec;
+    // the init script runs before <html> exists: watch the document instead
+    new MutationObserver(() => {
+      const html = document.documentElement;
+      if (!rec.gone && html && !html.hasAttribute("data-intro")) rec.gone = performance.now();
+    }).observe(document, { subtree: true, attributes: true, attributeFilter: ["data-intro"] });
     const boxEls = () =>
       Array.from(
         document.querySelectorAll<HTMLElement>(
@@ -129,6 +224,7 @@ async function record(browser: Browser, url: string, width: number, height: numb
       });
       samples.push({
         t: frameTime,
+        y: window.scrollY,
         intro: document.documentElement.dataset.intro ?? null,
         cursors,
         boxes: boxes(),
@@ -151,13 +247,55 @@ async function record(browser: Browser, url: string, width: number, height: numb
   await page.waitForFunction(() => performance.getEntriesByName("intro:start").length > 0, null, {
     timeout: 8000,
   });
+  await page.mouse.move(width / 2, height / 2);
+  const act: Act = {
+    page,
+    at: (ms) =>
+      page
+        .waitForFunction(
+          (t) => performance.now() - performance.getEntriesByName("intro:start")[0].startTime >= t,
+          ms,
+          { polling: "raf" }
+        )
+        .then(() => {}),
+    wheel: (dy = 400) => page.mouse.wheel(0, dy),
+    swipe: () => swipeOn(cdp!, width / 2, height * 0.7, height * 0.3),
+  };
+  if (opts.act) await opts.act(act);
   await page.waitForFunction(() => !document.documentElement.hasAttribute("data-intro"), null, {
     timeout: 15000,
   });
-  await page.waitForTimeout(300);
+  // long enough to see any lurch after the hold ends
+  await page.waitForTimeout(600);
+  let releasedY: number | null = null;
+  if (opts.release) {
+    await (opts.touch ? act.swipe() : act.wheel(300));
+    await page.waitForTimeout(600);
+    releasedY = await page.evaluate(() => window.scrollY);
+  }
   const rec = await page.evaluate(() => {
     const w = window as unknown as Record<string, unknown>;
-    const { samples, styled } = w.__introRec as { samples: unknown[]; styled: Record<string, number> };
+    const { samples, styled, gone, escAt, absorbed } = w.__introRec as {
+      samples: unknown[];
+      styled: Record<string, number>;
+      gone: number;
+      escAt: number;
+      absorbed: number;
+    };
+    // the hero's final look: everything shown, nothing animating or held
+    const final: string[] = [];
+    const html = document.documentElement;
+    ["data-intro", "data-intro-ff", "data-intro-snap"].forEach(
+      (a) => html.hasAttribute(a) && final.push(`html still has ${a}`)
+    );
+    document.querySelectorAll<HTMLElement>("[data-intro-part], [data-intro-type]").forEach((el) => {
+      const name = el.dataset.introPart ?? el.dataset.introType;
+      const cs = getComputedStyle(el);
+      if (cs.opacity !== "1") final.push(`${name} opacity ${cs.opacity}`);
+      if (cs.clipPath !== "none") final.push(`${name} clipped`);
+      if (el.getAnimations().length) final.push(`${name} still animating`);
+    });
+    if (document.querySelector("[data-intro-styled]")) final.push("data-intro-styled left over");
     const marks: Record<string, number> = {};
     performance
       .getEntriesByType("mark")
@@ -176,6 +314,10 @@ async function record(browser: Browser, url: string, width: number, height: numb
     const headline = document.querySelector('[data-intro-part="headline"]');
     const greeting = document.querySelector('[data-intro-part="frame"] [data-intro-type="greeting"]');
     return {
+      gone,
+      escAt,
+      absorbed,
+      final,
       samples,
       trace: w.__cursorTrace,
       marks,
@@ -188,8 +330,8 @@ async function record(browser: Browser, url: string, width: number, height: numb
       },
     };
   });
-  await page.close();
-  return rec as Recording;
+  await context.close();
+  return { ...(rec as Recording), releasedY };
 }
 
 function check(rec: Recording, label: string, vw: number, vh: number) {
@@ -276,14 +418,18 @@ function check(rec: Recording, label: string, vw: number, vh: number) {
     carriages === lines - 2,
     `copy made ${carriages} carriage returns for ${lines} lines in two blocks`
   );
-  // ... and keeps moving through each one (no stalls mid-line)
+  // ... and keeps moving through each one: never still for two frames running
+  // mid-line (one repeated frame is the compositor, not the glide)
   copyGlides.forEach((g) => {
     const inner = running.filter((s) => s.t > g.t + 50 && s.t < g.t + (g.ms ?? 0) - 50);
-    for (let i = 1; i < inner.length; i++) {
+    for (let i = 2; i < inner.length; i++) {
+      const o = inner[i - 2].cursors.copy;
       const p = inner[i - 1].cursors.copy;
       const q = inner[i].cursors.copy;
-      if (inner[i].t - inner[i - 1].t > 50) continue;
-      if (p && q && Math.hypot(q.x - p.x, q.y - p.y) < 0.05) {
+      if (inner[i].t - inner[i - 2].t > 60) continue;
+      const still = (u?: { x: number; y: number }, v?: { x: number; y: number }) =>
+        !!u && !!v && Math.hypot(v.x - u.x, v.y - u.y) < 0.05;
+      if (still(o, p) && still(p, q)) {
         expect(false, `copy stood still mid-line at +${rel(inner[i].t)}ms`);
         break;
       }
@@ -326,6 +472,9 @@ function check(rec: Recording, label: string, vw: number, vh: number) {
   const changed = during.findIndex((s, i) => i > 0 && s.boxes !== during[i - 1].boxes);
   expect(changed === -1, `layout changed at +${rel(during[changed]?.t ?? 0)}ms`);
 
+  expect(marks.hold === undefined && marks.ff === undefined, "fast-forward without a scroll");
+  rec.final.forEach((f) => expect(false, `final state: ${f}`));
+
   // no overlaps: style waits for copy
   const grey = rec.styled.headline - marks["headline-typed"];
   info.push(`headline grey ${Math.round(grey)}ms after typing`);
@@ -340,6 +489,155 @@ function check(rec: Recording, label: string, vw: number, vh: number) {
   return failures.length;
 }
 
+type Ending = "fast-forward" | "cap" | "escape";
+
+/** after a scroll or key during the intro */
+function checkInput(rec: Recording, label: string, ending: Ending, minAbsorbed = 0) {
+  const failures: string[] = [];
+  const expect = (ok: boolean, msg: string) => {
+    if (!ok) failures.push(msg);
+  };
+  const { marks, samples, trace } = rec;
+  const rel = (t: number) => Math.round(t - marks.start);
+  const info: string[] = [];
+
+  if (ending === "escape") {
+    expect(rec.escAt > 0, "Escape not pressed");
+    const took = rec.gone - rec.escAt;
+    info.push(`Escape at +${rel(rec.escAt)}ms ended it ${Math.round(took)}ms later`);
+    expect(took <= 100, `Escape took ${Math.round(took)}ms to end it`);
+    expect(marks.hold === undefined, "Escape started a scroll hold");
+    expect(marks.end === undefined, "the intro played on after Escape");
+  } else {
+    const hold = marks.hold;
+    expect(hold !== undefined, "no scroll hold started");
+    const held = rec.gone - hold;
+    info.push(`scroll at +${rel(hold)}ms, held ${Math.round(held)}ms`);
+    expect(held <= HOLD_MS + HOLD_SLACK_MS, `scroll held ${Math.round(held)}ms (cap ${HOLD_MS}ms)`);
+
+    if (ending === "fast-forward") {
+      expect(marks.ff !== undefined, "the intro never fast-forwarded");
+      expect(marks.cap === undefined, "fast-forward hit the cap instead of finishing");
+      expect(marks.end !== undefined, "fast-forward did not play to the end");
+      // cursors still fly and dock, just fast
+      const roles = ["layout", "copy", "media", "style"].filter((r) =>
+        trace.some((m) => m.kind === "move" && m.id === r)
+      );
+      roles.forEach((r) => expect(marks[`dock:${r}`] !== undefined, `${r} never docked`));
+      const late = roles.filter((r) => marks[`dock:${r}`] > hold);
+      info.push(`docked after the scroll: ${late.join(", ") || "none"}`);
+      expect(late.length > 0, "no cursor docked during the fast-forward");
+      const fast = trace.filter((m) => m.kind === "move" && m.t > hold);
+      expect(fast.length > 0, "no cursor flew during the fast-forward");
+    } else {
+      expect(marks.cap !== undefined, "the cap did not fire");
+      expect(marks.end === undefined, "a stalled fast-forward still finished");
+      expect(held >= HOLD_MS - HOLD_SLACK_MS / 2, `released after only ${Math.round(held)}ms`);
+    }
+
+    info.push(`${rec.absorbed} inputs absorbed`);
+    expect(rec.absorbed >= minAbsorbed, `only ${rec.absorbed} of ${minAbsorbed}+ inputs absorbed`);
+    // absorbed, never replayed: no scroll during the hold or after it ends
+    const moved = samples.find((x) => x.t <= rec.gone + 500 && x.y !== 0);
+    expect(!moved, `page scrolled to ${moved?.y} at +${rel(moved?.t ?? 0)}ms`);
+    // released: a scroll once it is over moves the page
+    info.push(`scroll after: ${rec.releasedY}px`);
+    expect((rec.releasedY ?? 0) > 0, "scrolling not released after the intro");
+  }
+  rec.final.forEach((f) => expect(false, `final state: ${f}`));
+
+  console.log(`${failures.length ? "FAIL" : "ok  "} - ${label}: ${info.join("; ")}`);
+  failures.forEach((f) => console.log(`       ${f}`));
+  return failures.length;
+}
+
+interface Scenario {
+  label: string;
+  width: number;
+  height: number;
+  ending: Ending;
+  opts: PlayOptions;
+  /** scroll inputs that must have been absorbed */
+  absorbed?: number;
+}
+
+const DESKTOP = { width: 1440, height: 900 };
+const SCENARIOS: Scenario[] = [
+  {
+    label: "wheel at 0.2s",
+    ...DESKTOP,
+    ending: "fast-forward",
+    opts: { release: true, act: async (a) => (await a.at(200), await a.wheel()) },
+  },
+  {
+    label: "wheel at 3s",
+    ...DESKTOP,
+    ending: "fast-forward",
+    opts: { release: true, act: async (a) => (await a.at(3000), await a.wheel()) },
+  },
+  {
+    label: "more scrolling during the fast-forward",
+    ...DESKTOP,
+    ending: "fast-forward",
+    // the first wheel plus all six below land inside the hold
+    absorbed: 7,
+    opts: {
+      release: true,
+      act: async (a) => {
+        await a.at(200);
+        await a.wheel();
+        for (const [ms, key] of [
+          [300, ""],
+          [400, "ArrowDown"],
+          [500, ""],
+          [600, "PageDown"],
+          [700, " "],
+          [800, ""],
+        ] as const) {
+          await a.at(ms);
+          if (key) await a.page.keyboard.press(key);
+          else await a.wheel(800);
+        }
+      },
+    },
+  },
+  {
+    label: "arrow key at 1s",
+    ...DESKTOP,
+    ending: "fast-forward",
+    opts: { release: true, act: async (a) => (await a.at(1000), await a.page.keyboard.press("ArrowDown")) },
+  },
+  {
+    label: "touch scroll at 0.2s (390, touch)",
+    width: 390,
+    height: 844,
+    ending: "fast-forward",
+    opts: { touch: true, release: true, act: async (a) => (await a.at(200), await a.swipe()) },
+  },
+  {
+    label: "cap: fast-forward stalled, wheel at 0.5s",
+    ...DESKTOP,
+    ending: "cap",
+    opts: {
+      release: true,
+      act: async (a) => {
+        // the intro never hears about the scroll: only the boot script's cap can end it
+        await a.page.evaluate(() => (window.__introFastForward = () => {}));
+        await a.at(500);
+        await a.wheel();
+        await a.at(1100);
+        await a.wheel(800);
+      },
+    },
+  },
+  {
+    label: "Escape at 1s",
+    ...DESKTOP,
+    ending: "escape",
+    opts: { act: async (a) => (await a.at(1000), await a.page.keyboard.press("Escape")) },
+  },
+];
+
 async function main() {
   const { url, proc } = await startServer();
   const browser = await launch();
@@ -347,7 +645,11 @@ async function main() {
   try {
     for (const { width, height } of VIEWPORTS) {
       const rec = await record(browser, url, width, height);
-      failed += check(rec, `${width}x${height}`, width, height);
+      failed += check(rec, `full run ${width}x${height}`, width, height);
+    }
+    for (const sc of SCENARIOS) {
+      const rec = await record(browser, url, sc.width, sc.height, sc.opts);
+      failed += checkInput(rec, sc.label, sc.ending, sc.absorbed);
     }
   } finally {
     await browser.close();
