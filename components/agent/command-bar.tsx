@@ -77,7 +77,10 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     const el = panelRef.current;
     if (!el) return;
     const io = new IntersectionObserver(([entry]) => {
-      setDocked(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+      const d = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+      setDocked(d);
+      // the core travels with the dock (components/core/core.tsx)
+      setAgentState({ docked: d });
     });
     io.observe(el);
     return () => io.disconnect();
@@ -312,6 +315,8 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
       >
         <div className="dock-inner">
           <div className="dock-top">
+            {/* where the core lands when docked; the core itself overlays it */}
+            <span className="dock-core" data-core-slot="" aria-hidden="true" />
             <span className="label cmd-status" data-status={status}>
               {status}
             </span>

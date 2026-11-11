@@ -232,14 +232,15 @@ a {
   color: var(--text);
 }
 
+/* headline | core | command panel: the core is the centrepiece */
 .hero-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 24vw) minmax(0, 1fr);
   align-items: center;
-  gap: clamp(24px, 5vw, 72px);
+  gap: clamp(20px, 3.5vw, 56px);
   width: 100%;
-  max-width: var(--max);
+  max-width: 1320px;
   margin: 0 auto;
   padding-top: clamp(32px, 6vh, 64px);
 }
@@ -249,8 +250,9 @@ a {
   gap: 16px;
 }
 .hero-title {
-  max-width: 14ch;
-  font-size: clamp(40px, 5.6vw, 80px);
+  max-width: 12ch;
+  /* sized so the headline stays three lines beside the core at 1280-1440 */
+  font-size: clamp(40px, 4.5vw, 72px);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.035em;
@@ -273,19 +275,63 @@ a {
   color: var(--border);
 }
 .hero-core {
-  width: clamp(140px, 18vw, 220px);
+  width: 100%;
+  max-width: 360px;
   aspect-ratio: 1;
-  margin-top: 16px;
+  justify-self: center;
 }
 
 /* ============================================================
-   Core: the CSS core (SSR placeholder + fallback) under the
-   shader core, which fades in over it once it has drawn a frame
+   Core: the static still (SSR placeholder + fallback) under the
+   shader core, which crossfades in once it has drawn a frame.
+   The stack is one element that also travels into the dock.
    ============================================================ */
 .core-stack {
   position: relative;
   width: 100%;
   height: 100%;
+}
+.core-stack[data-docked] {
+  position: fixed;
+  z-index: 41; /* over the dock bar */
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.core-still {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.5s ease-out;
+}
+.core-still-edges path {
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+[data-core-ready] .core-still {
+  opacity: 0;
+}
+/* the still's states: a recolour of its lines (fallback devices, and docked) */
+.core-still path {
+  transition: stroke 0.3s;
+}
+.core-stack[data-status="thinking"] .core-still-edges path {
+  stroke: var(--text);
+}
+.core-stack[data-status="thinking"] .core-still-rings path {
+  stroke: var(--muted);
+}
+.core-stack[data-status="executing"] .core-still-edges path,
+.core-stack[data-status="executing"] .core-still-rings path {
+  stroke: var(--accent);
+}
+/* the dock's slot: an empty box the travelling core lands on */
+.dock-core {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 28px;
+  height: 28px;
 }
 .core-gl {
   position: absolute;
@@ -299,52 +345,6 @@ a {
 }
 [data-core-ready] .core-gl {
   opacity: 1;
-}
-[data-core-ready] .core {
-  opacity: 0;
-  transition: opacity 0.5s ease-out;
-}
-/* pointer tilt rotates the whole stack; the translateZ planes give parallax */
-.core {
-  --tiltX: 0deg;
-  --tiltY: 0deg;
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transform: perspective(600px) rotateX(var(--tiltX)) rotateY(var(--tiltY));
-  transition: transform 0.4s ease-out;
-}
-.core-layer {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-}
-.core-ring {
-  position: absolute;
-  inset: 0;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-}
-.core-ring-dashed {
-  border-style: dashed;
-  border-color: var(--muted);
-  animation: core-spin 24s linear infinite;
-}
-.core-hub {
-  position: absolute;
-  inset: 36%;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--text);
-  background: var(--panel);
-  font-family: var(--font-mono);
-  font-size: 12px;
-}
-@keyframes core-spin {
-  to {
-    rotate: 360deg;
-  }
 }
 
 /* ============================================================
@@ -1066,16 +1066,14 @@ html[data-intro] .intro-skip {
     grid-template-columns: minmax(0, 1fr);
   }
   .hero-grid {
+    position: relative;
     align-items: start;
   }
   .hero-core {
     position: absolute;
-    right: var(--gutter);
+    top: clamp(32px, 6vh, 64px);
+    right: 0;
     width: 96px;
-    margin: 0;
-  }
-  .hero-copy {
-    position: relative;
   }
 }
 
@@ -1095,8 +1093,11 @@ html[data-intro] .intro-skip {
     margin-left: 0;
     flex-basis: 100%;
   }
+  /* no core in the hero on phones; the still still docks into the bar */
   .hero-core {
-    display: none;
+    width: 0;
+    height: 0;
+    overflow: visible;
   }
 }
 

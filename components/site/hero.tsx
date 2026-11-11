@@ -1,5 +1,6 @@
 import type { Content } from "@/lib/types";
 import { Core } from "@/components/core/core";
+import { CoreStill } from "@/components/core/core-still";
 import { CommandBar } from "@/components/agent/command-bar";
 import { agentId } from "@/lib/agent/targets";
 import { SkipIntroButton } from "@/components/intro/boot-script";
@@ -18,9 +19,11 @@ export function Hero({ content }: { content: Content }) {
           <ul className="hero-status" data-intro-part="status" data-intro-tone="status">
             <li className="label">{profile.availability}</li>
           </ul>
-          <div className="hero-core" data-intro-part="core">
-            <Core />
-          </div>
+        </div>
+        <div className="hero-core" data-intro-part="core">
+          <Core>
+            <CoreStill />
+          </Core>
         </div>
         <CommandBar config={content.terminal} />
       </div>

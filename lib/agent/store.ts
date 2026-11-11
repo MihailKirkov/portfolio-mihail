@@ -13,9 +13,11 @@ interface AgentState {
   executing: boolean;
   /** active filter_projects tag, or null */
   filterTag: string | null;
+  /** the command bar is docked (the hero panel has scrolled away); the core follows */
+  docked: boolean;
 }
 
-let state: AgentState = { requesting: false, executing: false, filterTag: null };
+let state: AgentState = { requesting: false, executing: false, filterTag: null, docked: false };
 const listeners = new Set<() => void>();
 
 export function setAgentState(patch: Partial<AgentState>) {
@@ -36,7 +38,7 @@ export function useAgentState<T>(select: (s: AgentState) => T): T {
   return useSyncExternalStore(
     subscribe,
     () => select(state),
-    () => select({ requesting: false, executing: false, filterTag: null })
+    () => select({ requesting: false, executing: false, filterTag: null, docked: false })
   );
 }
 
