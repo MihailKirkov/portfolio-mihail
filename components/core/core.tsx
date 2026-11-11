@@ -12,8 +12,11 @@ import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
 //   - not under reduced motion, not with hardwareConcurrency <= 4, not with
 //     data saver on, not without a hardware-backed WebGL2 context
 //   - not while the core is hidden (phones): nothing is fetched until it shows
-//   - never in the middle of the boot intro: a context + shader compile stalls
-//     a frame, so a chunk that lands mid-intro mounts once the intro has ended
+//   - never during the boot intro: the context and shader compile stall a
+//     frame, and R3F creates them a few frames after the mount, so while the
+//     intro is pending or running the mount waits for it to end. On a first
+//     visit the media cursor drops in the CSS core and the shader core fades
+//     in over it once the intro is done.
 // Once the shader core has drawn its first frame the CSS core fades out under
 // it. If the WebGL context is lost the CSS core comes back and stays.
 //
@@ -45,10 +48,10 @@ function finePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-/** run `fn` now, or once the boot intro has ended if it is mid-run */
+/** run `fn` now, or once the boot intro (pending or running) has ended */
 function outsideIntro(fn: () => void): () => void {
   const html = document.documentElement;
-  if (html.dataset.intro !== "running") {
+  if (!html.hasAttribute("data-intro")) {
     fn();
     return () => {};
   }

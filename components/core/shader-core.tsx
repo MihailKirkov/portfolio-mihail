@@ -256,17 +256,17 @@ void main() {
   float width = 0.09 - 0.05 * think + 0.02 * exec;
   float vein = 1.0 - smoothstep(0.0, width, abs(n));
   // executing: the ridges the vertex shader raised carry the accent
-  float ridge = pow(clamp(vDisp / 0.07, 0.0, 1.0), 2.0) * exec;
+  float ridge = pow(clamp(vDisp / 0.07, 0.0, 1.0), 6.0) * exec;
 
   vec3 base = mix(uGround, uPanel, 0.35 + 0.65 * lambert());
   base = mix(base, uPanel * 1.5, rim() * 0.6);
-  base = mix(base, uAccent * 0.18, exec * 0.5);
+  base = mix(base, uAccent * 0.12, exec * 0.3);
   base = mix(base, uPanel * 2.0, toward() * 0.5);
 
   vec3 veinCol = uMuted * 0.8 * idle + uText * think + uAccent * exec;
   float veinAmt = vein * (0.45 * idle + 1.0 * think + 0.9 * exec);
   vec3 col = mix(base, veinCol, clamp(veinAmt, 0.0, 1.0));
-  col = mix(col, uAccent, ridge * 0.9);
+  col = mix(col, uAccent, ridge * 0.7);
   col = mix(col, uText, toward() * vein * 0.5);
   col = mix(col, uText, exp(-uSince * 5.0) * exec * 0.35);
   gl_FragColor = vec4(col, 1.0);
@@ -284,7 +284,7 @@ const CONTOUR_VERT = sphereVertex(/* glsl */ `
   float terrain = snoise(p * 1.7 + uTime * 0.08) * 0.5 + snoise(p * 3.4 - uTime * 0.05) * 0.25;
   float churn = snoise(p * 2.6 + vec3(uTime * 1.3, -uTime * 0.9, uTime * 0.6));
   d += terrain * (0.07 * idle + 0.05 * exec);
-  d += churn * 0.11 * think;
+  d += churn * 0.07 * think;
 `);
 
 const CONTOUR_FRAG = /* glsl */ `
@@ -292,9 +292,9 @@ ${FRAG_HEAD}
 void main() {
   float idle = uState.x, think = uState.y, exec = uState.z;
   // contours of height along the axis, plus the terrain's own relief
-  float lines = 9.0 + 9.0 * think;
-  float judder = snoise(vec3(floor(vPos.y * 18.0), uTime * 9.0, 0.0)) * 0.05 * think;
-  float h = vPos.y * 0.5 + 0.5 + vDisp * 3.0 + judder;
+  float lines = 9.0 + 3.0 * think;
+  float judder = snoise(vec3(floor(vPos.y * 18.0), uTime * 9.0, 0.0)) * 0.02 * think;
+  float h = vPos.y * 0.5 + 0.5 + vDisp * (3.0 - 1.8 * think) + judder;
   float c = fract(h * lines);
   float dc = min(c, 1.0 - c);
   float w = fwidth(h * lines);
