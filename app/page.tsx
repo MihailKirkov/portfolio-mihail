@@ -7,6 +7,7 @@ import { Contact } from "@/components/site/contact";
 import { ProjectList } from "@/components/projects/project-list";
 import { CursorLayer } from "@/components/agent/cursor-lazy";
 import { BootIntro } from "@/components/intro/intro-lazy";
+import { PointerEffects } from "@/components/site/pointer-effects-lazy";
 
 // Statically generated at build time; content is baked into the HTML.
 export const dynamic = "force-static";
@@ -32,6 +33,7 @@ export default async function Home() {
       </main>
       <CursorLayer />
       <BootIntro />
+      <PointerEffects />
     </>
   );
 }

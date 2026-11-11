@@ -60,7 +60,6 @@ html {
 
 body {
   margin: 0;
-  background: var(--ground);
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 16px;
@@ -280,8 +279,31 @@ a {
 }
 
 /* ============================================================
-   CSS core (SSR placeholder + fallback for the shader core)
+   Core: the CSS core (SSR placeholder + fallback) under the
+   shader core, which fades in over it once it has drawn a frame
    ============================================================ */
+.core-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.core-gl {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease-out;
+}
+.core-gl canvas {
+  display: block;
+}
+[data-core-ready] .core-gl {
+  opacity: 1;
+}
+[data-core-ready] .core {
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
 /* pointer tilt rotates the whole stack; the translateZ planes give parallax */
 .core {
   --tiltX: 0deg;
@@ -323,6 +345,37 @@ a {
   to {
     rotate: 360deg;
   }
+}
+
+/* ============================================================
+   Pointer effects: a soft neutral spotlight behind the page
+   (never the accent) and the magnetic buttons. Both are only
+   mounted for a fine hover pointer without reduced motion.
+   ============================================================ */
+.spotlight {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* behind everything in the body; the ground is painted by html */
+  z-index: -1;
+  width: 900px;
+  height: 900px;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(232, 234, 237, 0.05) 0%,
+    rgba(232, 234, 237, 0.02) 35%,
+    rgba(232, 234, 237, 0) 70%
+  );
+  transition: opacity 0.6s ease-out;
+  will-change: transform;
+}
+.spotlight[data-on] {
+  opacity: 1;
+}
+[data-magnet] {
+  will-change: translate;
 }
 
 /* ============================================================

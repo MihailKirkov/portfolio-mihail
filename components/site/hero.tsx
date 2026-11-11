@@ -1,5 +1,5 @@
 import type { Content } from "@/lib/types";
-import { CssCore } from "@/components/core/reactor-core";
+import { Core } from "@/components/core/core";
 import { CommandBar } from "@/components/agent/command-bar";
 import { agentId } from "@/lib/agent/targets";
 import { SkipIntroButton } from "@/components/intro/boot-script";
@@ -19,7 +19,7 @@ export function Hero({ content }: { content: Content }) {
             <li className="label">{profile.availability}</li>
           </ul>
           <div className="hero-core" data-intro-part="core">
-            <CssCore />
+            <Core />
           </div>
         </div>
         <CommandBar config={content.terminal} />

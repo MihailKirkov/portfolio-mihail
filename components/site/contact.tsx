@@ -20,6 +20,7 @@ export function Contact({ profile }: { profile: Profile }) {
           href={profile.cv_url}
           download="Mihail-Kirkov-CV.pdf"
           data-agent-id={agentId.cta("cv-contact")}
+          data-magnet=""
         >
           <DownloadIcon /> CV
         </a>
