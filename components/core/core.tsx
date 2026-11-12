@@ -12,32 +12,48 @@ import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
 //   - not under reduced motion, not with hardwareConcurrency <= 4, not with
 //     data saver on, not without a hardware-backed WebGL2 context
 //   - not while the core is hidden (phones): nothing is fetched until it shows
-//   - never during the boot intro: the context and shader compile stall a
-//     frame, and R3F creates them a few frames after the mount, so while the
-//     intro is pending or running the mount waits for it to end. On a first
-//     visit the media cursor drops in the still and the live core crossfades
-//     in over it once the intro is done.
+// The chunk is fetched right after hydration. If it lands before the
+// boot intro starts, the live core mounts hidden and the intro waits for its
+// first frame (bounded, see boot-intro.tsx), so the media cursor drops in a
+// core that is already turning. If it lands while the intro is running, the
+// mount waits for the intro to end: a context + shader compile stalls a
+// frame, which would show as a cursor jump. Then the still is dropped in and
+// the live core crossfades in afterwards. The stack reports this on
+// data-core ("loading" | "deferred") and data-core-ready.
 // Once the shader core has drawn its first frame the still fades out under
 // it (same camera, same geometry: no change of shape). If the WebGL context
 // is lost the still comes back and stays.
 //
-// Docking: when the command bar docks (the hero panel has scrolled away) the
-// stack - still or canvas, the same element - goes position: fixed and flies
-// from the hero box to the dock's slot ([data-core-slot]), shrinking; it
-// snaps to the slot's real size at the end so the canvas renders small, at a
-// capped frame rate. Undocking flies it back. The still's thinking and
-// executing looks are a CSS recolour keyed on data-status.
+// Travel. One target: the hero box when the command bar is in the hero, the
+// dock's slot ([data-core-slot]) once the bar has docked. The stack - still
+// or canvas, the same element - eases toward that target every frame, so a
+// reversal mid-flight only changes direction. While it flies it keeps its
+// layout size (the canvas render size) and moves and scales as a whole; the
+// render size changes only at rest: the slot's size when docked, the hero's
+// when flying back. R3F measures the canvas by offset size, so the flight's
+// transform never triggers a re-measure. Docked, it follows the slot through
+// bar resizes (answer text, tool log, "Show me"), window resizes and the
+// mobile keyboard. A fast scroll skips the flight: a short crossfade to the
+// target instead. The still's thinking and executing looks are a CSS
+// recolour keyed on data-status.
 //
 // Dev only: ?state=idle|thinking|executing holds the core in one state.
 
 type ShaderModule = { ShaderCore: (p: ShaderCoreProps) => React.JSX.Element };
 
 const DEV = process.env.NODE_ENV === "development";
-const FLIGHT_MS = 550;
-const FLIGHT_EASE = "cubic-bezier(0.2, 0, 0, 1)";
 const DOCKED_FPS = 24;
-/** longer than R3F's debounced canvas measure (50ms) */
-const MEASURE_MS = 80;
+/** while the boot intro runs the core is a backdrop: steady and cheap */
+const INTRO_FPS = 30;
+/** easing rate of the flight, per second; ~0.6s for a hero-to-dock trip */
+const EASE = 10;
+/** settled when this close to the target, in px (position + size) */
+const SETTLE_PX = 0.5;
+/** the exponential ease never quite arrives: close at least this fast, px/s */
+const MIN_CLOSE_PX_S = 60;
+/** scrolling faster than this skips the flight for a crossfade */
+const FAST_SCROLL_PX_S = 4000;
+const CROSSFADE_MS = 160;
 
 function canRunShader() {
   if (prefersReducedMotion()) return false;
@@ -60,10 +76,10 @@ function finePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-/** run `fn` now, or once the boot intro (pending or running) has ended */
-function outsideIntro(fn: () => void): () => void {
+/** run `fn` once the boot intro is not running (now, or when it ends) */
+function outsideRunningIntro(fn: () => void): () => void {
   const html = document.documentElement;
-  if (!html.hasAttribute("data-intro")) {
+  if (html.dataset.intro !== "running") {
     fn();
     return () => {};
   }
@@ -76,32 +92,52 @@ function outsideIntro(fn: () => void): () => void {
   return () => mo.disconnect();
 }
 
+/** a square box in viewport px */
 interface Box {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
+  x: number;
+  y: number;
+  w: number;
 }
 
-/** the dock slot's box where it will be once the dock bar has slid in */
-function slotBox(slot: HTMLElement): Box {
-  const r = slot.getBoundingClientRect();
-  const dock = slot.closest<HTMLElement>(".dock");
-  const tr = dock ? getComputedStyle(dock).translate : "none";
-  const dy = tr && tr !== "none" ? parseFloat(tr.split(" ")[1] ?? "0") || 0 : 0;
-  return { left: r.left, top: r.top - dy, width: r.width, height: r.height };
+function boxOf(n: Element | null | undefined): Box | null {
+  if (!n) return null;
+  const r = n.getBoundingClientRect();
+  return { x: r.left, y: r.top, w: r.width };
 }
 
-function place(el: HTMLElement, b: Box) {
-  el.style.left = `${b.left}px`;
-  el.style.top = `${b.top}px`;
-  el.style.width = `${b.width}px`;
-  el.style.height = `${b.height}px`;
+/**
+ * the page's scroll speed, px/s, averaged over the last SPEED_WINDOW_MS of
+ * scroll events (one event carries a whole frame's steps, so a single event
+ * says little)
+ */
+const SPEED_WINDOW_MS = 150;
+const SPEED_FLOOR_MS = 100;
+function scrollSpeedTracker() {
+  const samples: { t: number; y: number }[] = [];
+  const onScroll = () => {
+    const now = performance.now();
+    samples.push({ t: now, y: window.scrollY });
+    // keep one sample older than the window as the baseline, so the average
+    // spans the whole window even when frames (and so events) are sparse
+    while (samples.length > 2 && now - samples[1].t > SPEED_WINDOW_MS) samples.shift();
+  };
+  window.addEventListener("scroll", onScroll, { passive: true });
+  return {
+    speed: () => {
+      const now = performance.now();
+      const last = samples[samples.length - 1];
+      if (!last || now - last.t > SPEED_WINDOW_MS) return 0;
+      const first = samples[0];
+      // over at least SPEED_FLOOR_MS: a burst of events in one frame, or one
+      // big step after a quiet spell, is not a fast scroll
+      const dt = Math.max(last.t - first.t, SPEED_FLOOR_MS);
+      return (Math.abs(last.y - first.y) / dt) * 1000;
+    },
+    stop: () => window.removeEventListener("scroll", onScroll),
+  };
 }
 
-function unplace(el: HTMLElement) {
-  el.style.left = el.style.top = el.style.width = el.style.height = "";
-}
+type Mode = "home" | "flying" | "docked";
 
 export function Core({ children }: { children: ReactNode }) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -110,14 +146,21 @@ export function Core({ children }: { children: ReactNode }) {
   const [stillGone, setStillGone] = useState(false);
   const [lost, setLost] = useState(false);
   const [active, setActive] = useState(true);
+  const [introRunning, setIntroRunning] = useState(false);
   const [pointer, setPointer] = useState(false);
   const [forced, setForced] = useState<AgentStatus | null>(null);
   const status = useAgentState(statusOf);
   const docked = useAgentState((s) => s.docked);
+  const dockedRef = useRef(docked);
+  dockedRef.current = docked;
+  const readyRef = useRef(ready);
+  readyRef.current = ready;
+  const retarget = useRef<() => void>(() => {});
 
-  // decide, load, and mount outside the intro
+  // decide and load at idle; mount outside a running intro
   useEffect(() => {
-    if (!canRunShader()) return;
+    const el = wrap.current;
+    if (!el || !canRunShader()) return;
     if (DEV) {
       const s = new URLSearchParams(location.search).get("state");
       if (s === "idle" || s === "thinking" || s === "executing") setForced(s);
@@ -126,42 +169,50 @@ export function Core({ children }: { children: ReactNode }) {
 
     let disposed = false;
     let undo = () => {};
-    const shown = () => (wrap.current?.getBoundingClientRect().width ?? 0) > 0;
+    const shown = () => el.getBoundingClientRect().width > 0;
     const load = () => {
+      el.dataset.core = "loading";
       void import("@/components/core/shader-core").then((m) => {
         if (disposed) return;
-        undo = outsideIntro(() => !disposed && setMod(m));
+        if (document.documentElement.dataset.intro === "running") el.dataset.core = "deferred";
+        undo = outsideRunningIntro(() => !disposed && setMod(m));
       });
     };
-    if (shown()) {
+    const onResize = () => {
+      if (!shown()) return;
+      window.removeEventListener("resize", onResize);
       load();
-    } else {
-      // hidden (phones): fetch nothing unless a resize shows it
-      const onResize = () => {
-        if (!shown()) return;
-        window.removeEventListener("resize", onResize);
-        load();
-      };
-      window.addEventListener("resize", onResize);
-      return () => {
-        disposed = true;
-        undo();
-        window.removeEventListener("resize", onResize);
-      };
-    }
+    };
+    // right after hydration: the fetch is cheap to start, and the earlier
+    // the chunk is in, the surer it is evaluated before the intro moves
+    // (requestIdleCallback came too late: its evaluation landed mid-intro)
+    if (shown()) load();
+    // hidden (phones): fetch nothing unless a resize shows it
+    else window.addEventListener("resize", onResize);
     return () => {
       disposed = true;
       undo();
+      window.removeEventListener("resize", onResize);
     };
   }, []);
 
-  // pause off screen or in a hidden tab
+  // render only on screen and in a visible tab. During the boot intro the
+  // first frame (the compile) must come before it starts; once it runs, the
+  // core renders only after the media cursor has dropped it in
+  // (data-core-shown on the wrapper, set by boot-intro.tsx), and never
+  // compiles mid-intro
   useEffect(() => {
     const el = wrap.current;
-    if (!mod || !el) return;
+    const home = el?.parentElement;
+    if (!mod || !el || !home) return;
+    const html = document.documentElement;
     let inView = true;
     let visible = document.visibilityState !== "hidden";
-    const update = () => setActive(inView && visible);
+    const update = () => {
+      const running = html.dataset.intro === "running";
+      setIntroRunning(running);
+      setActive(inView && visible && (!running || (readyRef.current && "coreShown" in home.dataset)));
+    };
     const io = new IntersectionObserver(([entry]) => {
       inView = entry.isIntersecting;
       update();
@@ -172,110 +223,220 @@ export function Core({ children }: { children: ReactNode }) {
       update();
     };
     document.addEventListener("visibilitychange", onVisibility);
+    const mo = new MutationObserver(update);
+    mo.observe(html, { attributes: true, attributeFilter: ["data-intro"] });
+    mo.observe(home, { attributes: true, attributeFilter: ["data-core-shown"] });
+    update();
     return () => {
       io.disconnect();
+      mo.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [mod]);
 
   // the still fades out under the first shader frame, then unmounts
   useEffect(() => {
+    const el = wrap.current;
     if (!ready) {
       setStillGone(false);
       return;
     }
+    if (el) delete el.dataset.core;
     const id = setTimeout(() => setStillGone(true), 600);
     return () => clearTimeout(id);
   }, [ready]);
 
-  // travel between the hero box and the dock slot
+  // travel: ease toward the one target every frame
   useEffect(() => {
     const el = wrap.current;
     const home = el?.parentElement;
-    const slot = document.querySelector<HTMLElement>("[data-core-slot]");
-    if (!el || !home || !slot) return;
-    const reduced = prefersReducedMotion();
-    let anim: Animation | undefined;
-    let nudge = 0;
+    if (!el || !home) return;
+    const slot = () => document.querySelector<HTMLElement>("[data-core-slot]");
+    const target = (): Box | null => (dockedRef.current ? boxOf(slot()) : boxOf(home));
+    const scroll = scrollSpeedTracker();
 
-    if (docked) {
-      const from = home.getBoundingClientRect();
-      const to = slotBox(slot);
-      el.dataset.docked = "";
-      // hidden in the hero (phones): nothing to fly from
-      if (reduced || from.width < 1) {
-        place(el, to);
-      } else {
-        place(el, from);
-        const s = to.width / from.width;
-        anim = el.animate(
-          [
-            { transform: "none" },
-            { transform: `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${s})` },
-          ],
-          { duration: FLIGHT_MS, easing: FLIGHT_EASE, fill: "forwards" }
-        );
-        // land: the real small size, so the canvas renders small
-        anim.onfinish = () => {
-          place(el, slotBox(slot));
-          anim?.cancel();
-        };
-      }
-      const onResize = () => {
-        if (!anim || anim.playState === "idle") place(el, slotBox(slot));
-      };
-      window.addEventListener("resize", onResize);
-      return () => {
-        anim?.cancel();
-        window.removeEventListener("resize", onResize);
-      };
-    }
+    let mode: Mode = "home";
+    /** where the stack is now, while flying or docked */
+    let cur: Box | null = null;
+    /** the layout size, which is the canvas render size */
+    let layoutW = 0;
+    let raf = 0;
+    let last = 0;
+    let fade = 0;
+    let followers: (() => void)[] = [];
 
-    if (!("docked" in el.dataset)) return;
-    const from = slotBox(slot);
-    const to = home.getBoundingClientRect();
-    const finish = () => {
-      unplace(el);
-      el.style.transform = "";
+    const setLayout = (w: number) => {
+      layoutW = w;
+      el.style.width = `${w}px`;
+      el.style.height = `${w}px`;
+    };
+    const apply = () => {
+      if (!cur) return;
+      el.style.transform = `translate(${cur.x}px, ${cur.y}px) scale(${cur.w / layoutW})`;
+    };
+    const stopLoop = () => {
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      last = 0;
+    };
+    const unfollow = () => {
+      followers.forEach((f) => f());
+      followers = [];
+    };
+
+    const settleHome = () => {
+      stopLoop();
+      unfollow();
+      mode = "home";
+      cur = null;
+      el.style.width = el.style.height = el.style.transform = "";
+      delete el.dataset.flying;
       delete el.dataset.docked;
-      // R3F measures its canvas with getBoundingClientRect, debounced, and a
-      // measure taken mid-flight read the scaled box: one more layout change
-      // now, untransformed and held past the debounce, sets it right
-      el.style.width = "99.9%";
-      nudge = window.setTimeout(() => {
-        el.style.width = "";
-      }, MEASURE_MS);
     };
-    if (reduced || to.width < 1) {
-      finish();
-      return;
-    }
-    // the same measure would read the scaled box at take-off: sit hidden and
-    // untransformed at the hero size past the debounce first, so the canvas
-    // renders large on the way back
-    place(el, to);
-    el.style.visibility = "hidden";
-    const hold = window.setTimeout(() => {
-      el.style.visibility = "";
-      const s = from.width / to.width;
-      anim = el.animate(
-        [
-          { transform: `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${s})` },
-          { transform: "none" },
-        ],
-        { duration: FLIGHT_MS, easing: FLIGHT_EASE, fill: "forwards" }
-      );
-      anim.onfinish = () => {
-        anim?.cancel();
-        finish();
+
+    const settleDock = (t: Box) => {
+      stopLoop();
+      unfollow();
+      mode = "docked";
+      cur = t;
+      // at rest in the slot: render at the slot's size
+      setLayout(t.w);
+      apply();
+      delete el.dataset.flying;
+      el.dataset.docked = "";
+      // follow the slot: bar resizes, window resizes, the mobile keyboard,
+      // and the bar's own slide-in, which the observers do not see
+      const resync = () => {
+        const n = target();
+        if (!n || !cur || mode !== "docked") return;
+        if (Math.abs(n.x - cur.x) + Math.abs(n.y - cur.y) + Math.abs(n.w - cur.w) > SETTLE_PX) fly();
       };
-    }, MEASURE_MS);
-    return () => {
-      clearTimeout(hold);
-      clearTimeout(nudge);
-      el.style.visibility = "";
-      anim?.cancel();
+      const bar = slot()?.closest<HTMLElement>(".dock-inner") ?? slot();
+      const ro = bar ? new ResizeObserver(resync) : null;
+      if (bar) ro?.observe(bar);
+      const vv = window.visualViewport;
+      const dock = slot()?.closest<HTMLElement>(".dock") ?? null;
+      window.addEventListener("resize", resync);
+      vv?.addEventListener("resize", resync);
+      vv?.addEventListener("scroll", resync);
+      dock?.addEventListener("transitionend", resync);
+      const late = window.setTimeout(resync, 300);
+      followers = [
+        () => ro?.disconnect(),
+        () => window.removeEventListener("resize", resync),
+        () => vv?.removeEventListener("resize", resync),
+        () => vv?.removeEventListener("scroll", resync),
+        () => dock?.removeEventListener("transitionend", resync),
+        () => clearTimeout(late),
+      ];
     };
+
+    const settle = () => {
+      const t = target();
+      if (dockedRef.current && t) settleDock(t);
+      else settleHome();
+    };
+
+    const tick = (now: number) => {
+      raf = 0;
+      const t = target();
+      if (!t || !cur) return settle();
+      const dt = Math.min(last ? (now - last) / 1000 : 1 / 60, 0.05);
+      last = now;
+      const gap = Math.abs(t.x - cur.x) + Math.abs(t.y - cur.y) + Math.abs(t.w - cur.w);
+      const k = Math.min(1, Math.max(1 - Math.exp(-dt * EASE), (dt * MIN_CLOSE_PX_S) / Math.max(gap, 1e-6)));
+      cur.x += (t.x - cur.x) * k;
+      cur.y += (t.y - cur.y) * k;
+      cur.w += (t.w - cur.w) * k;
+      const left = Math.abs(t.x - cur.x) + Math.abs(t.y - cur.y) + Math.abs(t.w - cur.w);
+      if (left < SETTLE_PX) {
+        cur = t;
+        apply();
+        return settle();
+      }
+      apply();
+      raf = requestAnimationFrame(tick);
+    };
+
+    /** head for the target from wherever the stack is now */
+    const fly = () => {
+      unfollow();
+      if (mode === "home") {
+        const h = boxOf(home);
+        if (!h) return;
+        cur = h;
+        setLayout(h.w);
+      } else if (mode === "docked" && !dockedRef.current) {
+        // off home: render at the hero's size from take-off, so the way
+        // back is sharp; the one re-measure happens at rest, not mid-flight
+        const h = boxOf(home);
+        if (h && h.w > 0) setLayout(h.w);
+      }
+      mode = "flying";
+      el.dataset.flying = "";
+      delete el.dataset.docked;
+      apply();
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+
+    /** no flight: a short crossfade to the target */
+    const jump = () => {
+      stopLoop();
+      unfollow();
+      clearTimeout(fade);
+      el.style.opacity = "0";
+      // going home: take the hero's render size now, out of sight, so the
+      // re-measure is done before the fade-in
+      if (mode === "docked" && !dockedRef.current) {
+        const h = boxOf(home);
+        if (h && h.w > 0) {
+          setLayout(h.w);
+          apply();
+        }
+      }
+      fade = window.setTimeout(() => {
+        const t = target();
+        if (dockedRef.current && t) {
+          if (mode === "home") el.dataset.flying = "";
+          settleDock(t);
+        } else {
+          settleHome();
+        }
+        el.style.opacity = "";
+      }, CROSSFADE_MS);
+    };
+
+    retarget.current = () => {
+      clearTimeout(fade);
+      el.style.opacity = "";
+      const h = boxOf(home);
+      const s = boxOf(slot());
+      const degenerate = !h || h.w < 1 || !s || s.w < 1;
+      const speed = scroll.speed();
+      const crossfade = degenerate || speed > FAST_SCROLL_PX_S;
+      // how the last retarget travelled, and why (the browser checks read it)
+      el.dataset.travel = crossfade ? "fade" : "fly";
+      el.dataset.travelSpeed = String(Math.round(speed));
+      if (crossfade) jump();
+      else fly();
+    };
+
+    return () => {
+      stopLoop();
+      unfollow();
+      clearTimeout(fade);
+      scroll.stop();
+      retarget.current = () => {};
+    };
+  }, []);
+
+  const started = useRef(false);
+  useEffect(() => {
+    if (!started.current) {
+      started.current = true;
+      if (!docked) return;
+    }
+    retarget.current();
   }, [docked]);
 
   const gl = mod && !lost;
@@ -292,7 +453,7 @@ export function Core({ children }: { children: ReactNode }) {
           status={forced ?? status}
           pointer={pointer}
           active={active}
-          fps={docked ? DOCKED_FPS : 0}
+          fps={introRunning ? INTRO_FPS : docked ? DOCKED_FPS : 0}
           onReady={() => setReady(true)}
           onLost={() => {
             setLost(true);

@@ -59,6 +59,12 @@ declare global {
 
 const DRIVER_WAIT_MS = 1500;
 const FONT_WAIT_MS = 1500;
+/**
+ * the live core, if its chunk is in, mounts before the intro and compiles on
+ * its first frame; that stall must land before anything moves. Bounded: past
+ * this the gate holds the core until the intro ends and the still is dropped in
+ */
+const CORE_WAIT_MS = 600;
 
 // Fast-forward. The boot script holds scroll for at most FF_HOLD_MS from the
 // first scroll, then ends the intro whatever state it is in. Here, whatever is
@@ -84,9 +90,9 @@ const T = {
    * the average speed on the bowed path) stays well under a jump
    */
   flightMin: 450,
-  flightMax: 1100,
+  flightMax: 1300,
   flightBase: 200,
-  flightPerPx: 0.75,
+  flightPerPx: 0.85,
   /**
    * copy's carriage return, from the end of a typed line to the start of the
    * next: straight and linear at about the typing glide's own speed, so typing
@@ -343,6 +349,16 @@ function typeBlock(copy: Track, b: Block, charMs: number) {
   });
 }
 
+/**
+ * the core drops in. The live core (components/core/core.tsx) waits for this
+ * mark to start rendering: hidden, it has nothing to show, and its frames
+ * would only load the cursors' choreography
+ */
+function showCore(core: HTMLElement | null, signal: AbortSignal) {
+  core?.setAttribute("data-core-shown", "");
+  return dropIn(core, T.drop, signal);
+}
+
 function buildIntro(): { steps: Step[]; plannedMs: number; plannedSteps: number } {
   const label = introPart("label");
   const headlineEl = introPart("headline");
@@ -472,11 +488,11 @@ function buildIntro(): { steps: Step[]; plannedMs: number; plannedSteps: number 
     media.wait(T.mediaLead);
     media.fly(core, { x: coreR.left + coreR.width / 2, y: coreR.top + coreR.height / 2 });
     media.click();
-    media.run((s) => dropIn(core, T.drop, s), T.drop);
+    media.run((s) => showCore(core, s), T.drop);
     if (spot) media.dock(spot);
   } else {
     // nothing to do on screen (the core is hidden on phones): no cursor
-    media.run((s) => dropIn(core, T.drop, s));
+    media.run((s) => showCore(core, s));
   }
 
   // ---- style: CV accent, the headline stack, then the panel -----------------
@@ -556,6 +572,24 @@ function buildIntro(): { steps: Step[]; plannedMs: number; plannedSteps: number 
     // the longest chain of steps, for the fast-forward's per-step frame cost
     plannedSteps: Math.max(...tracks.map((t) => t.steps.length)),
   };
+}
+
+/** the live core's first frame, if one is loading (components/core/core.tsx) */
+function waitForCore(maxMs: number) {
+  return new Promise<void>((resolve) => {
+    const stack = document.querySelector<HTMLElement>(".core-stack");
+    if (!stack) return resolve();
+    const done = () => stack.dataset.core !== "loading" || "coreReady" in stack.dataset;
+    if (done()) return resolve();
+    const finish = () => {
+      mo.disconnect();
+      clearTimeout(t);
+      resolve();
+    };
+    const mo = new MutationObserver(() => done() && finish());
+    mo.observe(stack, { attributes: true });
+    const t = setTimeout(finish, maxMs);
+  });
 }
 
 /** wait out the heavy first frames, so no cursor starts mid-flight after a stall */
@@ -648,7 +682,10 @@ export function BootIntro() {
       if (!hasDriver || choreo.busy || html.dataset.intro !== "pending") return end();
 
       html.dataset.intro = "running";
-      if (ffSince === null) await settleFrames(600);
+      if (ffSince === null) {
+        await waitForCore(CORE_WAIT_MS);
+        await settleFrames(600);
+      }
       if (ended || disposed) return;
       const intro = buildIntro();
       plannedMs = intro.plannedMs;

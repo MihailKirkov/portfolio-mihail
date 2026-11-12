@@ -137,8 +137,8 @@ void main() {
   vec3 p = normalize(position);
   float think = uState.y;
   float exec = uState.z;
-  float d = snoise(p * 2.2 + uTime * 1.6) * 0.07 * think;
-  d += 0.06 * exec;
+  float d = 0.06 * exec;
+  if (think > 0.001) d += snoise(p * 2.2 + uTime * 1.6) * 0.07 * think;
   // executing: the shell flexes in hard pulses
   d += 0.03 * exec * pow(0.5 + 0.5 * sin(uTime * 7.0 + p.y * 6.0), 8.0);
   // bulge toward the pointer when it is close
@@ -172,7 +172,8 @@ void main() {
 
   // thinking: a band scanning down the shell, fast
   float band = smoothstep(0.75, 1.0, fract(-vPos.y * 0.6 - uTime * 1.4));
-  float flicker = step(0.55, fract(snoise(floor(vPos * 4.0) * 1.7 + floor(uTime * 12.0))));
+  float flicker = 0.0;
+  if (think > 0.001) flicker = step(0.55, fract(snoise(floor(vPos * 4.0) * 1.7 + floor(uTime * 12.0))));
   // executing: a sweep around the axis lights the faces as it passes
   float ang = atan(vPos.z, vPos.x) / 6.2831853 + 0.5;
   float sweep = pow(fract(ang - uTime * 0.9), 6.0);
@@ -513,6 +514,9 @@ export function ShaderCore({ status, pointer, active, fps, onReady, onLost }: Sh
         dpr={[1, 2]}
         gl={{ alpha: true, antialias: true, powerPreference: "low-power", stencil: false }}
         camera={{ position: [0, 0, 6.4], fov: 30, near: 0.1, far: 20 }}
+        // the layout size, not the bounding box: the gate moves and scales
+        // this element in flight and must not trigger a re-measure
+        resize={{ offsetSize: true, scroll: false, debounce: { scroll: 50, resize: 0 } }}
         onCreated={({ gl }) => gl.setClearColor(0x000000, 0)}
       >
         <Loop active={active} fps={fps} />
