@@ -29,6 +29,8 @@
   --gutter: clamp(16px, 4vw, 48px);
   --max: 1200px;
   --topbar-h: 64px;
+  /* the docked command bar's height, kept clear below the page's last content */
+  --dock-h: 168px;
 }
 
 @theme inline {
@@ -320,6 +322,11 @@ a {
 [data-core-ready] .core-still {
   opacity: 0;
 }
+/* during the boot intro nothing is visible yet: no crossfade, no repaint mid-flight */
+html[data-intro] [data-core-ready] .core-still {
+  visibility: hidden;
+  transition: none;
+}
 /* the still's states: a recolour of its lines (fallback devices, and docked) */
 .core-still path {
   transition: stroke 0.3s;
@@ -347,6 +354,9 @@ a {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.5s ease-out;
+  /* stays on its own compositing layer: when the fade-in ends, Chrome would
+     otherwise drop the layer and read the WebGL canvas back, a ~50ms stall */
+  will-change: opacity;
 }
 .core-gl canvas {
   display: block;
@@ -548,25 +558,32 @@ a {
   opacity: 1;
   translate: 0 0;
 }
+/* head (core, status) beside the body (answer, log); chips and input below */
 .dock-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 12px;
   max-width: 760px;
   margin: 0 auto;
   padding: 10px;
   border: 1px solid var(--border);
   background: var(--panel);
 }
-.dock-top {
+.dock-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 12px;
   min-width: 0;
 }
-.dock-top .cmd-status {
+.dock-head .cmd-status {
   flex: 0 0 auto;
   width: 72px;
+}
+.dock-toggle {
+  display: none;
+}
+.dock-body {
+  min-width: 0;
 }
 .dock-answer {
   min-width: 0;
@@ -580,10 +597,109 @@ a {
   max-height: 84px;
   overflow-y: auto;
 }
+.dock-body .chip.showme {
+  margin-top: 6px;
+}
+.dock-chips,
+.dock-inner > form {
+  grid-column: 1 / -1;
+}
 
-/* room for the dock below the last section */
+/* room for the dock below the last section; scrolls into view land above it */
 main {
-  padding-bottom: 168px;
+  padding-bottom: var(--dock-h);
+}
+html {
+  scroll-padding-bottom: var(--dock-h);
+}
+
+/* narrow viewports: one compact row (core, status, input) by default. With
+   an answer the body gets the full width on its own row, scrolls inside a
+   bar capped at 40% of the viewport, and folds away on "hide". The chips
+   scroll sideways and show while the input is focused or the bar is open. */
+@media (max-width: 767px) {
+  :root {
+    /* the collapsed bar (58px) plus its margins */
+    --dock-h: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+  .dock {
+    bottom: var(--kb, 0px);
+    padding: 0 8px calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+  /* head and input on one row; the body and the chips below, full width */
+  .dock-inner {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head form"
+      "body body"
+      "chips chips";
+    gap: 0 8px;
+    max-height: calc(40svh - 8px - env(safe-area-inset-bottom, 0px));
+    padding: 8px;
+  }
+  .dock-head {
+    grid-area: head;
+    gap: 8px;
+    min-height: 40px;
+  }
+  .dock-inner > form {
+    grid-area: form;
+  }
+  .dock-head .cmd-status {
+    width: auto;
+  }
+  .dock-toggle {
+    display: inline-flex;
+    margin-left: auto;
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .dock-body {
+    grid-area: body;
+    display: none;
+    min-height: 0;
+    margin-top: 8px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .dock[data-expanded="true"] .dock-body {
+    display: block;
+  }
+  .dock-answer {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: none;
+  }
+  .dock .toollog {
+    max-height: none;
+    overflow: visible;
+  }
+  .dock-chips {
+    grid-area: chips;
+    display: none;
+    margin-top: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .dock-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .dock[data-expanded="true"] .dock-chips,
+  .dock[data-focus="true"] .dock-chips {
+    display: block;
+  }
+  .dock-chips .chips {
+    flex-wrap: nowrap;
+    width: max-content;
+  }
+  .dock-chips .chip {
+    white-space: nowrap;
+  }
 }
 
 .sr-only {
@@ -1086,12 +1202,6 @@ html[data-intro] .intro-skip {
 }
 
 @media (max-width: 640px) {
-  .dock-chips {
-    display: none;
-  }
-  .dock {
-    padding: 0 8px 8px;
-  }
   .grid-row,
   .timeline li {
     grid-template-columns: minmax(0, 1fr);

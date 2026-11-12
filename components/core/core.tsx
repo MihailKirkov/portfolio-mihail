@@ -76,10 +76,14 @@ function finePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 }
 
-/** run `fn` once the boot intro is not running (now, or when it ends) */
-function outsideRunningIntro(fn: () => void): () => void {
+/**
+ * run `fn` once the boot intro is out of the way: now, unless it is in the
+ * given state(s), then when its attribute goes
+ */
+function outsideIntro(states: string[], fn: () => void): () => void {
   const html = document.documentElement;
-  if (html.dataset.intro !== "running") {
+  const intro = html.dataset.intro;
+  if (!intro || !states.includes(intro)) {
     fn();
     return () => {};
   }
@@ -170,12 +174,20 @@ export function Core({ children }: { children: ReactNode }) {
     let disposed = false;
     let undo = () => {};
     const shown = () => el.getBoundingClientRect().width > 0;
+    // progress marks (core:load, core:chunk, core:mount, core:ready) for the
+    // browser checks, which read them against the intro's own marks
     const load = () => {
       el.dataset.core = "loading";
+      performance.mark("core:load");
       void import("@/components/core/shader-core").then((m) => {
         if (disposed) return;
+        performance.mark("core:chunk");
         if (document.documentElement.dataset.intro === "running") el.dataset.core = "deferred";
-        undo = outsideRunningIntro(() => !disposed && setMod(m));
+        undo = outsideIntro(["running"], () => {
+          if (disposed) return;
+          performance.mark("core:mount");
+          setMod(m);
+        });
       });
     };
     const onResize = () => {
@@ -234,7 +246,11 @@ export function Core({ children }: { children: ReactNode }) {
     };
   }, [mod]);
 
-  // the still fades out under the first shader frame, then unmounts
+  // the still fades out under the first shader frame, then unmounts. Not
+  // during the boot intro: the fade's end and the unmount each repaint the
+  // hero for a frame, which mid-flight shows as a cursor jump; nothing is
+  // visible yet anyway, so the still is hidden at once (globals.css) and
+  // unmounted once the intro is over
   useEffect(() => {
     const el = wrap.current;
     if (!ready) {
@@ -242,8 +258,14 @@ export function Core({ children }: { children: ReactNode }) {
       return;
     }
     if (el) delete el.dataset.core;
-    const id = setTimeout(() => setStillGone(true), 600);
-    return () => clearTimeout(id);
+    let timer = 0;
+    const stop = outsideIntro(["pending", "running"], () => {
+      timer = window.setTimeout(() => setStillGone(true), 600);
+    });
+    return () => {
+      stop();
+      clearTimeout(timer);
+    };
   }, [ready]);
 
   // travel: ease toward the one target every frame
@@ -454,7 +476,10 @@ export function Core({ children }: { children: ReactNode }) {
           pointer={pointer}
           active={active}
           fps={introRunning ? INTRO_FPS : docked ? DOCKED_FPS : 0}
-          onReady={() => setReady(true)}
+          onReady={() => {
+            performance.mark("core:ready");
+            setReady(true);
+          }}
           onLost={() => {
             setLost(true);
             setReady(false);

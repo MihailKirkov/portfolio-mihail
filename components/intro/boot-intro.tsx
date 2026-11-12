@@ -90,9 +90,11 @@ const T = {
    * the average speed on the bowed path) stays well under a jump
    */
   flightMin: 450,
-  flightMax: 1300,
+  flightMax: 1500,
   flightBase: 200,
   flightPerPx: 0.85,
+  /** and never faster on average than this, so the eased peak stays under 60px/frame */
+  flightMaxPxPerMs: 0.75,
   /**
    * copy's carriage return, from the end of a typed line to the start of the
    * next: straight and linear at about the typing glide's own speed, so typing
@@ -121,8 +123,10 @@ const dist = (a: Point, b: Point) => Math.hypot(b.x - a.x, b.y - a.y);
 const clamp = (n: number, lo: number, hi: number) => Math.min(Math.max(n, lo), hi);
 
 /** a flight's duration: never under T.flightMin, slower the further it goes */
-const flightMs = (a: Point, b: Point) =>
-  Math.round(clamp(T.flightBase + dist(a, b) * T.flightPerPx, T.flightMin, T.flightMax));
+const flightMs = (a: Point, b: Point) => {
+  const d = dist(a, b);
+  return Math.round(clamp(Math.max(T.flightBase + d * T.flightPerPx, d / T.flightMaxPxPerMs), T.flightMin, T.flightMax));
+};
 
 /** a sweep or field glide: linear, so a little slower than a flight */
 const sweepMs = (a: Point, b: Point, min: number, max: number) =>

@@ -11,7 +11,8 @@
     "test:chat": "tsx scripts/test-chat-stream.ts",
     "test:choreo": "tsx scripts/test-choreo.ts",
     "test:intro": "tsx scripts/test-intro.ts",
-    "test:core": "tsx scripts/test-core.ts"
+    "test:core": "tsx scripts/test-core.ts",
+    "test:dock": "tsx scripts/test-dock.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",

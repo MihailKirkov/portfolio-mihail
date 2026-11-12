@@ -51,6 +51,9 @@ export const viewport: Viewport = {
   themeColor: "#0a0b0d",
   width: "device-width",
   initialScale: 1,
+  // the on-screen keyboard shrinks the layout viewport, so the docked
+  // command bar (position: fixed) stays above it
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({

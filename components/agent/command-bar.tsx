@@ -63,11 +63,17 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
   const [log, setLog] = useState<ToolLogEntry[]>([]);
   const [input, setInput] = useState("");
   const [docked, setDocked] = useState(false);
+  // the docked bar on narrow viewports: the answer row shown or collapsed,
+  // and the input focused (which shows the chips)
+  const [expanded, setExpanded] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [replayed, setReplayed] = useState(false);
   const executing = useAgentState((s) => s.executing);
   const status = useAgentState(statusOf);
   const requesting = useAgentState((s) => s.requesting);
   const panelRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const blurTimer = useRef(0);
   const history = useRef<Turn[]>([]);
   // bumped per question so a superseded typewriter stops writing
   const turnRef = useRef(0);
@@ -86,6 +92,26 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     return () => io.disconnect();
   }, []);
 
+  // keep the docked bar above the on-screen keyboard: where the visual
+  // viewport is shorter than the layout viewport (iOS), lift the bar by the
+  // difference (--kb). Chrome resizes the layout viewport instead
+  // (interactive-widget=resizes-content), where this stays 0.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const el = dockRef.current;
+    if (!vv || !el) return;
+    const update = () => {
+      const lift = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      el.style.setProperty("--kb", `${lift}px`);
+    };
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
+
   function begin(q: string) {
     choreo.cancel();
     const turn = ++turnRef.current;
@@ -94,6 +120,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     setPending(true);
     setLog([]);
     setReplayed(false);
+    setExpanded(true);
     setAgentState({ requesting: true });
     return turn;
   }
@@ -220,7 +247,9 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     void askFree(v);
   }
 
-  const form = (
+  // the same input in the hero panel and in the dock; only the hero's is a
+  // part of the boot intro (typed in, held grey)
+  const form = (inHero: boolean) => (
     <form className="cmd-input" onSubmit={onSubmit}>
       <input
         value={input}
@@ -230,7 +259,15 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
         maxLength={500}
         disabled={requesting}
         data-agent-id={agentId.commandInput()}
-        data-intro-type="placeholder"
+        data-intro-type={inHero ? "placeholder" : undefined}
+        onFocus={() => {
+          clearTimeout(blurTimer.current);
+          setFocused(true);
+        }}
+        // a tap on a chip blurs the input first: keep the chips a moment
+        onBlur={() => {
+          blurTimer.current = window.setTimeout(() => setFocused(false), 250);
+        }}
       />
       <button type="submit" className="btn" aria-label="Send" disabled={requesting}>
         ↵
@@ -304,31 +341,48 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
           {showMeButton}
         </div>
         {chips}
-        {form}
+        {form(true)}
       </div>
 
       <div
         className="dock"
+        ref={dockRef}
         data-docked={docked}
+        data-has-answer={question !== null}
+        data-expanded={question !== null && expanded}
+        data-focus={focused}
         inert={!docked}
         aria-hidden={!docked}
       >
         <div className="dock-inner">
-          <div className="dock-top">
+          <div className="dock-head">
             {/* where the core lands when docked; the core itself overlays it */}
             <span className="dock-core" data-core-slot="" aria-hidden="true" />
             <span className="label cmd-status" data-status={status}>
               {status}
             </span>
+            {/* narrow viewports: the answer row folds away */}
+            {question !== null && (
+              <button
+                type="button"
+                className="dock-toggle label"
+                aria-expanded={expanded}
+                onClick={() => setExpanded((e) => !e)}
+              >
+                {expanded ? "hide" : "answer"}
+              </button>
+            )}
+          </div>
+          <div className="dock-body">
             <p className="dock-answer">
               {answer}
               {caret}
             </p>
+            {status !== "idle" && <ToolLog log={log} />}
             {showMeButton}
           </div>
-          {status !== "idle" && <ToolLog log={log} />}
           <div className="dock-chips">{chips}</div>
-          {form}
+          {form(false)}
         </div>
       </div>
 
