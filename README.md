@@ -21,7 +21,11 @@ opens a project, points at a skill group, opens a gallery.
   state (idle, thinking, executing) and travels into the docked bar.
 - **Projects** as scroll-driven depth chapters on a WebGL stage, with a detail
   overlay and a full-screen gallery.
-- **Stack, experience, credentials, contact** as plain static sections.
+- **Stack** as a constellation (a tiered list on phones and reduced motion).
+- **Experience** as a journey through one gate per career step: About first
+  (with the competitive record, languages and education), then roles,
+  milestones and certifications. The vertical timeline is the fallback.
+- **Contact** as a finale with the CV, email, GitHub and LinkedIn.
 
 ![The agent running a canned reply](docs/screenshots/agent.png)
 

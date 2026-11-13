@@ -45,8 +45,9 @@ Reference sketches: the "Portfolio v3 directions" canvas (A Operator, B Swarm, C
 1. **Hero** (100svh): top bar, headline, core, command bar + suggestion chips,
    tool-call log, streamed answer line.
 2. **Projects**: 5 depth chapters (job-cc, lead-hq, ignis, ignight, izlei).
-3. **Stack**, **Experience**, **Credentials**: compact static sections reusing
-   the renderers in `lib/sections.tsx`.
+3. **Stack** and **Experience** (the journey: About, roles, milestones and
+   certifications on one path): renderers in `lib/sections.tsx`. There is no
+   separate Credentials section (folded into the journey in the final pass).
 4. **Contact**: CV, email, GitHub, LinkedIn.
 
 The command bar docks to the bottom of the viewport after the hero and stays
@@ -64,7 +65,7 @@ Typed, closed set. Nothing outside this list can ever run.
 
 | action | params | effect |
 |---|---|---|
-| `scroll_to` | `section`: hero, projects, stack, experience, credentials, contact | smooth scroll |
+| `scroll_to` | `section`: hero, projects, stack, experience, contact | smooth scroll |
 | `open_project` | `slug` (one of the seed slugs) | scroll to chapter, expand detail |
 | `highlight` | `target` (a known agent id) | accent outline pulse for ~2s |
 | `filter_projects` | `tag` (from seed stacks) | dim non-matching chapters |
@@ -296,3 +297,19 @@ Four parts, built in order, one commit per part. Rules for all of them:
   scales past the viewport edges, the next one is already visible. Same
   motion bar as the projects stage.
 - Fallback: the current vertical timeline.
+
+## Final pass (structure as shipped)
+
+- Sections: hero, projects, stack, experience (journey), contact. Nav,
+  `SECTIONS`/`scroll_to`, agent targets and narration keys match; nothing
+  points at "credentials".
+- Journey: certifications are small dashed markers on the path at their
+  dates (label only while current). The About gate carries one heading and
+  the competitive record, languages and education as short labelled facts.
+  The info panel is capped above the dock; its body scrolls inside a fade
+  mask. Roles show two bullets and a "more" toggle for the rest.
+- Fallback (phones, reduced motion, no JS): the about block with the same
+  facts, then the vertical timeline with certifications as marks.
+- Hero: the command panel is sized to its content; the hero narration line
+  is printed in the panel under the greeting (until the first question)
+  instead of a bubble over it. The narrator still plays the hero pulse.
