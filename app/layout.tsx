@@ -23,8 +23,12 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 // Title and description come from seed.json so a content edit updates them too.
 const { profile } = seedContent;
-const title = `${profile.name} - ${profile.title}`;
-const description = profile.pitch;
+// short title: the name and the tagline's first segment ("Full-stack
+// developer"); the long keyword string (profile.title) lives only in the
+// meta description
+const role = profile.tagline.split(" · ")[0].trim();
+const title = `${profile.name} - ${role}`;
+const description = `${profile.title}. ${profile.pitch}`;
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
