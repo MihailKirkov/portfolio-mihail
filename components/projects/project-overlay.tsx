@@ -4,6 +4,7 @@ import { Fragment, useEffect, useRef } from "react";
 import { Gallery } from "@/components/projects/gallery";
 import { agentId } from "@/lib/agent/targets";
 import type { StageProject } from "@/components/projects/depth-stage";
+import { showModalReturningFocus } from "@/lib/dialog";
 
 // The depth stage's detail overlay: a full-viewport modal with the long
 // description, stack, links and the gallery. Nothing on the stage scrolls;
@@ -24,7 +25,7 @@ export function ProjectOverlay({
   useEffect(() => {
     const d = ref.current;
     if (!d) return;
-    if (!d.open) d.showModal();
+    showModalReturningFocus(d);
     if (gallery) {
       d.querySelector<HTMLElement>(`[data-agent-id="${agentId.gallery(project.slug)}"]`)?.click();
     }

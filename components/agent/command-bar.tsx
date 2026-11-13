@@ -1,5 +1,6 @@
 "use client";
 
+import { ANNOUNCER_ID } from "@/lib/agent/announce";
 import { useEffect, useRef, useState } from "react";
 import type { TerminalConfig } from "@/lib/types";
 import { CANNED } from "@/lib/agent/canned";
@@ -250,6 +251,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (requesting) return;
     const v = input;
     setInput("");
     void askFree(v);
@@ -265,7 +267,9 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
         placeholder="type a question…"
         aria-label="Ask Mihail a question"
         maxLength={500}
-        disabled={requesting}
+        // busy: read-only, not disabled, so a keyboard user keeps focus here
+        readOnly={requesting}
+        aria-disabled={requesting || undefined}
         data-agent-id={agentId.commandInput()}
         data-intro-type={inHero ? "placeholder" : undefined}
         onFocus={() => {
@@ -277,7 +281,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
           blurTimer.current = window.setTimeout(() => setFocused(false), 250);
         }}
       />
-      <button type="submit" className="btn" aria-label="Send" disabled={requesting}>
+      <button type="submit" className="btn" aria-label="Send" aria-disabled={requesting || undefined}>
         ↵
       </button>
     </form>
@@ -290,7 +294,8 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
           key={s}
           type="button"
           className="chip"
-          disabled={requesting}
+          // not disabled while busy: that would drop keyboard focus to <body>
+          aria-disabled={requesting || undefined}
           onClick={() => void askCanned(s)}
         >
           <span className="chip-label" data-intro-type="chip">
@@ -397,6 +402,8 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
       <p className="sr-only" aria-live="polite">
         {announce}
       </p>
+      {/* what the agent changed on the page (lib/agent/announce.ts) */}
+      <p id={ANNOUNCER_ID} className="sr-only" role="status" aria-live="polite" />
     </>
   );
 }

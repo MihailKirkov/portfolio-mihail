@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import { agentId } from "@/lib/agent/targets";
+import { showModalReturningFocus } from "@/lib/dialog";
 
 // Project screenshot carousel. Extracted from the v2 project deck; arrow keys
 // are scoped to the focused carousel (not the document) because several
@@ -130,7 +131,7 @@ export function Gallery({
 
   function openLarge() {
     setOpen(true);
-    dialogRef.current?.showModal();
+    if (dialogRef.current) showModalReturningFocus(dialogRef.current);
   }
 
   return (
@@ -159,6 +160,16 @@ export function Gallery({
                 aria-label={`Show image ${n + 1}`}
                 className="gallery-thumb"
                 onClick={() => setI(n)}
+                // keep a keyboard-focused thumb inside the scrolling strip
+                onFocus={(e) => {
+                  const b = e.currentTarget;
+                  const strip = b.parentElement;
+                  if (!strip) return;
+                  const l = b.offsetLeft - strip.offsetLeft;
+                  if (l < strip.scrollLeft) strip.scrollLeft = l;
+                  else if (l + b.offsetWidth > strip.scrollLeft + strip.clientWidth)
+                    strip.scrollLeft = l + b.offsetWidth - strip.clientWidth;
+                }}
               >
                 <GalleryImage src={g} alt="" sizes="80px" fit="cover" />
               </button>

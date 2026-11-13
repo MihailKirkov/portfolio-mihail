@@ -7,6 +7,7 @@ import {
 } from "@/lib/agent/actions";
 import { choreo, prefersReducedMotion, type Step } from "@/lib/agent/choreo";
 import { resolveFirst } from "@/lib/agent/targets";
+import { announce, describeAction } from "@/lib/agent/announce";
 
 // Turns a reply's action calls into cursor steps: for each valid action the
 // cursor flies to its target, clicks, THEN the effect fires. Invalid calls and
@@ -67,7 +68,14 @@ export function startActionRun(onUpdate: (log: ToolLogEntry[]) => void): ActionR
             // cut short: a pause runs this step again if its target is still
             // on screen when the visitor stops scrolling; a cancel leaves it
             // "running" so it is logged as cancelled
-            if (!signal.aborted) set(i, "done");
+            if (!signal.aborted) {
+              set(i, "done");
+              // feedback only: a failure here never fails the action
+              try {
+                const said = describeAction(call);
+                if (said) announce(said);
+              } catch {}
+            }
           },
         },
         { kind: "wait", ms: PAUSE_AFTER_ACTION_MS },
