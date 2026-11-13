@@ -980,21 +980,38 @@ html {
    Projects: depth stage. Only under [data-depth="on"], which
    components/projects/depth-stage.tsx sets on wide viewports
    without reduced motion; everything else sees the plain cards
-   above. The track is tall, the stage sticks under the top bar,
-   and each chapter slab sits along Z by its --d (distance from
-   the front, in chapters; set per frame from scroll). The stage
-   keeps the dock's height clear so the docked bar and core sit
-   over empty ground, never over a slab's controls.
+   above. ~60svh of scroll per project, with a proximity snap
+   stop per project. The stage sticks under the top bar: rail,
+   image slabs (moved by inline transform + --o only), and a
+   flat info panel that is never transformed. Nothing in it
+   scrolls. The stage keeps the docked bar's height clear.
    ============================================================ */
-.chapter-rail {
+.chapter-rail,
+.slab,
+.depth-stop {
   display: none;
+}
+html:has(.depth[data-depth="on"]) {
+  scroll-snap-type: y proximity;
 }
 .depth[data-depth="on"] {
   --stage-h: calc(100svh - var(--topbar-h));
-  --slab-z: 900px;
+  --step: 60svh;
 }
 .depth[data-depth="on"] .depth-track {
-  height: calc(var(--stage-h) + (var(--n) - 1) * 90svh);
+  position: relative;
+  height: calc(var(--stage-h) + (var(--n) - 1) * var(--step));
+}
+/* one snap stop per project: lands that project at the front */
+.depth[data-depth="on"] .depth-stop {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: calc(var(--i) * var(--step) - var(--topbar-h));
+  width: 1px;
+  height: 1px;
+  scroll-snap-align: start;
+  pointer-events: none;
 }
 .depth[data-depth="on"] .depth-stage {
   position: sticky;
@@ -1002,15 +1019,24 @@ html {
   z-index: 0;
   isolation: isolate;
   display: grid;
-  grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
-  gap: clamp(20px, 3vw, 48px);
+  grid-template-columns: 168px minmax(0, 1fr) minmax(240px, 320px);
+  align-items: center;
+  gap: clamp(24px, 3vw, 48px);
   height: var(--stage-h);
-  padding: 8px 0 calc(max(var(--dock-h), var(--dock-live, 0px)) + 8px);
-  overflow: hidden;
+  padding: 16px 0 calc(max(var(--dock-h), var(--dock-live, 0px)) + 16px);
 }
+
+/* rail */
 .depth[data-depth="on"] .chapter-rail {
-  display: block;
-  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.chapter-skip {
+  text-decoration: none;
+}
+.chapter-skip:hover {
+  color: var(--text);
 }
 .chapter-rail ol {
   margin: 0;
@@ -1018,93 +1044,182 @@ html {
   list-style: none;
   border-left: 1px solid var(--hairline);
 }
-.chapter-rail a {
+.chapter-rail ol a {
   display: flex;
   flex-direction: column;
   gap: 2px;
   margin-left: -1px;
-  padding: 10px 0 10px 14px;
+  padding: 9px 0 9px 14px;
   border-left: 1px solid transparent;
   color: var(--muted);
   text-decoration: none;
   transition: color 0.2s, border-color 0.2s, opacity 0.3s;
 }
-.chapter-rail a:hover {
+.chapter-rail ol a:hover {
   color: var(--text);
 }
-.chapter-rail a[aria-current] {
+.chapter-rail ol a[aria-current] {
   border-left-color: var(--text);
   color: var(--text);
 }
-.chapter-rail a[data-dimmed] {
+.chapter-rail ol a[data-dimmed] {
   opacity: 0.35;
 }
 .chapter-rail-title {
   font-size: 14px;
   line-height: 1.25;
 }
-/* the vanishing point sits above the stage, so the next slab recedes up
-   into the free strip over the front one and its head peeks out there */
-.depth[data-depth="on"] .projects {
-  --peek: 64px;
+
+/* slabs: the first gallery image at 16:10, nothing else */
+.depth[data-depth="on"] .depth-slabs {
+  container-type: size;
   position: relative;
+  height: 100%;
+  min-width: 0;
+  perspective: 1100px;
+  perspective-origin: 50% 30%;
+  /* the outgoing slab grows toward the viewer: it never leaves this column */
+  overflow: clip;
+}
+.depth[data-depth="on"] .projects {
   display: block;
   height: 100%;
-  perspective: 1200px;
-  perspective-origin: 50% -110px;
 }
 .depth[data-depth="on"] .project {
-  --d: 0;
-  --dim: 1;
+  --o: 1;
+  --t: 0;
+  --dim-t: 0;
+  --w: min(84cqw, 66cqh * 1.6);
   position: absolute;
-  inset: var(--peek) 0 0;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  border: 1px solid var(--hairline);
-  background: var(--ground);
-  transform: translateZ(calc(var(--d) * var(--slab-z)));
-  opacity: calc(clamp(0, min(1 - var(--d) * 2.2, 1 + var(--d) * 0.6), 1) * var(--dim));
-  transition: none;
+  inset: 28cqh 0 0;
+  width: var(--w);
+  height: calc(var(--w) / 1.6);
+  margin: 0 auto;
+  opacity: var(--o);
+  transform-origin: 50% 50%;
   will-change: transform, opacity;
-  backface-visibility: hidden;
+  transition: none;
 }
+/* filter_projects: a dimmed slab takes a heavy tint, it never turns see-through */
 .depth[data-depth="on"] .project[data-dimmed] {
-  --dim: 0.28;
+  --dim-t: 0.75;
 }
-/* only the slab at the front takes the pointer */
-.depth[data-depth="on"] .project:not([data-depth-state="front"]) {
+.depth[data-depth="on"] .project > :not(.slab) {
+  display: none;
+}
+.depth[data-depth="on"] .slab {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  overflow: hidden;
+  cursor: pointer;
+}
+.depth[data-depth="on"] .slab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ground);
+  opacity: max(var(--t), var(--dim-t));
   pointer-events: none;
 }
-.depth[data-depth="on"] .project-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  grid-template-rows: minmax(0, 1fr);
-  padding-top: 20px;
+.depth[data-depth="on"] .project:not([data-depth-state="front"]) .slab {
+  pointer-events: none;
 }
-/* the long description scrolls inside its column, never the page */
-.depth[data-depth="on"] .project-text {
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  padding-right: 4px;
+.slab-title {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 28px;
 }
-.depth[data-depth="on"] .gallery {
-  min-height: 0;
+
+/* the info panel: flat, never transformed; content crossfades */
+.depth[data-depth="on"] .depth-panel {
+  min-width: 0;
 }
-.depth[data-depth="on"] .gallery-stage {
-  flex: 1 1 auto;
-  min-height: 0;
-  aspect-ratio: auto;
+.depth-panel-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
 }
-@media (max-width: 1000px) {
+.depth-panel-title {
+  font-size: clamp(26px, 2.6vw, 36px);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.depth-panel-lead {
+  color: var(--text);
+  font-size: 17px;
+}
+.depth-panel-inner .tags {
+  margin-top: 4px;
+}
+
+@media (max-width: 1100px) {
   .depth[data-depth="on"] .depth-stage {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr) minmax(220px, 280px);
   }
   .depth[data-depth="on"] .chapter-rail-title {
     display: none;
   }
+  .depth[data-depth="on"] .chapter-skip {
+    font-size: 0;
+  }
+  .depth[data-depth="on"] .chapter-skip::after {
+    content: "skip ↓";
+    font-size: 11px;
+  }
+}
+
+/* the detail overlay: full viewport, solid; the long content lives here */
+.project-overlay {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--ground);
+  color: var(--text);
+}
+.project-overlay::backdrop {
+  background: var(--ground);
+}
+.project-overlay-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 24px var(--gutter) 48px;
+}
+.project-overlay-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+.project-overlay-head .project-title {
+  margin-top: 6px;
+}
+.project-overlay-body {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(24px, 4vw, 48px);
+  padding-top: 24px;
+}
+.project-overlay-body .project-text p + p {
+  margin-top: 0;
+}
+
+/* any open dialog (detail overlay, gallery viewer) locks the page */
+html:has(dialog[open]) {
+  overflow: hidden;
 }
 
 /* gallery */
@@ -1170,27 +1285,38 @@ html {
   min-height: 45px;
   margin-left: auto;
 }
+/* the gallery viewer: a true full-viewport dialog, image contained */
 .gallery-dialog {
-  width: min(1280px, calc(100vw - 32px));
+  width: 100vw;
+  height: 100dvh;
   max-width: none;
-  max-height: calc(100svh - 32px);
-  padding: 12px;
-  border: 1px solid var(--border);
-  background: var(--panel);
+  max-height: none;
+  margin: 0;
+  padding: 12px var(--gutter) 16px;
+  border: 0;
+  background: var(--ground);
   color: var(--text);
 }
+.gallery-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
 .gallery-dialog::backdrop {
-  background: rgb(10 11 13 / 0.88);
+  background: var(--ground);
 }
 .gallery-dialog-head {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
 .gallery-dialog .gallery-stage {
+  flex: 1 1 auto;
+  min-height: 0;
   aspect-ratio: auto;
-  height: min(76svh, calc((100vw - 58px) * 0.625));
+  border: 0;
+  background: var(--ground);
 }
 .gallery-thumb {
   position: relative;

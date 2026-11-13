@@ -22,7 +22,7 @@ export default async function Home() {
       <main>
         <Hero content={content} />
         <Section id="projects" label="02 / projects" title="Projects">
-          <ProjectList projects={content.projects} />
+          <ProjectList projects={content.projects} skipTo={sections[0]?.key ?? "contact"} />
         </Section>
         {sections.map((s) => (
           <Section key={s.key} id={s.key} label={s.label} title={s.title}>

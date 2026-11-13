@@ -52,10 +52,10 @@ export const HIGHLIGHT_TARGETS: string[] = [
 // ---- DOM ----------------------------------------------------------------------
 
 // The projects depth stage (components/projects/depth-stage.tsx) stacks its
-// chapters in one sticky stage, so a chapter's box is always on screen even
-// while it is faded out in the distance. While the stage is active each
-// chapter carries data-depth-state ("front", "near" or "far"), and the stage
-// registers how to scroll a chapter to the front.
+// chapters as image slabs in one sticky stage, so a slab's box can be on
+// screen while it is faded out in the distance. While the stage is active
+// each slab carries data-depth-state ("front", "near" or "far"), and the
+// stage registers how to bring a chapter to the front and open its overlays.
 
 type DepthState = "front" | "near" | "far";
 
@@ -65,11 +65,24 @@ function depthState(el: HTMLElement): DepthState | undefined {
     | undefined;
 }
 
-let depthScrollY: ((el: HTMLElement) => number | null) | null = null;
+export interface DepthStageApi {
+  /** element inside a chapter -> scrollY that brings that chapter to the front */
+  scrollY(el: HTMLElement): number | null;
+  /** open a project's detail overlay */
+  openDetail(slug: string): void;
+  /** open a project's gallery overlay */
+  openGallery(slug: string): void;
+}
 
-/** the depth stage's scroll mapping: element inside a chapter -> scrollY that brings it to the front */
-export function setDepthScroll(fn: ((el: HTMLElement) => number | null) | null) {
-  depthScrollY = fn;
+let depthApi: DepthStageApi | null = null;
+
+export function setDepthStage(api: DepthStageApi | null) {
+  depthApi = api;
+}
+
+/** the active depth stage, or null (plain cards: under 768px, reduced motion, no JS) */
+export function depthStage() {
+  return depthApi;
 }
 
 /** at least partly inside the viewport */
@@ -144,7 +157,7 @@ export async function scrollToElement(
   el: HTMLElement,
   { instant, signal }: { instant: boolean; signal?: AbortSignal }
 ) {
-  const depthY = depthScrollY?.(el) ?? null;
+  const depthY = depthApi?.scrollY(el) ?? null;
   if (depthY !== null) {
     window.scrollTo({ top: depthY, behavior: instant ? "instant" : "smooth" });
   } else {

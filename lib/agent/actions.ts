@@ -1,6 +1,7 @@
 import {
   agentId,
   applyProjectFilter,
+  depthStage,
   pulse,
   resolveTarget,
   scrollToElement,
@@ -68,6 +69,13 @@ const open_project: ActionDef<{ slug: string }> = {
   validate: validator("open_project"),
   targets: ({ slug }) => [agentId.projectDetail(slug), agentId.project(slug)],
   async run({ slug }, ctx) {
+    const stage = depthStage();
+    if (stage) {
+      // depth stage: bring the chapter to the front, then its detail overlay
+      await scrollTo(agentId.project(slug), ctx);
+      if (!ctx.signal.aborted) stage.openDetail(slug);
+      return;
+    }
     const summary = el(agentId.projectDetail(slug));
     const details = summary?.closest("details");
     if (details) details.open = true;
@@ -99,10 +107,13 @@ const filter_projects: ActionDef<{ tag: string }> = {
 const show_gallery: ActionDef<{ slug: string }> = {
   name: "show_gallery",
   validate: validator("show_gallery"),
-  targets: ({ slug }) => [agentId.gallery(slug)],
+  // the gallery's own "view larger" button; on the depth stage, when no detail
+  // overlay is showing it, the project's slab
+  targets: ({ slug }) => [agentId.gallery(slug), agentId.project(slug)],
   run({ slug }) {
-    // the target is the gallery's own "view larger" button
-    el(agentId.gallery(slug))?.click();
+    const button = el(agentId.gallery(slug));
+    if (button) button.click();
+    else depthStage()?.openGallery(slug);
   },
 };
 

@@ -13,7 +13,7 @@ function isExternalImage(src: string) {
   return src.startsWith("http://") || src.startsWith("https://");
 }
 
-function GalleryImage({
+export function GalleryImage({
   src,
   alt,
   sizes,
