@@ -28,7 +28,7 @@ interface AgentState {
   ambient: boolean;
 }
 
-export type CoreSpot = "dock" | "contact" | "timeline" | "stack";
+export type CoreSpot = "dock" | "contact" | "timeline" | "stack" | "journey";
 
 const INITIAL: AgentState = {
   requesting: false,

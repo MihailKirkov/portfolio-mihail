@@ -14,7 +14,6 @@ export const SECTIONS = [
   "hero",
   "projects",
   "stack",
-  "about",
   "experience",
   "credentials",
   "contact",

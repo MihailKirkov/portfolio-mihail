@@ -27,7 +27,9 @@ export function CoreSlot({
     const still = window.matchMedia("(prefers-reduced-motion: reduce)");
     let inView = false;
     const update = () => {
-      const claim = inView && wide.matches && !still.matches;
+      // a slot inside a hidden fallback never claims the core
+      const shown = el.getClientRects().length > 0;
+      const claim = inView && shown && wide.matches && !still.matches;
       const cur = getAgentState().coreSpot;
       if (claim && cur !== spot) setAgentState({ coreSpot: spot });
       else if (!claim && cur === spot) setAgentState({ coreSpot: "dock" });

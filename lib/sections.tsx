@@ -3,6 +3,7 @@ import Image from "next/image";
 import type { Content, Experience, TimelineEntry } from "@/lib/types";
 import { agentId } from "@/lib/agent/targets";
 import { TimelineDraw } from "@/components/site/timeline-draw";
+import { Journey, type JourneyStep } from "@/components/site/journey";
 import { StackLinks } from "@/components/site/stack-links";
 import { StackStage } from "@/components/stack/stack-stage";
 import { projectsUsing, TIERS, uniqueSkills } from "@/lib/skills";
@@ -10,7 +11,7 @@ import { projectsUsing, TIERS, uniqueSkills } from "@/lib/skills";
 // Renderers for the compact static sections below the projects. Every value
 // comes from seed.json; nothing here may add facts of its own.
 
-export type SectionKey = "stack" | "about" | "experience" | "credentials";
+export type SectionKey = "stack" | "experience" | "credentials";
 
 export interface Section {
   key: SectionKey;
@@ -72,6 +73,41 @@ export function buildSections(content: Content): Section[] {
     stack: p.stack,
   }));
 
+  // the journey: About first, then every step oldest first, newest last
+  const yearOf = (d: string) => d.match(/\d{4}/)?.[0] ?? "";
+  const journeySteps: JourneyStep[] = [
+    {
+      id: "about",
+      year: "",
+      label: "about",
+      date: "about",
+      title: "About",
+      text: identity.about,
+      photo: { src: "/me.jpg", alt: `Photo of ${profile.name}` },
+    },
+    ...[...experienceTimeline(experiences, timeline)].reverse().map((n): JourneyStep =>
+      n.kind === "role"
+        ? {
+            id: n.e.id,
+            year: yearOf(n.e.start),
+            label: `${yearOf(n.e.start)} · ${n.e.company}`,
+            date: `${n.e.start} - ${n.e.end}`,
+            start: n.e.start,
+            title: n.e.company,
+            role: n.e.role,
+            bullets: n.e.bullets,
+          }
+        : {
+            id: n.t.id,
+            year: yearOf(n.t.date),
+            label: yearOf(n.t.date),
+            date: n.t.date,
+            title: n.t.label,
+          }
+    ),
+  ];
+  journeySteps[0].year = journeySteps[1]?.year ?? "";
+
   return [
     {
       key: "stack",
@@ -124,31 +160,26 @@ export function buildSections(content: Content): Section[] {
       ),
     },
     {
-      key: "about",
-      title: "About",
-      body: (
-        <div className="about">
-          {/* public/me.jpg: a replaceable photo slot (3:4) */}
-          <Image
-            className="about-photo"
-            src="/me.jpg"
-            alt={`Photo of ${profile.name}`}
-            width={240}
-            height={320}
-            sizes="(max-width: 767px) 96px, 180px"
-          />
-          <div className="about-text">
-            <p>{identity.about}</p>
-            <p className="muted">{identity.fun_fact}</p>
-          </div>
-        </div>
-      ),
-    },
-    {
       key: "experience",
       title: "Experience",
       body: (
-        <>
+        <Journey steps={journeySteps}>
+          {/* fallback: the about block, then the vertical timeline */}
+          <div className="about">
+            {/* public/me.jpg: a replaceable photo slot (3:4) */}
+            <Image
+              className="about-photo"
+              src="/me.jpg"
+              alt={`Photo of ${profile.name}`}
+              width={240}
+              height={320}
+              sizes="(max-width: 767px) 96px, 180px"
+            />
+            <div className="about-text">
+              <p>{identity.about}</p>
+              <p className="muted">{identity.fun_fact}</p>
+            </div>
+          </div>
           <TimelineDraw>
             <ol className="xp-list">
               {experienceTimeline(experiences, timeline).map((n) =>
@@ -182,7 +213,7 @@ export function buildSections(content: Content): Section[] {
               )}
             </ol>
           </TimelineDraw>
-        </>
+        </Journey>
       ),
     },
     {
