@@ -296,6 +296,14 @@ a {
   flex-direction: column;
   gap: 16px;
 }
+/* the eyebrow stays one line beside the core from 1280 up */
+@media (min-width: 1280px) {
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+}
 .hero-title {
   max-width: 12ch;
   /* sized so the headline stays three lines beside the core at 1280-1440 */
@@ -658,6 +666,9 @@ html[data-intro] [data-core-ready] .core-still {
 }
 .dock .toollog {
   margin-top: 6px;
+}
+.dock-demo {
+  margin-right: 8px;
 }
 .dock-body .chip.showme {
   margin-top: 6px;

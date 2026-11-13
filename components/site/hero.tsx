@@ -11,8 +11,8 @@ export function Hero({ content }: { content: Content }) {
     <section id="hero" className="hero" data-agent-id={agentId.section("hero")}>
       <div className="hero-grid">
         <div className="hero-copy">
-          <p className="label" data-intro-part="label" data-intro-tone="label">
-            {profile.name} / {profile.tagline}
+          <p className="label hero-eyebrow" data-intro-part="label" data-intro-tone="label">
+            {profile.tagline}
           </p>
           <h1 className="hero-title" data-intro-part="headline" data-intro-tone="headline">{profile.headline}</h1>
           <p className="hero-sub" data-intro-part="sub" data-intro-tone="sub">{profile.subhead}</p>
