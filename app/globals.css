@@ -202,7 +202,8 @@ a {
   .stack-tier-label {
     display: block;
     margin-bottom: 6px;
-    color: var(--border);
+    /* muted, not the border tone: it is text and must read (>= 4.5:1) */
+    color: #7a818d;
   }
 }
 
