@@ -526,9 +526,23 @@ html[data-intro] [data-core-ready] .core-still {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  height: clamp(150px, 26vh, 260px);
+  /* sized to its content: no empty gap under the greeting; a long answer
+     scrolls inside instead of growing the panel without limit */
+  max-height: clamp(150px, 26vh, 260px);
   overflow-y: auto;
   font-size: 15px;
+}
+.cmd-hint {
+  margin: 0;
+  padding-left: 64px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+@media (max-width: 767px) {
+  .cmd-hint {
+    padding-left: 0;
+  }
 }
 .cmd-line {
   display: grid;

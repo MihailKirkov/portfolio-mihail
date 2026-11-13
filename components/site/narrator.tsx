@@ -125,6 +125,13 @@ export function Narrator({ narration }: { narration: Narration }) {
         return;
       }
       seen.add(id);
+      // the hero's line is printed in the command panel (Hero); only its pulse plays here
+      if (id === "hero") {
+        const h = narration.sections.hero?.highlight;
+        const t = h && !reduced ? resolveTarget(h) : null;
+        if (t) pulse(t);
+        return;
+      }
       say(narration.sections[id], id);
     };
 

@@ -57,7 +57,7 @@ function ToolLog({ log }: { log: ToolLogEntry[] }) {
   );
 }
 
-export function CommandBar({ config }: { config: TerminalConfig }) {
+export function CommandBar({ config, hint }: { config: TerminalConfig; hint?: string }) {
   const [question, setQuestion] = useState<string | null>(null);
   const [answer, setAnswer] = useState(config.greeting);
   const [pending, setPending] = useState(false);
@@ -353,6 +353,9 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
               {caret}
             </span>
           </p>
+          {/* the hero's narration line lives in the panel, not in a bubble
+              over it; it gives way to the first question */}
+          {hint && question === null && <p className="cmd-hint">{hint}</p>}
           <ToolLog log={log} />
           {showMeButton}
         </div>

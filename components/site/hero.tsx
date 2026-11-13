@@ -25,7 +25,7 @@ export function Hero({ content }: { content: Content }) {
             <CoreStill />
           </Core>
         </div>
-        <CommandBar config={content.terminal} />
+        <CommandBar config={content.terminal} hint={content.narration.sections.hero?.line} />
       </div>
       <SkipIntroButton />
     </section>
