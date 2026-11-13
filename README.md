@@ -1,101 +1,126 @@
 # Mihail Kirkov - Portfolio
 
-> An interactive, cockpit-style portfolio for a full-stack developer. Three switchable HUD layouts, a central reactor core that tilts to your cursor, and an **AI agent I built** that answers questions about me in real time.
+A portfolio operated by an AI agent. You type a request; the agent answers and
+drives the page with a visible cursor while it does: it scrolls to a section,
+opens a project, points at a skill group, opens a gallery.
 
-**🔗 Live:** https://portfolio-mihail.vercel.app/
+**Live:** https://portfolio-mihail.vercel.app/
 
-[![Live](https://img.shields.io/badge/live-portfolio--mihail.vercel.app-4aa3e0)](https://portfolio-mihail.vercel.app/)
-![Next.js](https://img.shields.io/badge/Next.js-15-000)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178c6)
-![Tailwind](https://img.shields.io/badge/Tailwind-06b6d4)
-![Claude API](https://img.shields.io/badge/AI-Claude%20API-7cc4ff)
+![Hero](docs/screenshots/hero.png)
 
----
+## What you see
 
-## What this is
+- **Boot intro.** On the first visit of a session, four role cursors (layout,
+  copy, media, style) assemble the real hero from a grey wireframe, then merge
+  into the one accent agent cursor. Any click, key or scroll ends it.
+- **The agent.** A command bar in the hero, docked to the bottom of the screen
+  everywhere else. Three suggestion chips, free-typed questions, a tool-call
+  log that shows each action as it runs, and a "Show me" button that replays
+  actions you interrupted.
+- **The core.** A shader sphere (React Three Fiber) that reacts to the agent's
+  state (idle, thinking, executing) and travels into the docked bar.
+- **Projects** as scroll-driven depth chapters on a WebGL stage, with a detail
+  overlay and a full-screen gallery.
+- **Stack, experience, credentials, contact** as plain static sections.
 
-I'm **Mihail Kirkov** - a full-stack developer (React/Next · Node · PHP) with hands-on AI-integration experience and 2+ years in production. **EU citizen** (no sponsorship required) and **available from August 2026**.
+![The agent running a canned reply](docs/screenshots/agent.png)
 
-This site is my portfolio, built to do more than list a CV: it's a single-screen "spaceship cockpit" interface where each section opens as a hologram, and a built-in AI agent (grounded on my CV) lets a recruiter just *ask* - "what's your stack?", "why hire you?", "tell me about a project" - and get an instant answer. It's also, deliberately, a working demonstration of the frontend + AI-integration skills it describes.
+![Projects depth stage](docs/screenshots/projects.png)
 
-> If you're a recruiter: the **live site** is the fastest way to get the full picture - it's interactive. This README covers what's under the hood.
+<img src="docs/screenshots/mobile.png" alt="The site at 390px" width="300">
 
-## Screenshots
+## The agent and its tool calls
 
-<!-- Add the PNGs to docs/screenshots/ in the repo (filenames below). The three
-     mode shots already exist from local runs; drop them in and they'll render. -->
+The agent can only do what a small, closed action registry allows
+(`lib/agent/schema.ts`, browser side in `lib/agent/actions.ts`):
 
-**Flight Deck** - the default layout: capability gauges, live project status, the core, and the AI terminal.
+| Action | What it does |
+| --- | --- |
+| `scroll_to(section)` | Scroll to a section |
+| `open_project(slug)` | Bring a project to the front and open its detail |
+| `highlight(target)` | Outline a section, project, skill group, experience entry or CTA |
+| `filter_projects(tag)` | Dim projects whose stack does not list the tag |
+| `show_gallery(slug)` | Open a project's screenshots |
+| `offer_cv()` | Point at the CV button (never downloads anything) |
+| `offer_contact()` | Scroll to contact and point at the email link |
 
-![Flight Deck](docs/screenshots/flight-deck.png)
+Every enum (sections, slugs, tags, targets) is generated from
+`content/seed.json`, so the model cannot name something that is not on the
+page. Each action is sent to Claude as a tool; the tools are UI directives
+only: nothing runs on the server and there is no tool-result round trip.
 
-**Visor** - a helmet-view layout with flanking instrument dials (chess rating + competitive informatics).
+In the browser each accepted call becomes cursor steps: fly to the target,
+click, then run the effect. At most four actions per reply. Each finished
+action is announced to screen readers through a live region.
 
-![Visor](docs/screenshots/visor.png)
+## Architecture
 
-**Reactor** - a radial layout with the section nodes orbiting a central arc-reactor core.
+- **Static content.** `content/seed.json` is the only content source. The page
+  is prerendered at build time; there is no database or runtime fetch. The
+  chat's system prompt is built from the same file.
+- **Validated actions.** A tool call is accepted only if its input arrived as
+  complete JSON, names a registered action and uses only allowed values. It is
+  validated twice: in the route as the stream arrives, and again in the
+  browser before anything moves.
+- **NDJSON stream.** `/api/chat` answers with one JSON event per line:
+  `{"t":"text"}` deltas, `{"t":"action"}` the moment each tool call closes,
+  and `{"t":"done"}` last, always, including after an error or truncation. The
+  model calls its actions first and sends the answer through a final `say`
+  tool, so the page starts moving while the answer is still being written
+  (`lib/agent/chat-stream.ts`).
+- **Guards.** Server-side API key, 500-character input cap, last 10 messages
+  of history, 450 output tokens, 10 requests per minute per IP (in-memory, per
+  instance), and a plain failure message if anything goes wrong.
+- **Fallbacks.** The page is complete HTML underneath every animation:
+  - JS off: all content readable, all links work.
+  - Reduced motion: no intro, no cursor flights, no 3D; actions still happen,
+    instantly.
+  - No WebGL, low-end devices, phones: a server-rendered SVG still of the core.
+  - Under 768px: projects as plain cards with the same content.
+  - No API key or an outage: the three chips still answer, from canned
+    replies with scripted actions, with zero network.
 
-![Reactor](docs/screenshots/reactor.png)
+## Stack
 
-**Project deck** - projects open into a full-screen holographic gallery with per-project detail.
+Next.js 15 (App Router), React 19, TypeScript, Tailwind 4, React Three Fiber,
+Lenis, Claude API (`claude-haiku-4-5`) via `@anthropic-ai/sdk`. Hosted on
+Vercel.
 
-![Project deck](docs/screenshots/project-deck.png)
-
-## Highlights
-
-- **Three HUD modes that *morph* between each other.** The core, section nodes, and terminal are rendered once and physically glide/resize into the new arrangement (Framer Motion layout animations) - not a crossfade.
-- **An AI chat terminal I built end-to-end.** RAG-lite: grounded on my profile, served from a serverless route with the API key kept server-side, output/token caps, and per-IP rate limiting. The three suggested questions return instantly with zero network so the headline answers always work.
-- **3D reactor core** that tilts toward the cursor with parallaxed rings (CSS 3D transforms, no heavy 3D engine).
-- **Holographic section modals**, a career **timeline**, and a skills **radar chart** (rendered full-size in the Stack modal and as a compact flank dial in the Visor).
-- **Accessible and motion-aware** - keyboard-navigable, focus-trapped modals, ARIA roles, and a full `prefers-reduced-motion` fallback.
-- **Mobile** collapses the cockpit to a clean, fully functional vertical stack.
-
-## Tech stack
-
-- **Framework:** Next.js 15 (App Router) + TypeScript
-- **Styling:** Tailwind CSS + hand-built HUD components (SVG / CSS, `clip-path`, backdrop-blur)
-- **Animation:** Framer Motion (mode morph), CSS keyframes
-- **AI:** Claude API (Haiku) via a serverless route
-- **Charts:** hand-rolled SVG (radar, gauges, dials) - no charting library
-- **Hosting:** Vercel (static SSG + serverless function for chat)
-
-## Architecture notes
-
-A couple of decisions worth calling out, since they show how I think about reliability:
-
-- **The public site never calls a database at runtime.** All content is read from a committed `content/seed.json` and baked into static HTML at build time - so pages load instantly with no spinner and the site keeps working regardless of any backend state. Content is one file to edit.
-- **The AI agent fails gracefully.** The key never reaches the browser; requests are token- and rate-limited; and the three suggestion chips are answered client-side, so the feature still demos perfectly even with no API key or during an outage.
-
-## Run it locally
+## Run it
 
 ```bash
-git clone <this-repo>
-cd portfolio-mihail
 npm install
-npm run dev
-# open http://localhost:3000
+npm run dev          # http://localhost:3000
 ```
 
-**Environment variables** (`.env.local`):
+`.env.local`:
 
 ```bash
-ANTHROPIC_API_KEY=        # server-only - enables the live "ask anything" chat
-NEXT_PUBLIC_SITE_URL=     # e.g. https://portfolio-mihail.vercel.app (for OG/canonical)
+ANTHROPIC_API_KEY=      # server only; enables free-typed questions
+NEXT_PUBLIC_SITE_URL=   # canonical URL, for metadata, sitemap and the share image
 ```
 
-The site builds and runs without these - the canned suggestion answers work offline, and `NEXT_PUBLIC_SITE_URL` only affects metadata. `ANTHROPIC_API_KEY` is only needed for free-typed chat questions.
+Both are optional locally: without the key, the chips still work and typed
+questions get the chat's failure message.
 
-Editing content: everything (profile, experience, projects, certs, timeline, skills) lives in `content/seed.json`.
+Checks. The intro, core and dock tests drive Chrome against a production
+build: run `npm run build` first and they start their own server, or set
+`INTRO_URL` to one that is already running.
 
-## Contact
+```bash
+npm run lint
+npm run build
+npm run test:chat     # stream parsing, validation, truncation, errors
+npm run test:choreo   # cursor engine and action runner
+npm run test:intro    # boot intro timing and behaviour
+npm run test:core     # core travel and docking
+npm run test:dock     # docked bar on 320-390px phones
+```
 
-- **Email:** mihailkirkov04@gmail.com
-- **LinkedIn:** https://www.linkedin.com/in/mihail-kirkov-b65b36262/
-- **GitHub:** https://github.com/MihailKirkov
-- **Portfolio:** https://portfolio-mihail.vercel.app/
+Content: edit `content/seed.json`. The page, the agent's enums and its system
+prompt all rebuild from it.
 
-EU citizen - no visa, work permit, or sponsorship required. Open to on-site, hybrid, and remote-EU roles. Available from August 2026.
+## Links
 
----
-
-<sub>Built with Next.js, TypeScript, and Claude. Design and code by Mihail Kirkov.</sub>
+- GitHub: https://github.com/MihailKirkov
+- LinkedIn: https://www.linkedin.com/in/mihail-kirkov-b65b36262/
