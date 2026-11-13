@@ -18,8 +18,9 @@ import { agentId } from "@/lib/agent/targets";
 
 // The command bar: input, suggestion chips, the streamed answer line and the
 // tool log. One state source renders two views - the full panel in the hero
-// and a compact bar docked to the bottom of the viewport once the hero
-// scrolls away - so the conversation is the same wherever the visitor is.
+// and a slim pill (core, status, input) docked to the bottom of the viewport
+// once the hero scrolls away - so the conversation is the same wherever the
+// visitor is. The pill opens up (answer, chips) only while it is in use.
 //
 // Chips play a canned answer + canned action script (no network). Free-typed
 // questions go to /api/chat, which streams NDJSON events: validated actions
@@ -364,6 +365,9 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
         data-has-answer={question !== null}
         data-expanded={question !== null && expanded}
         data-focus={focused}
+        // desktop: the body and chips only show while the agent is answering
+        // (or the input is focused), or while "Show me" is on offer
+        data-active={pending || requesting || executing || !!showMeButton}
         inert={!docked}
         aria-hidden={!docked}
       >

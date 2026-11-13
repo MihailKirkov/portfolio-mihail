@@ -29,8 +29,9 @@
   --gutter: clamp(16px, 4vw, 48px);
   --max: 1200px;
   --topbar-h: 64px;
-  /* the docked command bar's height, kept clear below the page's last content */
-  --dock-h: 168px;
+  /* the docked pill's height (58px) plus its margins, kept clear below the
+     page's last content */
+  --dock-h: calc(76px + env(safe-area-inset-bottom, 0px));
 }
 
 @theme inline {
@@ -538,9 +539,6 @@ html[data-intro] [data-core-ready] .core-still {
   border-color: var(--accent);
   color: var(--accent);
 }
-.dock-top .chip.showme {
-  margin-left: auto;
-}
 
 /* tool log: one mono row per action call; the running one is accent */
 .toollog {
@@ -590,64 +588,105 @@ html[data-intro] [data-core-ready] .core-still {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--kb, 0px);
   z-index: 40;
-  padding: 0 var(--gutter) 12px;
+  padding: 0 var(--gutter) calc(12px + env(safe-area-inset-bottom, 0px));
   pointer-events: none;
   opacity: 0;
   translate: 0 16px;
   transition: opacity 0.2s, translate 0.2s;
 }
 .dock[data-docked="true"] {
-  pointer-events: auto;
   opacity: 1;
   translate: 0 0;
 }
-/* head (core, status) beside the body (answer, log); chips and input below */
+/* only the pill itself takes input: the page stays clickable beside it */
+.dock[data-docked="true"] .dock-inner {
+  pointer-events: auto;
+}
+/* a slim pill on every width: core, status and input on one row. The body
+   (greeting or answer, tool log) and the chips sit above it and only show
+   while the input is focused or the agent is answering, so the bar never
+   covers the middle of a section at rest. */
 .dock-inner {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 8px 12px;
-  max-width: 760px;
+  grid-template-rows: auto auto auto;
+  grid-template-areas:
+    "body body"
+    "chips chips"
+    "head form";
+  gap: 0 10px;
+  max-width: 560px;
+  max-height: calc(50svh - 12px);
   margin: 0 auto;
-  padding: 10px;
+  padding: 8px;
   border: 1px solid var(--border);
   background: var(--panel);
 }
 .dock-head {
+  grid-area: head;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
+  min-height: 40px;
+}
+.dock-inner > form {
+  grid-area: form;
 }
 .dock-head .cmd-status {
   flex: 0 0 auto;
-  width: 72px;
 }
 .dock-toggle {
   display: none;
 }
 .dock-body {
+  grid-area: body;
+  display: none;
   min-width: 0;
+  min-height: 0;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--hairline);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .dock-answer {
   min-width: 0;
-  overflow: hidden;
   font-size: 14px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 .dock .toollog {
-  max-height: 84px;
-  overflow-y: auto;
+  margin-top: 6px;
 }
 .dock-body .chip.showme {
   margin-top: 6px;
 }
-.dock-chips,
-.dock-inner > form {
-  grid-column: 1 / -1;
+.dock-chips {
+  grid-area: chips;
+  display: none;
+  min-width: 0;
+  margin-bottom: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.dock-chips::-webkit-scrollbar {
+  display: none;
+}
+.dock-chips .chips {
+  flex-wrap: nowrap;
+  width: max-content;
+}
+.dock-chips .chip {
+  white-space: nowrap;
+}
+@media (min-width: 768px) {
+  .dock[data-focus="true"] .dock-body,
+  .dock[data-active="true"] .dock-body,
+  .dock[data-focus="true"] .dock-chips,
+  .dock[data-active="true"] .dock-chips {
+    display: block;
+  }
 }
 
 /* room for the dock below the last section; scrolls into view land above it */
@@ -658,42 +697,26 @@ html {
   scroll-padding-bottom: var(--dock-h);
 }
 
-/* narrow viewports: one compact row (core, status, input) by default. With
-   an answer the body gets the full width on its own row, scrolls inside a
-   bar capped at 40% of the viewport, and folds away on "hide". The chips
-   scroll sideways and show while the input is focused or the bar is open. */
+/* narrow viewports: the same pill, edge to edge. With an answer the body
+   stays open (toggled by "answer" / "hide") and scrolls inside a bar capped
+   at 40% of the viewport; the chips show while the input is focused or the
+   bar is open. Body and chips sit below the row here, next to the thumb. */
 @media (max-width: 767px) {
-  :root {
-    /* the collapsed bar (58px) plus its margins */
-    --dock-h: calc(76px + env(safe-area-inset-bottom, 0px));
-  }
   .dock {
-    bottom: var(--kb, 0px);
     padding: 0 8px calc(8px + env(safe-area-inset-bottom, 0px));
   }
-  /* head and input on one row; the body and the chips below, full width */
   .dock-inner {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-areas:
       "head form"
       "body body"
       "chips chips";
     gap: 0 8px;
+    max-width: none;
     max-height: calc(40svh - 8px - env(safe-area-inset-bottom, 0px));
-    padding: 8px;
   }
   .dock-head {
-    grid-area: head;
     gap: 8px;
-    min-height: 40px;
-  }
-  .dock-inner > form {
-    grid-area: form;
-  }
-  .dock-head .cmd-status {
-    width: auto;
   }
   .dock-toggle {
     display: inline-flex;
@@ -705,45 +728,19 @@ html {
     cursor: pointer;
   }
   .dock-body {
-    grid-area: body;
-    display: none;
-    min-height: 0;
-    margin-top: 8px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    margin: 8px 0 0;
+    padding: 0;
+    border: 0;
   }
   .dock[data-expanded="true"] .dock-body {
     display: block;
   }
-  .dock-answer {
-    display: block;
-    overflow: visible;
-    -webkit-line-clamp: none;
-  }
-  .dock .toollog {
-    max-height: none;
-    overflow: visible;
-  }
   .dock-chips {
-    grid-area: chips;
-    display: none;
-    margin-top: 8px;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .dock-chips::-webkit-scrollbar {
-    display: none;
+    margin: 8px 0 0;
   }
   .dock[data-expanded="true"] .dock-chips,
   .dock[data-focus="true"] .dock-chips {
     display: block;
-  }
-  .dock-chips .chips {
-    flex-wrap: nowrap;
-    width: max-content;
-  }
-  .dock-chips .chip {
-    white-space: nowrap;
   }
 }
 
