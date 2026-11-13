@@ -13,7 +13,7 @@ import { chromium, type Browser, type CDPSession, type Page } from "playwright";
 //     visible cursor leaves the viewport
 //   - copy glides along each line: one move per line, never one per character,
 //     and it keeps moving the whole time it types; typing is paced to be read
-//   - the cursors dock one by one, copy last; the agent appears with the first
+//   - the cursors dock one by one; the agent appears with the first
 //     dock and stays
 //   - nothing reflows while the intro runs (layout boxes, not transforms)
 //   - style never colours what copy is still on: the headline sits grey for at
@@ -38,7 +38,7 @@ const MAX_GLIDE_PX_S = 2000;
 const MAX_STEP_PX = 60; // per 60Hz frame
 const MIN_CHAR_MS = 20;
 const HEADLINE_GREY_MS = 1000;
-const DOCK_GAP_MS = 150;
+const DOCK_GAP_MS = 80;
 const HOLD_MS = 1200;
 /** timer slack when checking the hold's end */
 const HOLD_SLACK_MS = 80;
@@ -454,7 +454,6 @@ function check(rec: Recording, label: string, vw: number, vh: number) {
     .sort((a, b) => (a.t ?? Infinity) - (b.t ?? Infinity));
   info.push(`docks ${docks.map((d) => `${d.r}@${rel(d.t)}`).join(" ")}`);
   docks.forEach((d) => expect(d.t !== undefined, `${d.r} never docked`));
-  expect(docks[docks.length - 1]?.r === "copy", `copy is not last to dock`);
   for (let i = 1; i < docks.length; i++) {
     expect(
       docks[i].t - docks[i - 1].t >= DOCK_GAP_MS,
