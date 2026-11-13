@@ -156,7 +156,7 @@ export function Journey({ steps, children }: { steps: JourneyStep[]; children: R
               style={{ width: `calc(${GATE_W}px * var(--k, 1))`, height: `calc(${GATE_H}px * var(--k, 1))` }}
             >
               <span className="jr-gate-label">
-                {i === cur ? `current gate · ${s.start ?? s.date}` : s.label}
+                {i === cur ? `current gate · ${s.start ?? (s.date || s.label)}` : s.label}
               </span>
             </div>
           ))}
@@ -172,36 +172,7 @@ export function Journey({ steps, children }: { steps: JourneyStep[]; children: R
           </div>
         )}
 
-        <div className="jr-panel" key={step.id} aria-live="polite">
-          {step.photo && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="jr-photo" src={step.photo.src} alt={step.photo.alt} />
-          )}
-          {step.kind === "cert" && <p className="jr-date">certification · {step.date}</p>}
-          {step.kind !== "cert" && step.date && <p className="jr-date">{step.date}</p>}
-          <h3 className="jr-title">{step.title}</h3>
-          {step.role && <p className="jr-role">{step.role}</p>}
-          {step.text && <p className="jr-text">{step.text}</p>}
-          {step.facts && (
-            <dl className="jr-facts">
-              {step.facts.map((f) => (
-                <div key={f.label}>
-                  <dt>{f.label}</dt>
-                  {f.lines.map((l, i) => (
-                    <dd key={i}>{l}</dd>
-                  ))}
-                </div>
-              ))}
-            </dl>
-          )}
-          {step.bullets && step.bullets.length > 0 && (
-            <ul className="jr-bullets">
-              {step.bullets.map((b, i) => (
-                <li key={i}>{b}</li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <JourneyPanel key={step.id} step={step} />
 
         <ol className="jr-rail">
           {rail.map(({ year, i, last }) => {
@@ -216,6 +187,63 @@ export function Journey({ steps, children }: { steps: JourneyStep[]; children: R
             );
           })}
         </ol>
+      </div>
+    </div>
+  );
+}
+
+/** bullets shown before the "more" toggle */
+const BULLETS_SHOWN = 2;
+
+/** the flat info panel: header fixed, body scrolls inside a fade mask so the
+ *  panel never runs under the dock */
+function JourneyPanel({ step }: { step: JourneyStep }) {
+  const [all, setAll] = useState(false);
+  const bullets = step.bullets ?? [];
+  const shown = all ? bullets : bullets.slice(0, BULLETS_SHOWN);
+  const hidden = bullets.length - BULLETS_SHOWN;
+  return (
+    <div className="jr-panel" data-about={step.photo ? "" : undefined} data-kind={step.kind} aria-live="polite">
+      {step.photo && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img className="jr-photo" src={step.photo.src} alt={step.photo.alt} />
+      )}
+      {step.kind === "cert" && <p className="jr-date">certification · {step.date}</p>}
+      {step.kind !== "cert" && step.date && <p className="jr-date">{step.date}</p>}
+      <h3 className="jr-title">{step.title}</h3>
+      {step.role && <p className="jr-role">{step.role}</p>}
+      <div className="jr-body" data-lenis-prevent tabIndex={-1}>
+        {step.text && <p className="jr-text">{step.text}</p>}
+        {step.facts && (
+          <dl className="jr-facts">
+            {step.facts.map((f) => (
+              <div key={f.label}>
+                <dt>{f.label}</dt>
+                {f.lines.map((l, i) => (
+                  <dd key={i}>{l}</dd>
+                ))}
+              </div>
+            ))}
+          </dl>
+        )}
+        {shown.length > 0 && (
+          <ul className="jr-bullets" id={`jr-bullets-${step.id}`}>
+            {shown.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        )}
+        {hidden > 0 && (
+          <button
+            type="button"
+            className="jr-more"
+            aria-expanded={all}
+            aria-controls={`jr-bullets-${step.id}`}
+            onClick={() => setAll((v) => !v)}
+          >
+            {all ? "less" : `more (${hidden})`}
+          </button>
+        )}
       </div>
     </div>
   );

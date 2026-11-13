@@ -2254,8 +2254,11 @@ html[data-intro] .intro-skip {
 .jr-panel {
   position: absolute;
   left: 72px;
-  top: 300px;
+  --top: 300px;
+  top: var(--top);
   width: 400px;
+  /* never under the dock */
+  max-height: calc(100% - var(--top) - var(--dock-h) - 16px);
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -2360,6 +2363,18 @@ html[data-intro] .intro-skip {
 .jr-gate[data-kind="cert"][data-current] {
   border-style: solid;
 }
+/* a marker's label shows only while it is the current step, below it */
+.jr-gate[data-kind="cert"]:not([data-current]) .jr-gate-label {
+  display: none;
+}
+.jr-gate[data-kind="cert"] .jr-gate-label {
+  bottom: auto;
+  top: calc(100% + 6px);
+  transform-origin: 0 0;
+}
+.jr-panel[data-kind="cert"] .jr-title {
+  font-size: 34px;
+}
 /* About gate: short labelled facts under the paragraph */
 .jr-facts,
 .about-facts {
@@ -2388,4 +2403,45 @@ html[data-intro] .intro-skip {
 }
 .xp-cert > span:last-child {
   color: #c4c9d1;
+}
+
+/* the panel's body scrolls inside a fade mask when it is taller than the room left */
+.jr-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 28px;
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 36px), transparent);
+}
+.jr-body::-webkit-scrollbar {
+  display: none;
+}
+.jr-more {
+  align-self: flex-start;
+  padding: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.jr-more:hover {
+  text-decoration: underline;
+}
+/* About has no passed-gate note above it: it starts higher */
+.jr-panel[data-about] {
+  --top: 140px;
+}
+@media (max-height: 820px) {
+  .jr-panel[data-about] .jr-photo {
+    width: 84px;
+  }
 }
