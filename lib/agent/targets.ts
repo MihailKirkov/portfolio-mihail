@@ -1,5 +1,6 @@
 import seed from "@/content/seed.json";
 import type { Content } from "@/lib/types";
+import { position, scrollToY, yOf } from "@/lib/scroll";
 
 // Agent targets: every element the agent can act on carries
 // data-agent-id="<kind>:<key>". Components build ids with `agentId` and the
@@ -135,45 +136,22 @@ export function isComfortablyVisible(el: HTMLElement) {
   return tall ? r.top >= top && r.top < bottom - 80 : r.top >= top && r.bottom <= bottom;
 }
 
-/** resolve once the page has stopped scrolling (or after a hard cap) */
-function scrollSettled(signal?: AbortSignal) {
-  return new Promise<void>((resolve) => {
-    let last = window.scrollY;
-    let still = 0;
-    const started = performance.now();
-    function tick() {
-      if (signal?.aborted) return resolve();
-      const y = window.scrollY;
-      still = y === last ? still + 1 : 0;
-      last = y;
-      if (still >= 6 || performance.now() - started > 1500) return resolve();
-      requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  });
-}
-
 export async function scrollToElement(
   el: HTMLElement,
   { instant, signal }: { instant: boolean; signal?: AbortSignal }
 ) {
-  const depthY = depthApi?.scrollY(el) ?? null;
-  if (depthY !== null) {
-    window.scrollTo({ top: depthY, behavior: instant ? "instant" : "smooth" });
-  } else {
-    const tall = el.getBoundingClientRect().height > window.innerHeight * 0.6;
-    el.scrollIntoView({
-      behavior: instant ? "instant" : "smooth",
-      block: tall ? "start" : "center",
-    });
+  // the depth stage knows the scroll stop that brings a chapter to the front;
+  // everything else is centred, or its top shown when it is tall. All through
+  // the page's one scroll source (lib/scroll.ts), which stops where it is on
+  // a cancel
+  let y = depthApi?.scrollY(el) ?? null;
+  if (y === null) {
+    const r = el.getBoundingClientRect();
+    const tall = r.height > window.innerHeight * 0.6;
+    y = tall ? yOf(el) : r.top + position() - (window.innerHeight - r.height) / 2;
   }
-  if (instant) return;
-  // a cancel must also stop a smooth scroll already in flight, or the page
-  // keeps gliding to the old target after the visitor took over
-  const stop = () => window.scrollTo({ top: window.scrollY, behavior: "instant" });
-  signal?.addEventListener("abort", stop);
-  await scrollSettled(signal);
-  signal?.removeEventListener("abort", stop);
+  const max = document.documentElement.scrollHeight - window.innerHeight;
+  await scrollToY(Math.max(0, Math.min(max, y)), { instant, signal });
 }
 
 const PULSE_MS = 2000;

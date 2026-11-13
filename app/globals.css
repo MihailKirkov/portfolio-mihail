@@ -55,9 +55,14 @@
   border-radius: 0;
 }
 
+/* no scroll-behavior: smooth and no scroll snap: lib/scroll.ts (Lenis on a
+   fine pointer) is the one smooth-scroll source */
 html {
-  scroll-behavior: smooth;
   background: var(--ground);
+}
+html.lenis,
+html.lenis body {
+  height: auto;
 }
 
 body {
@@ -980,19 +985,15 @@ html {
    Projects: depth stage. Only under [data-depth="on"], which
    components/projects/depth-stage.tsx sets on wide viewports
    without reduced motion; everything else sees the plain cards
-   above. ~60svh of scroll per project, with a proximity snap
-   stop per project. The stage sticks under the top bar: rail,
+   above. ~60svh of scroll per project, each holding still for a
+   share of it at its stop (no snapping). The stage sticks under the top bar: rail,
    image slabs (moved by inline transform + --o only), and a
    flat info panel that is never transformed. Nothing in it
    scrolls. The stage keeps the docked bar's height clear.
    ============================================================ */
 .chapter-rail,
-.slab,
-.depth-stop {
+.slab {
   display: none;
-}
-html:has(.depth[data-depth="on"]) {
-  scroll-snap-type: y proximity;
 }
 .depth[data-depth="on"] {
   --stage-h: calc(100svh - var(--topbar-h));
@@ -1001,17 +1002,6 @@ html:has(.depth[data-depth="on"]) {
 .depth[data-depth="on"] .depth-track {
   position: relative;
   height: calc(var(--stage-h) + (var(--n) - 1) * var(--step));
-}
-/* one snap stop per project: lands that project at the front */
-.depth[data-depth="on"] .depth-stop {
-  display: block;
-  position: absolute;
-  left: 0;
-  top: calc(var(--i) * var(--step) - var(--topbar-h));
-  width: 1px;
-  height: 1px;
-  scroll-snap-align: start;
-  pointer-events: none;
 }
 .depth[data-depth="on"] .depth-stage {
   position: sticky;
@@ -1508,9 +1498,6 @@ html[data-intro] .intro-skip {
    Reduced motion: content stays, choreography goes
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
   *,
   *::before,
   *::after {

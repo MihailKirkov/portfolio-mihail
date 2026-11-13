@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ShaderCoreProps } from "@/components/core/shader-core";
 import { canRunWebGL } from "@/lib/core/gate";
+import { onScroll } from "@/lib/scroll";
 import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
 
 // The core's gate and its travel. `children` is the static still
@@ -101,14 +102,14 @@ const SPEED_WINDOW_MS = 150;
 const SPEED_FLOOR_MS = 100;
 function scrollSpeedTracker() {
   const samples: { t: number; y: number }[] = [];
-  const onScroll = () => {
+  // the page's one scroll source (Lenis when it runs, else native)
+  const stop = onScroll(({ y }) => {
     const now = performance.now();
-    samples.push({ t: now, y: window.scrollY });
+    samples.push({ t: now, y });
     // keep one sample older than the window as the baseline, so the average
     // spans the whole window even when frames (and so events) are sparse
     while (samples.length > 2 && now - samples[1].t > SPEED_WINDOW_MS) samples.shift();
-  };
-  window.addEventListener("scroll", onScroll, { passive: true });
+  });
   return {
     speed: () => {
       const now = performance.now();
@@ -120,7 +121,7 @@ function scrollSpeedTracker() {
       const dt = Math.max(last.t - first.t, SPEED_FLOOR_MS);
       return (Math.abs(last.y - first.y) / dt) * 1000;
     },
-    stop: () => window.removeEventListener("scroll", onScroll),
+    stop,
   };
 }
 

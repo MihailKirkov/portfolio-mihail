@@ -9,15 +9,9 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import {
-  AnimatePresence,
-  motion,
-  useMotionValue,
-  useMotionValueEvent,
-  useScroll,
-  useSpring,
-} from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { agentId, setDepthStage } from "@/lib/agent/targets";
+import { onScroll, position, scrollToY } from "@/lib/scroll";
 import { canRunWebGL } from "@/lib/core/gate";
 import { ProjectLinks, ProjectOverlay } from "@/components/projects/project-overlay";
 import type { DepthDriver, DepthGLProps } from "@/components/projects/depth-gl";
@@ -30,10 +24,13 @@ import type { DepthDriver, DepthGLProps } from "@/components/projects/depth-gl";
 // project, and the long content in a full-viewport overlay. Nothing on the
 // stage scrolls inside itself.
 //
-// Motion: one spring-smoothed progress value drives every slab (transform and
-// opacity only). The outgoing slab moves toward the viewer and is gone within
-// the first quarter of a transition; the incoming one only starts forward
-// after that, so the two never cross while both are visible.
+// Motion: one progress value, read straight from the page's one scroll source
+// (lib/scroll.ts: Lenis, or native scroll on touch and under reduced motion),
+// drives the slabs or the scene, the rail and the info panel in the same call:
+// no second smoothing layer and no snapping. Each project holds still for a
+// share of the scroll at its stop. Within a transition (u, 0..1) the
+// outgoing slab is gone at its midpoint, u = 0.5, and that is exactly where the
+// rail and the panel switch to the incoming project.
 //
 // WebGL. Where the core's gate passes (lib/core/gate.ts: no reduced motion,
 // > 4 cores, no data saver, hardware WebGL2), the scene in
@@ -66,8 +63,10 @@ const QUERY =
   "(min-width: 768px) and (min-height: 560px) and (prefers-reduced-motion: no-preference)";
 /** share of each stop-to-stop scroll the front slab holds still, at each end */
 const HOLD = 0.15;
-/** the outgoing slab is fully faded by this share of the transition */
-const OUT = 0.25;
+/** the transition midpoint: the outgoing slab is gone, the panel switches */
+const SWITCH = 0.5;
+/** the incoming slabs start forward at this share of the transition */
+const ADVANCE = 0.25;
 
 const clamp01 = (t: number) => Math.min(1, Math.max(0, t));
 const smoothstep = (t: number) => t * t * (3 - 2 * t);
@@ -94,7 +93,7 @@ function upcoming(e: number): Look {
 function outgoing(u: number): Look {
   return {
     transform: `translate3d(0, 0, ${(320 * u).toFixed(1)}px)`,
-    opacity: clamp01(1 - u / OUT),
+    opacity: clamp01(1 - u / SWITCH),
     tint: 0,
   };
 }
@@ -122,7 +121,7 @@ export function DepthStage({
   const glOn = gl && glReady;
   const glOnRef = useRef(glOn);
   glOnRef.current = glOn;
-  const driver = useRef<DepthDriver>({ cam: 0, raw: 0, dimmed: projects.map(() => false) });
+  const driver = useRef<DepthDriver>({ cam: 0, dimmed: projects.map(() => false) });
   const glImages = useMemo(() => projects.map((x) => x.gallery[0] ?? null), [projects]);
   // every chapter shares the front slab's layout box; the first one stands for it
   const glSlot = useCallback(
@@ -134,10 +133,6 @@ export function DepthStage({
     setGlLost(true);
     setGlReady(false);
   }, []);
-
-  const { scrollY } = useScroll();
-  const target = useMotionValue(0);
-  const progress = useSpring(target, { stiffness: 240, damping: 36, mass: 0.6, restDelta: 0.0002 });
 
   useEffect(() => {
     const mq = window.matchMedia(QUERY);
@@ -165,9 +160,9 @@ export function DepthStage({
     return Math.round(m.start + (n > 1 ? i / (n - 1) : 0) * m.range);
   };
 
-  const readTarget = () => {
+  const read = () => {
     const m = measure();
-    return m ? clamp01((window.scrollY - m.start) / m.range) : 0;
+    return m ? clamp01((position() - m.start) / m.range) : 0;
   };
 
   const render = (p: number) => {
@@ -176,11 +171,9 @@ export function DepthStage({
     const raw = p * Math.max(0, n - 1);
     const k = Math.min(Math.floor(raw), Math.max(0, n - 2));
     const u = smoothstep(clamp01((raw - k - HOLD) / (1 - 2 * HOLD)));
-    // the incoming slabs wait until the outgoing one has faded
-    const advance = smoothstep(clamp01((u - OUT) / (1 - OUT)));
-    const frontIdx = n > 1 && u >= 0.5 ? k + 1 : k;
+    const advance = smoothstep(clamp01((u - ADVANCE) / (1 - ADVANCE)));
+    const frontIdx = n > 1 && u >= SWITCH ? k + 1 : k;
 
-    driver.current.raw = raw;
     driver.current.cam = n > 1 ? k + u : 0;
     const glNow = glOnRef.current;
 
@@ -210,13 +203,6 @@ export function DepthStage({
     });
     setFront((f) => (f === frontIdx ? f : frontIdx));
   };
-
-  useMotionValueEvent(scrollY, "change", () => {
-    if (on) target.set(readTarget());
-  });
-  useMotionValueEvent(progress, "change", (p) => {
-    if (on) render(p);
-  });
 
   useEffect(() => {
     const root = rootRef.current;
@@ -262,7 +248,7 @@ export function DepthStage({
         const y = chapterY(Number(a.dataset.chapterLink));
         if (y === null) return;
         e.preventDefault();
-        window.scrollTo({ top: y, behavior: "smooth" });
+        void scrollToY(y);
         history.replaceState(null, "", a.hash);
         return;
       }
@@ -270,10 +256,8 @@ export function DepthStage({
       const slab = t.closest<HTMLElement>("[data-slab]");
       if (slab && root.contains(slab)) setOverlay({ slug: slab.dataset.slab!, gallery: false });
     };
-    const onResize = () => {
-      target.set(readTarget());
-      render(progress.get());
-    };
+    const onResize = () => render(read());
+    const unScroll = onScroll(() => render(read()));
     // the docked bar grows with an answer and its tool log; the stage keeps
     // its real height clear so the bar never covers the stage
     const dock = document.querySelector<HTMLElement>(".dock");
@@ -289,15 +273,13 @@ export function DepthStage({
     const hashIdx = location.hash ? indexOf(document.getElementById(location.hash.slice(1))) : -1;
     if (hashIdx >= 0) {
       const y = chapterY(hashIdx);
-      if (y !== null) window.scrollTo({ top: y, behavior: "instant" });
+      if (y !== null) void scrollToY(y, { instant: true });
     }
-    const p0 = readTarget();
-    target.set(p0);
-    progress.jump(p0);
-    render(p0);
+    render(read());
 
     return () => {
       setDepthStage(null);
+      unScroll();
       dockRO?.disconnect();
       root.style.removeProperty("--dock-live");
       root.removeEventListener("click", onClick);
@@ -370,7 +352,7 @@ export function DepthStage({
 
   // hand-off between the CSS slabs and the scene, both ways
   useEffect(() => {
-    if (on) render(progress.get());
+    if (on) render(read());
     // render only reads refs, props and `on`
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [glOn]);
@@ -386,14 +368,6 @@ export function DepthStage({
       data-depth-gl={glOn ? "" : undefined}
     >
       <div className="depth-track" style={{ "--n": n } as CSSProperties}>
-        {projects.map((x, i) => (
-          <span
-            key={x.slug}
-            className="depth-stop"
-            style={{ "--i": i } as CSSProperties}
-            aria-hidden
-          />
-        ))}
         <div className="depth-stage">
           {gl && glMod && (
             <div className="depth-gl" aria-hidden>

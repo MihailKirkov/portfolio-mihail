@@ -3,6 +3,7 @@ import { JetBrains_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { seedContent } from "@/lib/content";
 import { IntroBootScript } from "@/components/intro/boot-script";
+import { SmoothScroll } from "@/components/site/smooth-scroll";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -71,7 +72,10 @@ export default function RootLayout({
       <head>
         <IntroBootScript />
       </head>
-      <body>{children}</body>
+      <body>
+        <SmoothScroll />
+        {children}
+      </body>
     </html>
   );
 }

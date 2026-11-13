@@ -7,6 +7,7 @@ import {
   scrollToElement,
 } from "@/lib/agent/targets";
 import { setAgentState } from "@/lib/agent/store";
+import { onScroll, type ScrollInfo } from "@/lib/scroll";
 import { sleep } from "@/lib/agent/clock";
 
 // Cursor engine. One queue of steps shared by agent actions and the boot
@@ -102,9 +103,11 @@ const TYPE_CHAR_MS = 35;
 // `click` is how a touch tap cancels: a touch pointerdown may be the start of a
 // scroll, so it is ignored and the tap is caught when it completes
 const CANCEL_EVENTS = ["pointerdown", "keydown", "click"] as const;
-// `scroll` only counts while already paused (momentum after a touch flick);
-// otherwise it could be the agent's own smooth scroll
-const SCROLL_EVENTS = ["wheel", "touchmove", "scroll"] as const;
+// wheel and touch input pause the queue. The scroll itself is read from the
+// page's one scroll source (lib/scroll.ts): the visitor's scroll - Lenis's
+// smoothing tail after a wheel, momentum after a touch flick - keeps pushing
+// the resume back; the agent's own scrolls (started through it) never count
+const SCROLL_EVENTS = ["wheel", "touchmove"] as const;
 export const RESUME_AFTER_MS = 500;
 export const MAX_PAUSE_MS = 4000;
 
@@ -229,9 +232,14 @@ class Choreo {
 
   private onScrollInput = (e: Event) => {
     if (!e.isTrusted || this.current?.ownInput) return;
-    if (e.type === "scroll" && !this.paused) return;
     this.pause();
   };
+
+  private onPageScroll = (s: ScrollInfo) => {
+    if (!s.user || !this.paused || this.current?.ownInput) return;
+    this.pause();
+  };
+  private unScroll: () => void = () => {};
 
   /** hold the queue; every scroll event pushes the resume back */
   private pause() {
@@ -268,6 +276,7 @@ class Choreo {
     SCROLL_EVENTS.forEach((t) =>
       window.addEventListener(t, this.onScrollInput, { capture: true, passive: true })
     );
+    this.unScroll = onScroll(this.onPageScroll);
 
     while (this.queue.length) {
       const batch = this.queue.shift()!;
@@ -285,6 +294,7 @@ class Choreo {
     SCROLL_EVENTS.forEach((t) =>
       window.removeEventListener(t, this.onScrollInput, { capture: true })
     );
+    this.unScroll();
     this.endPause();
     this.controller = null;
     this.current = null;

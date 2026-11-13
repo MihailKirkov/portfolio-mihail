@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { ContextLoss, Loop, cssColor } from "@/components/core/r3f-shared";
+import { velocity as scrollVelocity } from "@/lib/scroll";
 
 // The projects depth scene: one R3F canvas behind the depth stage's DOM (rail,
 // info panel, invisible slab hit boxes). It loads in its own chunk behind
@@ -19,9 +20,11 @@ import { ContextLoss, Loop, cssColor } from "@/components/core/r3f-shared";
 //     direction), plus a slight lift of the background
 //   - a full-screen mood shader: a ground colour, two slow soft blobs and
 //     grain, blended from one project's palette to the next by depth
-// What differs here: the page keeps its native scroll. The stage's own
-// spring-smoothed progress, with its hold at every stop, is the camera's
-// position (driver.cam); its raw progress is the velocity source. At a stop
+// What differs here: the page scrolls through its one scroll source
+// (lib/scroll.ts, Lenis on a fine pointer), not a wheel hijack. The stage's
+// progress from that scroll, with its hold at every stop, is the camera's
+// position (driver.cam), unsmoothed; the scroll's velocity drives breath and
+// drift. At a stop
 // the front plane sits exactly on the DOM slab's box, so clicks, the agent
 // cursor and its outline land on the image. Palettes are sampled from each
 // image at load and muted to near-ground darks.
@@ -29,8 +32,6 @@ import { ContextLoss, Loop, cssColor } from "@/components/core/r3f-shared";
 export interface DepthDriver {
   /** camera position in project units, with the stage's hold at each stop */
   cam: number;
-  /** spring-smoothed scroll progress in project units; the velocity source */
-  raw: number;
   /** filter_projects: the chapter is dimmed */
   dimmed: boolean[];
 }
@@ -56,8 +57,8 @@ const REST = 3;
 const PLANE_GAP = 3.2;
 /** texture width requested from the image optimizer, px */
 const TEX_W = 1200;
-/** |velocity| at which breath and drift saturate, projects per second */
-const V_MAX = 2.5;
+/** |scroll velocity| at which breath and drift saturate, px per frame */
+const V_MAX = 40;
 
 // ---- moods: palettes sampled from the images, muted to the dark identity ----
 
@@ -422,7 +423,7 @@ function Scene({
   );
 
   // motion state, eased per frame
-  const m = useRef({ prevRaw: NaN, vel: 0, breath: 0, drift: 0, px: 0, py: 0, tint: [] as number[] });
+  const m = useRef({ breath: 0, drift: 0, px: 0, py: 0, tint: [] as number[] });
   const mood = useMemo(() => ({ a: new THREE.Color(), b: new THREE.Color() }), []);
 
   useFrame((state, delta) => {
@@ -432,15 +433,11 @@ function Scene({
     const dt = Math.min(Math.max(delta, 1 / 240), 0.05);
     const s = m.current;
 
-    // velocity from the raw progress (holds would flatten it at each stop)
-    if (Number.isNaN(s.prevRaw)) s.prevRaw = d.raw;
-    const rawVel = (d.raw - s.prevRaw) / dt;
-    s.prevRaw = d.raw;
-    s.vel = Math.max(-V_MAX, Math.min(V_MAX, damp(s.vel, rawVel, 7, dt)));
-    if (Math.abs(s.vel) < 1e-3) s.vel = 0;
-    const vn = Math.abs(s.vel) / V_MAX;
-    s.breath = damp(s.breath, Math.min(1, vn * 1.1), 8, dt);
-    s.drift = damp(s.drift, s.vel / V_MAX, 3, dt);
+    // the page scroll's own velocity (Lenis, or native); breath and drift
+    // keep the tutorial's easing, nothing else smooths the scroll
+    const vel = Math.max(-V_MAX, Math.min(V_MAX, scrollVelocity()));
+    s.breath = damp(s.breath, Math.min(1, (Math.abs(vel) / V_MAX) * 1.1), 8, dt);
+    s.drift = damp(s.drift, vel / V_MAX, 3, dt);
     const ptr = pointerRef.current;
     s.px = damp(s.px, ptr?.x ?? 0, 5, dt);
     s.py = damp(s.py, ptr?.y ?? 0, 5, dt);
@@ -476,14 +473,17 @@ function Scene({
       const dist = camera.position.z - z;
       let opacity: number;
       let tint: number;
+      // keyed on the transition's midpoint, where the stage switches the
+      // panel and the rail: the outgoing plane is gone and the incoming one
+      // fully lit exactly there
       if (dist < REST) {
-        // passing: gone within the first third of the way to the next stop
-        opacity = smoothstep(REST - 0.32 * PLANE_GAP, REST - 0.01, dist);
+        const out = (REST - dist) / PLANE_GAP;
+        opacity = 1 - smoothstep(0.2, 0.5, out);
         tint = 0;
       } else {
         const e = (dist - REST) / PLANE_GAP;
         opacity = Math.min(1, Math.max(0, 3 - e));
-        tint = e <= 1 ? 0.7 * e : 0.7 + 0.15 * Math.min(1, e - 1);
+        tint = e <= 1 ? 0.7 * smoothstep(0.5, 1, e) : 0.7 + 0.15 * Math.min(1, e - 1);
       }
       s.tint[i] = damp(s.tint[i] ?? 0, d.dimmed[i] ? 0.75 : 0, 6, dt);
       u.uOpacity.value = opacity;
