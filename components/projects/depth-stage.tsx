@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import {
   AnimatePresence,
   motion,
@@ -10,7 +18,9 @@ import {
   useSpring,
 } from "framer-motion";
 import { agentId, setDepthStage } from "@/lib/agent/targets";
+import { canRunWebGL } from "@/lib/core/gate";
 import { ProjectLinks, ProjectOverlay } from "@/components/projects/project-overlay";
+import type { DepthDriver, DepthGLProps } from "@/components/projects/depth-gl";
 
 // Scroll-driven depth chapters, layered over the static project list.
 // The server renders plain vertical cards; on a wide viewport without reduced
@@ -24,6 +34,19 @@ import { ProjectLinks, ProjectOverlay } from "@/components/projects/project-over
 // opacity only). The outgoing slab moves toward the viewer and is gone within
 // the first quarter of a transition; the incoming one only starts forward
 // after that, so the two never cross while both are visible.
+//
+// WebGL. Where the core's gate passes (lib/core/gate.ts: no reduced motion,
+// > 4 cores, no data saver, hardware WebGL2), the scene in
+// components/projects/depth-gl.tsx is fetched once the section is within a
+// screen of the viewport (three is already in the core's shared chunk) and
+// drawn behind the stage. The same progress drives it through a driver ref.
+// Until its textures are in and its first frame is drawn the CSS slabs stay;
+// then data-depth-gl is set, the slabs go invisible but stay in place at the
+// front position as hit boxes and agent targets, and the canvas fades in.
+// A lost context drops back to the CSS slabs for good. The canvas renders only
+// while the section is on screen and the tab is visible.
+
+type GLModule = { DepthGL: (p: DepthGLProps) => React.JSX.Element };
 
 export interface StageProject {
   slug: string;
@@ -90,6 +113,27 @@ export function DepthStage({
   const [front, setFront] = useState(0);
   const [overlay, setOverlay] = useState<{ slug: string; gallery: boolean } | null>(null);
   const n = projects.length;
+  const [glMod, setGlMod] = useState<GLModule | null>(null);
+  const [glReady, setGlReady] = useState(false);
+  const [glLost, setGlLost] = useState(false);
+  const [glActive, setGlActive] = useState(false);
+  const [finePtr, setFinePtr] = useState(false);
+  const gl = on && !!glMod && !glLost;
+  const glOn = gl && glReady;
+  const glOnRef = useRef(glOn);
+  glOnRef.current = glOn;
+  const driver = useRef<DepthDriver>({ cam: 0, raw: 0, dimmed: projects.map(() => false) });
+  const glImages = useMemo(() => projects.map((x) => x.gallery[0] ?? null), [projects]);
+  // every chapter shares the front slab's layout box; the first one stands for it
+  const glSlot = useCallback(
+    () => rootRef.current?.querySelector<HTMLElement>("[data-depth-chapter]") ?? null,
+    []
+  );
+  const onGlReady = useCallback(() => setGlReady(true), []);
+  const onGlLost = useCallback(() => {
+    setGlLost(true);
+    setGlReady(false);
+  }, []);
 
   const { scrollY } = useScroll();
   const target = useMotionValue(0);
@@ -136,14 +180,25 @@ export function DepthStage({
     const advance = smoothstep(clamp01((u - OUT) / (1 - OUT)));
     const frontIdx = n > 1 && u >= 0.5 ? k + 1 : k;
 
+    driver.current.raw = raw;
+    driver.current.cam = n > 1 ? k + u : 0;
+    const glNow = glOnRef.current;
+
     root.querySelectorAll<HTMLElement>("[data-depth-chapter]").forEach((el, i) => {
       let look: Look;
       if (i < k) look = outgoing(1);
       else if (i === k) look = u > 0 ? outgoing(u) : upcoming(0);
       else look = upcoming(i - k - advance);
-      el.style.transform = look.transform;
-      el.style.setProperty("--o", look.opacity.toFixed(3));
-      el.style.setProperty("--t", look.tint.toFixed(3));
+      if (glNow) {
+        // the scene draws; the slabs are invisible hit boxes at the front spot
+        el.style.removeProperty("transform");
+        el.style.removeProperty("--o");
+        el.style.removeProperty("--t");
+      } else {
+        el.style.transform = look.transform;
+        el.style.setProperty("--o", look.opacity.toFixed(3));
+        el.style.setProperty("--t", look.tint.toFixed(3));
+      }
       el.style.visibility = look.opacity < 0.004 ? "hidden" : "";
       el.style.zIndex = String(50 - (i - k));
       const state = i === frontIdx ? "front" : look.opacity >= 0.004 ? "near" : "far";
@@ -252,11 +307,84 @@ export function DepthStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on]);
 
+  // WebGL: decide once the stage is on; fetch the scene when the section nears
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!on || !root || glMod || glLost || !canRunWebGL()) return;
+    setFinePtr(window.matchMedia("(hover: hover) and (pointer: fine)").matches);
+    let disposed = false;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        io.disconnect();
+        void import("@/components/projects/depth-gl").then((m) => {
+          if (!disposed) setGlMod(m);
+        });
+      },
+      { rootMargin: "100% 0px" }
+    );
+    io.observe(root);
+    return () => {
+      disposed = true;
+      io.disconnect();
+    };
+  }, [on, glMod, glLost]);
+
+  // render only while the section is on screen and the tab is visible
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!gl || !root) return;
+    let inView = false;
+    let visible = document.visibilityState !== "hidden";
+    const update = () => setGlActive(inView && visible);
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      update();
+    });
+    io.observe(root);
+    const onVisibility = () => {
+      visible = document.visibilityState !== "hidden";
+      update();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [gl]);
+
+  // filter_projects dims chapters by attribute; the scene follows it
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!gl || !root) return;
+    const read = () => {
+      root.querySelectorAll<HTMLElement>("[data-depth-chapter]").forEach((el, i) => {
+        driver.current.dimmed[i] = el.hasAttribute("data-dimmed");
+      });
+    };
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(root, { attributes: true, subtree: true, attributeFilter: ["data-dimmed"] });
+    return () => mo.disconnect();
+  }, [gl]);
+
+  // hand-off between the CSS slabs and the scene, both ways
+  useEffect(() => {
+    if (on) render(progress.get());
+    // render only reads refs, props and `on`
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [glOn]);
+
   const p = projects[Math.min(front, n - 1)];
   const open = overlay ? projects.find((x) => x.slug === overlay.slug) : undefined;
 
   return (
-    <div ref={rootRef} className="depth" data-depth={on ? "on" : undefined}>
+    <div
+      ref={rootRef}
+      className="depth"
+      data-depth={on ? "on" : undefined}
+      data-depth-gl={glOn ? "" : undefined}
+    >
       <div className="depth-track" style={{ "--n": n } as CSSProperties}>
         {projects.map((x, i) => (
           <span
@@ -267,6 +395,19 @@ export function DepthStage({
           />
         ))}
         <div className="depth-stage">
+          {gl && glMod && (
+            <div className="depth-gl" aria-hidden>
+              <glMod.DepthGL
+                images={glImages}
+                driver={driver}
+                slot={glSlot}
+                active={glActive}
+                pointer={finePtr}
+                onReady={onGlReady}
+                onLost={onGlLost}
+              />
+            </div>
+          )}
           {/* server elements sit alone in their slots, never in a sibling list */}
           <div className="depth-rail">{rail}</div>
           <div className="depth-slabs">{children}</div>

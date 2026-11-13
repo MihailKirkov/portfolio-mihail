@@ -187,9 +187,14 @@ One engine, two users (agent actions and the boot intro).
   stalled fast-forward, and Escape.
 
 ### Project depth chapters - `components/projects/`
-- CSS 3D + Framer Motion `useScroll`, NOT WebGL. A sticky stage with
-  `perspective`; each project slab moves along Z with scroll progress; the
-  next slab is visible small in the distance. Chapter rail on the left.
+- A sticky stage driven by Framer Motion `useScroll`; each project slab
+  moves along Z with scroll progress; the next slab is visible small in the
+  distance. Chapter rail on the left.
+- Where the core's WebGL gate passes, an R3F scene (`depth-gl.tsx`, lazy,
+  near the section) draws the slabs as textured planes the camera travels
+  through, with scroll-velocity motion and a per-project background mood
+  (after the Codrops depth gallery, MIT). The CSS 3D slabs are its
+  placeholder and the fallback; the DOM rail, panel and overlays stay on top.
 - Reuse gallery logic from `components/hud/project-deck.tsx`.
 - Under 768px or reduced motion: plain vertical cards, same content.
 

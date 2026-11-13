@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ShaderCoreProps } from "@/components/core/shader-core";
-import { prefersReducedMotion } from "@/lib/agent/choreo";
+import { canRunWebGL } from "@/lib/core/gate";
 import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
 
 // The core's gate and its travel. `children` is the static still
@@ -54,23 +54,6 @@ const MIN_CLOSE_PX_S = 60;
 /** scrolling faster than this skips the flight for a crossfade */
 const FAST_SCROLL_PX_S = 4000;
 const CROSSFADE_MS = 160;
-
-function canRunShader() {
-  if (prefersReducedMotion()) return false;
-  const cores = navigator.hardwareConcurrency;
-  if (typeof cores === "number" && cores <= 4) return false;
-  const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
-  if (conn?.saveData) return false;
-  try {
-    const probe = document.createElement("canvas");
-    const gl = probe.getContext("webgl2", { failIfMajorPerformanceCaveat: true });
-    if (!gl) return false;
-    gl.getExtension("WEBGL_lose_context")?.loseContext();
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 function finePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -164,7 +147,7 @@ export function Core({ children }: { children: ReactNode }) {
   // decide and load at idle; mount outside a running intro
   useEffect(() => {
     const el = wrap.current;
-    if (!el || !canRunShader()) return;
+    if (!el || !canRunWebGL()) return;
     if (DEV) {
       const s = new URLSearchParams(location.search).get("state");
       if (s === "idle" || s === "thinking" || s === "executing") setForced(s);

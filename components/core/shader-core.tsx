@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, type RefObject } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import type { AgentStatus } from "@/lib/agent/store";
+import { ContextLoss, Loop, cssColor } from "@/components/core/r3f-shared";
 
 // The shader core: a faceted icosphere shell with three dashed orbits, on
 // React Three Fiber (WebGLRenderer only). It loads in its own chunk behind
@@ -43,19 +44,6 @@ export interface ShaderCoreProps {
 }
 
 // ---- colours from the CSS tokens, so --accent stays a one-line change ------
-
-function cssColor(name: string, fallback: string): THREE.Vector3 {
-  let hex = fallback;
-  if (typeof document !== "undefined") {
-    const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) hex = v;
-  }
-  let h = hex.slice(1);
-  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
-  const n = parseInt(h, 16);
-  // the shaders write straight to the sRGB canvas, so the tokens stay as-is
-  return new THREE.Vector3(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
-}
 
 function palette() {
   return {
@@ -429,50 +417,6 @@ function Scene({ statusRef, pointerRef, onReady }: SceneProps) {
       ))}
     </group>
   );
-}
-
-/**
- * our own frame loop: runs only while `active`, at most `fps` frames a second
- * when capped. A resize (docking) lifts the cap briefly so the canvas is
- * redrawn at its new size on the very next frame.
- */
-function Loop({ active, fps }: { active: boolean; fps: number }) {
-  const advance = useThree((s) => s.advance);
-  const size = useThree((s) => s.size);
-  const resizedAt = useRef(0);
-  useEffect(() => {
-    resizedAt.current = performance.now();
-  }, [size]);
-  useEffect(() => {
-    if (!active) return;
-    let id = 0;
-    let last = -Infinity;
-    const tick = (t: number) => {
-      id = requestAnimationFrame(tick);
-      const capped = fps > 0 && t - resizedAt.current > 150;
-      if (capped && t - last < 1000 / fps - 1) return;
-      last = t;
-      advance(t / 1000);
-    };
-    id = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(id);
-  }, [active, fps, advance]);
-  return null;
-}
-
-/** forwards a lost context to the gate, which falls back to the still */
-function ContextLoss({ onLost }: { onLost: () => void }) {
-  const gl = useThree((s) => s.gl);
-  useEffect(() => {
-    const el = gl.domElement;
-    const lost = (e: Event) => {
-      e.preventDefault();
-      onLost();
-    };
-    el.addEventListener("webglcontextlost", lost);
-    return () => el.removeEventListener("webglcontextlost", lost);
-  }, [gl, onLost]);
-  return null;
 }
 
 export function ShaderCore({ status, pointer, active, fps, onReady, onLost }: ShaderCoreProps) {

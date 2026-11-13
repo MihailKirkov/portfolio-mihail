@@ -1129,6 +1129,34 @@ html:has(.depth[data-depth="on"]) {
 .depth[data-depth="on"] .project:not([data-depth-state="front"]) .slab {
   pointer-events: none;
 }
+/* the WebGL scene (depth-gl.tsx): full-bleed behind the stage's DOM. It fades
+   in once ready; the slabs then go invisible but stay as hit boxes and agent
+   targets at the front spot, so the agent's outline frames the front image */
+.depth-gl {
+  display: none;
+}
+.depth[data-depth="on"] .depth-gl {
+  display: block;
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease-out;
+}
+.depth[data-depth="on"] .slab {
+  transition: opacity 0.4s ease-out;
+}
+.depth[data-depth-gl] .depth-gl {
+  opacity: 1;
+}
+.depth[data-depth-gl] .slab {
+  opacity: 0;
+}
 .slab-title {
   display: grid;
   place-items: center;
