@@ -23,7 +23,7 @@ interface AgentState {
   awake: boolean;
 }
 
-export type CoreSpot = "dock" | "contact" | "timeline";
+export type CoreSpot = "dock" | "contact" | "timeline" | "stack";
 
 const INITIAL: AgentState = {
   requesting: false,

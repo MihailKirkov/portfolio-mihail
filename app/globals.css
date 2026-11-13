@@ -1822,3 +1822,113 @@ html[data-intro] .intro-skip {
     transition: none;
   }
 }
+
+/* stack constellation (components/stack/constellation.tsx); the tiered list
+   is its fallback and stays in the DOM, hidden, while it runs */
+.constel {
+  position: relative;
+  height: clamp(480px, 72vh, 700px);
+  overflow: hidden;
+}
+.constel-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 132px;
+  height: 132px;
+  transform: translate(-50%, -50%);
+}
+.constel-skills {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.constel-skill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform, opacity;
+}
+.constel-skill > a,
+.constel-skill > button {
+  display: block;
+  padding: 3px 9px;
+  border: 1px solid var(--hairline);
+  background: var(--ground);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.constel-skill[data-tier="daily"] > * {
+  border-color: var(--border);
+  color: var(--text);
+}
+.constel-skill[data-tier="familiar"] > * {
+  color: var(--border);
+}
+.constel-skill[data-active] > * {
+  border-color: var(--accent);
+  color: var(--text);
+}
+.constel-skill > *:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 3px;
+}
+.constel-group {
+  position: absolute;
+  top: 0;
+  left: 0;
+  color: var(--border);
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.constel[data-has-active] .constel-group {
+  opacity: 0.4;
+}
+.constel-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.constel-lines line {
+  stroke: var(--accent);
+  stroke-width: 1;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.constel-lines line[data-on] {
+  opacity: 0.7;
+}
+.constel-card {
+  position: absolute;
+  display: grid;
+  gap: 6px;
+  width: 128px;
+  padding: 7px;
+  border: 1px solid var(--accent);
+  background: var(--panel);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.constel-card[data-on] {
+  opacity: 1;
+}
+.constel-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+.stack-fallback[hidden] {
+  display: none;
+}

@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import type { Content, Experience, SkillTier, TimelineEntry } from "@/lib/types";
+import type { Content, Experience, TimelineEntry } from "@/lib/types";
 import { agentId } from "@/lib/agent/targets";
 import { TimelineDraw } from "@/components/site/timeline-draw";
 import { StackLinks } from "@/components/site/stack-links";
+import { StackStage } from "@/components/stack/stack-stage";
+import { projectsUsing, TIERS, uniqueSkills } from "@/lib/skills";
 
 // Renderers for the compact static sections below the projects. Every value
 // comes from seed.json; nothing here may add facts of its own.
@@ -46,8 +48,6 @@ function experienceTimeline(experiences: Experience[], timeline: TimelineEntry[]
   return nodes.sort((a, b) => b.key - a.key);
 }
 
-const TIERS: SkillTier[] = ["daily", "shipped with", "familiar"];
-
 export function buildSections(content: Content): Section[] {
   const {
     profile,
@@ -63,9 +63,14 @@ export function buildSections(content: Content): Section[] {
   } = content;
 
   // a skill that appears in a project's stack links to the first such project
-  const projectFor = new Map<string, string>();
-  for (const p of byOrder(projects))
-    for (const t of p.stack) if (!projectFor.has(t.toLowerCase())) projectFor.set(t.toLowerCase(), p.slug);
+  const ordered = byOrder(projects);
+  const projectFor = (skill: string) => projectsUsing(skill, ordered)[0]?.slug;
+  const constellationProjects = ordered.map((p) => ({
+    slug: p.slug,
+    name: p.name,
+    thumb: p.gallery[0] ?? null,
+    stack: p.stack,
+  }));
 
   return [
     {
@@ -73,6 +78,7 @@ export function buildSections(content: Content): Section[] {
       title: "Stack",
       body: (
         <StackLinks>
+          <StackStage skills={uniqueSkills(skill_groups)} projects={constellationProjects}>
           <dl className="grid-list stack">
             <div className="grid-row stack-head" aria-hidden="true">
               <span />
@@ -92,15 +98,16 @@ export function buildSections(content: Content): Section[] {
                       <span className="label stack-tier-label">{tier}</span>
                       <ul className="tags" aria-label={`${g.label}, ${tier}`}>
                         {items.map((i) => {
-                          const slug = projectFor.get(i.name.toLowerCase());
+                          const slug = projectFor(i.name);
                           return (
-                            <li key={i.name} className="tag">
+                            <li key={i.name} className="tag" data-agent-id={agentId.skill(i.name)}>
                               {slug ? (
                                 <a href={`#project-${slug}`} data-project={slug} className="tag-link">
                                   {i.name}
                                 </a>
                               ) : (
-                                i.name
+                                // focusable so every skill is reachable by keyboard
+                                <span tabIndex={0}>{i.name}</span>
                               )}
                             </li>
                           );
@@ -112,6 +119,7 @@ export function buildSections(content: Content): Section[] {
               </div>
             ))}
           </dl>
+          </StackStage>
         </StackLinks>
       ),
     },

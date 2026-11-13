@@ -30,7 +30,7 @@ export const ACTION_SPECS = {
   },
   highlight: {
     description:
-      "Briefly outline one element on the page: a section, a project, a skill group, an experience entry, or a contact/CV button. Also the way to point at further matching projects after open_project.",
+      "Briefly outline one element on the page: a section, a project, a skill group, a single skill (shown with lines to the projects that use it), an experience entry, or a contact/CV button. Also the way to point at further matching projects after open_project.",
     params: { target: HIGHLIGHT_TARGETS },
   },
   filter_projects: {

@@ -1,5 +1,6 @@
 import seed from "@/content/seed.json";
 import type { Content } from "@/lib/types";
+import { skillKey, uniqueSkills } from "@/lib/skills";
 import { position, scrollToY, yOf } from "@/lib/scroll";
 
 // Agent targets: every element the agent can act on carries
@@ -30,6 +31,7 @@ export const agentId = {
   projectDetail: (slug: string) => `project-detail:${slug}`,
   gallery: (slug: string) => `gallery:${slug}`,
   stack: (groupId: string) => `stack:${groupId}`,
+  skill: (name: string) => `skill:${skillKey(name)}`,
   experience: (id: string) => `experience:${id}`,
   cta: (c: CtaId) => `cta:${c}`,
   commandInput: () => "command:input",
@@ -47,6 +49,7 @@ export const HIGHLIGHT_TARGETS: string[] = [
   ...SECTIONS.map(agentId.section),
   ...content.projects.map((p) => agentId.project(p.slug)),
   ...content.skill_groups.map((g) => agentId.stack(g.id)),
+  ...uniqueSkills(content.skill_groups).map((s) => agentId.skill(s.name)),
   ...content.experiences.map((e) => agentId.experience(e.id)),
   ...CTAS.map(agentId.cta),
 ];
