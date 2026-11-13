@@ -81,7 +81,9 @@ function snapshot(): Snapshot {
     travel: stack?.dataset.travel ?? "",
     core: rect(stack),
     home: rect(document.querySelector(".hero-core")),
-    slot: rect(document.querySelector('[data-core-slot="dock"]')),
+    // the slot the core rests in: the dock's, or an in-page spot (contact,
+    // the experience timeline) while that section claims the core
+    slot: rect(document.querySelector(`[data-core-slot="${stack?.dataset.spot ?? "dock"}"]`)),
     canvas: canvas ? { w: canvas.width, h: canvas.height } : null,
     dpr: window.devicePixelRatio,
   };
@@ -177,6 +179,8 @@ async function main() {
       const dockedBefore = await settled(page);
       expectIn(dockedBefore, "slot", failures, "docked before the reply");
       if (dockedBefore.travel !== "fly") failures.push(`a slow scroll ${dockedBefore.travel || "did not travel"}, expected a flight`);
+      // the docked pill shows its chips only while the input is focused
+      await page.focus(".dock input");
       await page.click(".dock .chip:has-text('Why should we hire you?')");
       await page.waitForTimeout(800);
       const during = await page.evaluate(snapshot);

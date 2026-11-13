@@ -478,6 +478,8 @@ export function Core({ children }: { children: ReactNode }) {
       className="core-stack"
       ref={wrap}
       data-status={forced ?? status}
+      // where the core rests while docked (read by npm run test:core)
+      data-spot={spot}
       data-core-ready={ready && gl ? "" : undefined}
     >
       {!(stillGone && gl) && children}
