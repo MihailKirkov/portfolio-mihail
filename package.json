@@ -12,7 +12,8 @@
     "test:choreo": "tsx scripts/test-choreo.ts",
     "test:intro": "tsx scripts/test-intro.ts",
     "test:core": "tsx scripts/test-core.ts",
-    "test:dock": "tsx scripts/test-dock.ts"
+    "test:dock": "tsx scripts/test-dock.ts",
+    "test:finale": "tsx scripts/test-finale.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.2",
