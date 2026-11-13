@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
-import type { Content } from "@/lib/types";
+import type { Content, Experience, TimelineEntry } from "@/lib/types";
 import { agentId } from "@/lib/agent/targets";
+import { TimelineDraw } from "@/components/site/timeline-draw";
 
 // Renderers for the compact static sections below the projects. Every value
 // comes from seed.json; nothing here may add facts of its own.
@@ -17,6 +18,33 @@ export interface Section {
 
 const byOrder = <T extends { sort_order: number }>(xs: T[]) =>
   [...xs].sort((a, b) => a.sort_order - b.sort_order);
+
+const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+
+/** a sortable key for a seed date string ("2019", "Feb 2024", "Apr-May 2026") */
+function dateKey(d: string) {
+  const year = Number(d.match(/\d{4}/)?.[0] ?? 0);
+  const m = MONTHS.indexOf(d.slice(0, 3).toLowerCase());
+  return year * 12 + (m < 0 ? 0 : m);
+}
+
+type TimelineNode =
+  | { kind: "role"; e: Experience; key: number }
+  | { kind: "mark"; t: TimelineEntry; key: number };
+
+/** roles and milestones on one line, newest first; a milestone that marks
+ *  the start of a role (same id) is that role's node, not a second date */
+function experienceTimeline(experiences: Experience[], timeline: TimelineEntry[]): TimelineNode[] {
+  const roles = new Set(experiences.map((e) => e.id));
+  const nodes: TimelineNode[] = [
+    ...byOrder(experiences).map((e) => ({ kind: "role" as const, e, key: dateKey(e.start) })),
+    ...byOrder(timeline)
+      .filter((t) => !roles.has(t.id))
+      .map((t) => ({ kind: "mark" as const, t, key: dateKey(t.date) })),
+  ];
+  // stable: equal dates keep roles before milestones
+  return nodes.sort((a, b) => b.key - a.key);
+}
 
 export function buildSections(content: Content): Section[] {
   const {
@@ -64,36 +92,39 @@ export function buildSections(content: Content): Section[] {
             <p>{identity.about}</p>
             <p className="muted">{identity.fun_fact}</p>
           </div>
-          <div className="grid-list">
-            {byOrder(experiences).map((e) => (
-              <article key={e.id} className="grid-row" data-agent-id={agentId.experience(e.id)}>
-                <p className="label">
-                  {e.start} - {e.end}
-                </p>
-                <div>
-                  <h3 className="row-title">
-                    {e.role} <span className="muted">/ {e.company}</span>
-                  </h3>
-                  {e.bullets.length > 0 && (
-                    <ul className="bullets">
-                      {e.bullets.map((b, i) => (
-                        <li key={i}>{b}</li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </article>
-            ))}
-          </div>
-          <h3 className="sub-head label">timeline</h3>
-          <ol className="timeline">
-            {byOrder(timeline).map((t) => (
-              <li key={t.id}>
-                <span className="label">{t.date}</span>
-                <span>{t.label}</span>
-              </li>
-            ))}
-          </ol>
+          <TimelineDraw>
+            <ol className="xp-list">
+              {experienceTimeline(experiences, timeline).map((n) =>
+                n.kind === "role" ? (
+                  <li
+                    key={n.e.id}
+                    className="xp-role"
+                    data-node="role"
+                    data-agent-id={agentId.experience(n.e.id)}
+                  >
+                    <p className="label">
+                      {n.e.start} - {n.e.end}
+                    </p>
+                    <h3 className="row-title">
+                      {n.e.role} <span className="muted">/ {n.e.company}</span>
+                    </h3>
+                    {n.e.bullets.length > 0 && (
+                      <ul className="bullets">
+                        {n.e.bullets.map((b, i) => (
+                          <li key={i}>{b}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                ) : (
+                  <li key={n.t.id} className="xp-mark" data-node="mark">
+                    <span className="label">{n.t.date}</span>
+                    <span>{n.t.label}</span>
+                  </li>
+                )
+              )}
+            </ol>
+          </TimelineDraw>
         </>
       ),
     },

@@ -920,18 +920,116 @@ html {
   font-size: 18px;
 }
 
-.timeline {
+/* experience: roles and milestones as nodes on one vertical line. Static,
+   the line is fully drawn; with motion (TimelineDraw, data-draw) it draws
+   down to the middle of the viewport and the core rides its tip. */
+.xp {
+  --xp-pad: 56px;
+  position: relative;
+  padding-left: var(--xp-pad);
+}
+.xp-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 12px;
+  width: 1px;
+  background: var(--text);
+  transform-origin: top;
+}
+.xp[data-draw] .xp-line {
+  transform: scaleY(var(--drawn, 0));
+}
+.xp::before {
+  /* the undrawn track */
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 12px;
+  width: 1px;
+  background: var(--hairline);
+}
+.xp-tip {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: 0;
+  height: 0;
+}
+.xp[data-draw] .xp-tip {
+  display: block;
+}
+/* the core's spot on the tip: an empty box centred on the line */
+.xp-core {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  display: block;
+  width: 40px;
+  height: 40px;
+}
+.xp-list {
+  display: flex;
+  flex-direction: column;
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--hairline);
 }
-.timeline li {
+.xp-role,
+.xp-mark {
+  position: relative;
+}
+.xp-role {
+  padding: 24px 0;
+}
+.xp-role .label {
+  margin-bottom: 6px;
+}
+.xp-mark {
   display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  gap: 24px;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
   padding: 10px 0;
-  border-bottom: 1px solid var(--hairline);
+  color: var(--muted);
+}
+.xp-mark .label {
+  padding-top: 3px;
+}
+/* the nodes: squares on the line, filled once reached (or always, static) */
+[data-node]::before {
+  content: "";
+  position: absolute;
+  left: calc(12px - var(--xp-pad));
+  width: 11px;
+  height: 11px;
+  translate: -5px 0;
+  border: 1px solid var(--text);
+  background: var(--text);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+.xp-role::before {
+  top: 28px;
+}
+.xp-mark::before {
+  top: 15px;
+  width: 7px;
+  height: 7px;
+  translate: -3px 0;
+}
+.xp[data-draw] [data-node]:not([data-reached])::before {
+  border-color: var(--border);
+  background: var(--ground);
+}
+@media (max-width: 767px) {
+  .xp {
+    --xp-pad: 32px;
+  }
+  .xp-mark {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
 }
 
 /* ============================================================
