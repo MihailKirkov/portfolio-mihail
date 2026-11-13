@@ -710,9 +710,6 @@ html[data-intro] [data-core-ready] .core-still {
 .dock .toollog {
   margin-top: 6px;
 }
-.dock-demo {
-  margin-right: 8px;
-}
 .dock-body .chip.showme {
   margin-top: 6px;
 }
@@ -1793,5 +1790,35 @@ html[data-intro] .intro-skip {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* the narrator's bubble beside the core (components/site/narrator.tsx) */
+.narrator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  max-width: min(280px, calc(100vw - 32px));
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.narrator[data-shown="true"] {
+  opacity: 1;
+}
+.narrator:empty {
+  padding: 0;
+  border: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .narrator {
+    transition: none;
   }
 }

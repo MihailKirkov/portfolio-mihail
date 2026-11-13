@@ -8,6 +8,7 @@ import { ProjectList } from "@/components/projects/project-list";
 import { CursorLayer } from "@/components/agent/cursor-lazy";
 import { BootIntro } from "@/components/intro/intro-lazy";
 import { PointerEffects } from "@/components/site/pointer-effects-lazy";
+import { Narrator } from "@/components/site/narrator";
 
 // Statically generated at build time; content is baked into the HTML.
 export const dynamic = "force-static";
@@ -34,6 +35,7 @@ export default async function Home() {
       <CursorLayer />
       <BootIntro />
       <PointerEffects />
+      <Narrator narration={content.narration} />
     </>
   );
 }

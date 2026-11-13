@@ -18,6 +18,9 @@ interface AgentState {
   /** where the core rests while docked: the dock's slot, or an in-page spot
    *  (components/core/core-slot.tsx) claimed by the section in view */
   coreSpot: CoreSpot;
+  /** the narrator woke the core after the visitor went idle: it turns
+   *  toward the pointer and its rings speed up (components/site/narrator.tsx) */
+  awake: boolean;
 }
 
 export type CoreSpot = "dock" | "contact" | "timeline";
@@ -28,6 +31,7 @@ const INITIAL: AgentState = {
   filterTag: null,
   docked: false,
   coreSpot: "dock",
+  awake: false,
 };
 
 let state: AgentState = INITIAL;
@@ -42,14 +46,14 @@ export function getAgentState() {
   return state;
 }
 
-function subscribe(l: () => void) {
+export function subscribeAgentState(l: () => void) {
   listeners.add(l);
   return () => listeners.delete(l);
 }
 
 export function useAgentState<T>(select: (s: AgentState) => T): T {
   return useSyncExternalStore(
-    subscribe,
+    subscribeAgentState,
     () => select(state),
     () => select(INITIAL)
   );

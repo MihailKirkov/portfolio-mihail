@@ -13,7 +13,7 @@ import {
   startActionRun,
   type ToolLogEntry,
 } from "@/lib/agent/runner";
-import { getAgentState, setAgentState, statusOf, useAgentState } from "@/lib/agent/store";
+import { setAgentState, statusOf, useAgentState } from "@/lib/agent/store";
 import { agentId } from "@/lib/agent/targets";
 
 // The command bar: input, suggestion chips, the streamed answer line and the
@@ -37,10 +37,6 @@ interface Turn {
 }
 
 const MAX_HISTORY = 10;
-// the idle demo: once per session, after this long with no visitor input
-// once the intro has ended
-const IDLE_DEMO_MS = 8000;
-const IDLE_DEMO_KEY = "v3-idle-demo";
 const TYPE_MS = 16;
 const FAILURE_TEXT =
   "Connection dropped - try again in a moment, or reach me by email.";
@@ -63,8 +59,6 @@ function ToolLog({ log }: { log: ToolLogEntry[] }) {
 
 export function CommandBar({ config }: { config: TerminalConfig }) {
   const [question, setQuestion] = useState<string | null>(null);
-  // the current question was asked by the idle demo, not the visitor
-  const [demo, setDemo] = useState(false);
   const [answer, setAnswer] = useState(config.greeting);
   const [pending, setPending] = useState(false);
   const [announce, setAnnounce] = useState("");
@@ -128,71 +122,10 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     };
   }, []);
 
-  // idle demo: if the visitor has not typed, clicked, tapped or scrolled for
-  // IDLE_DEMO_MS after the intro ends, the agent runs one chip by itself,
-  // labelled as a demo. Once per session; never once the visitor has
-  // interacted (that also uses up the session's demo); off under reduced
-  // motion. The demo chip is the one that opens a project.
-  const askCannedRef = useRef(askCanned);
-  askCannedRef.current = askCanned;
-  useEffect(() => {
-    if (prefersReducedMotion()) return;
-    const seen = () => {
-      try {
-        return sessionStorage.getItem(IDLE_DEMO_KEY) !== null;
-      } catch {
-        return true;
-      }
-    };
-    const markSeen = () => {
-      try {
-        sessionStorage.setItem(IDLE_DEMO_KEY, "1");
-      } catch {}
-    };
-    if (seen() || location.hash || window.scrollY > 0) return;
-    const chip =
-      config.suggestions.find((s) => CANNED[s]?.actions.some((a) => a.name === "open_project")) ??
-      config.suggestions.find((s) => CANNED[s]);
-    if (!chip) return;
-
-    const html = document.documentElement;
-    let timer = 0;
-    const events = ["pointerdown", "keydown", "wheel", "touchmove", "scroll"] as const;
-    const stop = () => {
-      clearTimeout(timer);
-      observer.disconnect();
-      events.forEach((e) => window.removeEventListener(e, onInput, true));
-      document.removeEventListener("visibilitychange", arm);
-    };
-    // any input, during the intro or after it, cancels the demo for good
-    const onInput = () => {
-      markSeen();
-      stop();
-    };
-    const arm = () => {
-      clearTimeout(timer);
-      if (html.hasAttribute("data-intro") || document.hidden) return;
-      timer = window.setTimeout(() => {
-        stop();
-        if (seen() || turnRef.current > 0 || getAgentState().requesting) return;
-        markSeen();
-        void askCannedRef.current(chip, true);
-      }, IDLE_DEMO_MS);
-    };
-    // wait for the intro to end (the attribute goes away), then start counting
-    const observer = new MutationObserver(arm);
-    observer.observe(html, { attributes: true, attributeFilter: ["data-intro"] });
-    events.forEach((e) => window.addEventListener(e, onInput, { capture: true, passive: true }));
-    document.addEventListener("visibilitychange", arm);
-    arm();
-    return stop;
-  }, [config.suggestions]);
-
-  function begin(q: string, isDemo = false) {
+  function begin(q: string) {
     choreo.cancel();
     const turn = ++turnRef.current;
     setQuestion(q);
-    setDemo(isDemo);
     setAnswer("");
     setPending(true);
     setLog([]);
@@ -235,10 +168,10 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
     });
   }
 
-  async function askCanned(q: string, isDemo = false) {
+  async function askCanned(q: string) {
     const reply = CANNED[q];
     if (!reply || requesting) return;
-    const turn = begin(q, isDemo);
+    const turn = begin(q);
     // act first: the cursor starts now and the answer types while it moves
     const acting = runActions(reply.actions, (next) => {
       if (turn === turnRef.current) setLog(next);
@@ -406,8 +339,8 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
         </p>
         <div className="cmd-answer">
           {question && (
-            <p className="cmd-line user" data-demo={demo || undefined}>
-              <span className="label">{demo ? "demo" : "you"}</span>
+            <p className="cmd-line user">
+              <span className="label">you</span>
               <span>{question}</span>
             </p>
           )}
@@ -459,7 +392,6 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
           </div>
           <div className="dock-body">
             <p className="dock-answer">
-              {demo && <span className="label dock-demo">demo</span>}
               {answer}
               {caret}
             </p>

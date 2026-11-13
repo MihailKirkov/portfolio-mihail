@@ -119,6 +119,19 @@ export interface TerminalConfig {
   suggestions: string[];
 }
 
+export interface NarrationLine {
+  line: string;
+  /** agent id pulsed once alongside the line */
+  highlight?: string;
+}
+
+export interface Narration {
+  note?: string;
+  /** keyed by section id (hero, projects, stack, ...) */
+  sections: Record<string, NarrationLine>;
+  idle: NarrationLine;
+}
+
 export interface Content {
   profile: Profile;
   identity: Identity;
@@ -131,4 +144,5 @@ export interface Content {
   timeline: TimelineEntry[];
   languages: Language[];
   terminal: TerminalConfig;
+  narration: Narration;
 }

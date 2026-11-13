@@ -288,5 +288,18 @@
       "Why should we hire you?",
       "Tell me about a project"
     ]
+  },
+  "narration": {
+    "note": "[PLACEHOLDER] Owner to write every line. highlight = agent id pulsed once with the line (optional).",
+    "sections": {
+      "hero": { "line": "[PLACEHOLDER] narrator line for hero", "highlight": "command:input" },
+      "projects": { "line": "[PLACEHOLDER] narrator line for projects", "highlight": "project:job-cc" },
+      "stack": { "line": "[PLACEHOLDER] narrator line for stack", "highlight": "stack:ai" },
+      "about": { "line": "[PLACEHOLDER] narrator line for about" },
+      "experience": { "line": "[PLACEHOLDER] narrator line for experience" },
+      "credentials": { "line": "[PLACEHOLDER] narrator line for credentials" },
+      "contact": { "line": "[PLACEHOLDER] narrator line for contact", "highlight": "cta:email" }
+    },
+    "idle": { "line": "[PLACEHOLDER] idle hint line" }
   }
 }

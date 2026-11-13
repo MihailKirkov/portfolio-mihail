@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import type { AgentStatus } from "@/lib/agent/store";
+import { getAgentState, type AgentStatus } from "@/lib/agent/store";
 import { ContextLoss, Loop, cssColor } from "@/components/core/r3f-shared";
 
 // The shader core: a faceted icosphere shell with three dashed orbits, on
@@ -274,6 +274,7 @@ function Ring({ spec, shared, pal }: { spec: RingSpec; shared: Shared; pal: Retu
   );
   useEffect(() => () => material.dispose(), [material]);
   const spinRef = useRef(0);
+  const awakeRef = useRef(0);
 
   useFrame((_, dt) => {
     const m = mesh.current;
@@ -283,7 +284,10 @@ function Ring({ spec, shared, pal }: { spec: RingSpec; shared: Shared; pal: Retu
     const t = shared.uTime.value;
     // idle: a slow turn; thinking: fast, wobbling; executing: the rings swing
     // round to face the viewer, a reticle, and spin steadily
-    spinRef.current += d * spec.dir * (0.15 * s.x + 1.4 * s.y + 0.9 * s.z);
+    // woken by the narrator: the rings speed up
+    const wake = getAgentState().awake ? 1 : 0;
+    awakeRef.current += (wake - awakeRef.current) * (1 - Math.exp(-d * 3));
+    spinRef.current += d * spec.dir * (0.15 * s.x + 1.4 * s.y + 0.9 * s.z + 1.1 * awakeRef.current);
     const wobX = Math.sin(t * 2.3 + spec.radius) * 0.45 * s.y;
     const wobY = Math.cos(t * 1.9 + spec.radius * 2.0) * 0.45 * s.y;
     m.rotation.set((spec.tilt[0] + wobX) * (1 - s.z), (spec.tilt[1] + wobY) * (1 - s.z), spinRef.current);
@@ -361,6 +365,7 @@ function Scene({ statusRef, pointerRef, onReady }: SceneProps) {
   );
   useEffect(() => () => material.dispose(), [material]);
   const target = useMemo(() => new THREE.Vector3(), []);
+  const wakeRef = useRef(0);
 
   useFrame((_, dt) => {
     const d = Math.min(Math.max(dt, 0), 0.05);
@@ -387,8 +392,12 @@ function Scene({ statusRef, pointerRef, onReady }: SceneProps) {
     const g = group.current;
     if (g) {
       const k = 1 - Math.exp(-d * 6);
-      g.rotation.x += (-p.y * MAX_TILT * 2 - g.rotation.x) * k;
-      g.rotation.y += (p.x * MAX_TILT * 2 - g.rotation.y) * k;
+      // woken by the narrator: it turns further toward the pointer
+      const wake = getAgentState().awake ? 1 : 0;
+      wakeRef.current += (wake - wakeRef.current) * (1 - Math.exp(-d * 3));
+      const tilt = MAX_TILT * 2 * (1 + wakeRef.current);
+      g.rotation.x += (-p.y * tilt - g.rotation.x) * k;
+      g.rotation.y += (p.x * tilt - g.rotation.y) * k;
       // breath: idle slow, thinking quick, executing a wider stance
       const t = shared.uTime.value;
       const breath = 1 + 0.012 * Math.sin(t * 1.2) * s.x + 0.03 * Math.sin(t * 6.0) * s.y + 0.05 * s.z;
