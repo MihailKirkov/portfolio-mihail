@@ -78,16 +78,24 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
   // bumped per question so a superseded typewriter stops writing
   const turnRef = useRef(0);
 
-  // dock once the hero panel has scrolled up out of view
+  // dock once the hero panel has scrolled up out of view. "Out of view" starts
+  // below the sticky top bar: a panel hidden under the bar is out of reach.
   useEffect(() => {
     const el = panelRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(([entry]) => {
-      const d = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-      setDocked(d);
-      // the core travels with the dock (components/core/core.tsx)
-      setAgentState({ docked: d });
-    });
+    const topbar = Math.round(
+      document.querySelector(".topbar")?.getBoundingClientRect().height ?? 0
+    );
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        const top = entry.rootBounds?.top ?? topbar;
+        const d = !entry.isIntersecting && entry.boundingClientRect.top < top;
+        setDocked(d);
+        // the core travels with the dock (components/core/core.tsx)
+        setAgentState({ docked: d });
+      },
+      { rootMargin: `-${topbar}px 0px 0px 0px` }
+    );
     io.observe(el);
     return () => io.disconnect();
   }, []);

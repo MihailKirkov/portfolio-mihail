@@ -327,7 +327,20 @@ export function Core({ children }: { children: ReactNode }) {
       vv?.addEventListener("scroll", resync);
       dock?.addEventListener("transitionend", resync);
       const late = window.setTimeout(resync, 300);
+      // a dialog closing (gallery viewer, detail overlay) unlocks the page:
+      // the scrollbar and a phone's toolbars come back after the close event
+      // and move the slot without resizing the bar, so check again once
+      // they have settled. `close` does not bubble: listen in capture.
+      let after: number[] = [];
+      const onDialogClose = () => {
+        after.forEach(clearTimeout);
+        resync();
+        after = [120, 400, 800].map((ms) => window.setTimeout(resync, ms));
+      };
+      document.addEventListener("close", onDialogClose, true);
       followers = [
+        () => document.removeEventListener("close", onDialogClose, true),
+        () => after.forEach(clearTimeout),
         () => ro?.disconnect(),
         () => window.removeEventListener("resize", resync),
         () => vv?.removeEventListener("resize", resync),

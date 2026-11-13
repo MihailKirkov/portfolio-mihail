@@ -1,6 +1,7 @@
 import type { Profile } from "@/lib/types";
 import { DownloadIcon } from "@/components/site/icons";
 import { agentId, type SectionId } from "@/lib/agent/targets";
+import { TopBarMenu } from "@/components/site/top-bar-menu";
 
 // Sticky across the whole page, so the agent can "click" a nav link or the CV
 // button from any section.
@@ -22,6 +23,7 @@ export function TopBar({ profile }: { profile: Profile }) {
             </a>
           ))}
         </nav>
+        <TopBarMenu items={NAV} />
         <a
           className="btn btn-primary"
           href={profile.cv_url}
