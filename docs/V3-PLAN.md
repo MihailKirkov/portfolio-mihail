@@ -236,3 +236,63 @@ One engine, two users (agent actions and the boot intro).
    the Anthropic console before going live.
 
 Phases 0-2 are the product. 3-5 are independent and can ship in any order.
+
+## Round 2 - cinematic sections below the projects
+
+Four parts, built in order, one commit per part. Rules for all of them:
+
+- Copy stays the owner's. New text goes into `seed.json` as fields marked
+  `[PLACEHOLDER]`; no final copy is written.
+- 3D scenes follow the projects stage: lazy-loaded within one screen of the
+  section, shared three.js/R3F chunks and `r3f-shared.tsx`, the core's gate,
+  paused off screen and on a hidden tab, CSS/plain fallback for phones,
+  reduced motion, low-end and no WebGL. At most two live WebGL contexts
+  besides the core: scenes far off screen unmount.
+- Scroll motion reads the Lenis scroll value directly, no extra springs.
+  Transform/opacity on DOM, smooth easing in GL. One accent (lime).
+- `scroll_to` reaches every section; `highlight` works on the new elements.
+
+### Part 1 - Narrator (replaces the idle auto-demo)
+- The idle auto-demo is removed.
+- `seed.narration`: one `[PLACEHOLDER]` line per section (with an optional
+  agent id to pulse) plus one idle hint line. No model calls.
+- First entry into a section per visit: the core shows that line in a small
+  bubble beside it for about 4s and pulses the configured element once.
+- Idle about 12s with no input: the core wakes (turns toward the pointer,
+  rings speed up) and shows the idle hint once. Nothing moves or scrolls.
+- Typing, a chip click or any agent run stops narration for the visit.
+- Bubbles are `aria-live="polite"`; under reduced motion they are plain text
+  without animation.
+
+### Part 2 - Stack constellation
+- The tag grid becomes skills orbiting the core in three tilted elliptical
+  rings by tier: daily inner and bright, shipped-with middle, familiar outer
+  and dim. Rings drift slowly and rotate a little with scroll.
+- Hover/focus on a skill (and the agent's `highlight`) highlights it and
+  draws lines to small cards for every project whose stack includes it.
+- Group labels sit quietly at ring sectors.
+- Fallback: the tiered list as a real list. Every skill keyboard-reachable
+  in both versions.
+
+### Part 3 - Finale (contact)
+- On scrolling in: the docked bar hides, the core grows large at the centre,
+  the five project images fly in from the edges and orbit it, a few skills
+  drift in.
+- Below: the contact headline (seed), the email as a large click-to-copy
+  link, CV primary, GitHub and LinkedIn secondary.
+- Once settled the agent cursor parks on the email with "click to copy".
+- Scrolling back up reverses it and the bar returns. Fallback: static large
+  core image with the same content.
+
+### Part 4 - Journey (about + experience)
+- About merges into Experience. The camera flies through one gate per
+  career step from the timeline data, newest last; the first gate is About
+  (photo + about text).
+- The core rides a lime floor path ahead of the camera; a big faint year sits
+  behind the current gate. A flat info panel on the left crossfades to the
+  current step (date, company, role, bullets, tags), never transformed. A
+  year rail on the right shows position and jumps on click.
+- Passing a gate is continuous: the camera moves along the path, the gate
+  scales past the viewport edges, the next one is already visible. Same
+  motion bar as the projects stage.
+- Fallback: the current vertical timeline.
