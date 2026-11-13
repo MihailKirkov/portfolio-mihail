@@ -137,6 +137,13 @@ export function DepthStage({ children }: { children: ReactNode }) {
       col.scrollTo({ top: d.offsetTop - col.offsetTop - 8, behavior: "smooth" });
     };
     const onResize = () => update();
+    // the docked bar grows with an answer and its tool log; the stage keeps
+    // its real height clear so the bar never covers the front slab's controls
+    const dock = document.querySelector<HTMLElement>(".dock");
+    const dockRO = dock
+      ? new ResizeObserver(() => root.style.setProperty("--dock-live", `${dock.offsetHeight}px`))
+      : null;
+    if (dock) dockRO?.observe(dock);
 
     root.addEventListener("click", onClick);
     root.addEventListener("focusin", onFocus);
@@ -153,6 +160,8 @@ export function DepthStage({ children }: { children: ReactNode }) {
 
     return () => {
       setDepthScroll(null);
+      dockRO?.disconnect();
+      root.style.removeProperty("--dock-live");
       root.removeEventListener("click", onClick);
       root.removeEventListener("focusin", onFocus);
       root.removeEventListener("toggle", onToggle, true);

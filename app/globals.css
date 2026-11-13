@@ -1005,7 +1005,7 @@ html {
   grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
   gap: clamp(20px, 3vw, 48px);
   height: var(--stage-h);
-  padding: 8px 0 calc(var(--dock-h) + 8px);
+  padding: 8px 0 calc(max(var(--dock-h), var(--dock-live, 0px)) + 8px);
   overflow: hidden;
 }
 .depth[data-depth="on"] .chapter-rail {
