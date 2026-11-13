@@ -156,6 +156,9 @@ function OneCursor({
   return (
     <motion.div
       className="agent-cursor"
+      // each cursor and its role label (agent, layout, copy, media, style) is
+      // hidden from assistive tech on its own, not only through the layer
+      aria-hidden="true"
       style={{ x, y, opacity, "--cursor-color": role.color } as never}
     >
       <motion.svg
@@ -172,7 +175,9 @@ function OneCursor({
           strokeLinejoin="miter"
         />
       </motion.svg>
-      <span className="agent-cursor-label">{role.label}</span>
+      <span className="agent-cursor-label" aria-hidden="true">
+        {role.label}
+      </span>
       {clicks > 0 && <span key={clicks} className="agent-cursor-ripple" />}
     </motion.div>
   );
