@@ -1580,8 +1580,11 @@ html:has(dialog[open]) {
 }
 /* the finale needs a full screen to settle in, core centred */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  #contact.section {
+    padding-bottom: 24px;
+  }
   .contact {
-    min-height: calc(100svh - 160px);
+    min-height: calc(100svh - var(--topbar-h) - 25px);
   }
 }
 .contact-stage {
