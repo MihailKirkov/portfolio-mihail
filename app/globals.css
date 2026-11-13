@@ -976,6 +976,137 @@ html {
   gap: 8px;
 }
 
+/* ============================================================
+   Projects: depth stage. Only under [data-depth="on"], which
+   components/projects/depth-stage.tsx sets on wide viewports
+   without reduced motion; everything else sees the plain cards
+   above. The track is tall, the stage sticks under the top bar,
+   and each chapter slab sits along Z by its --d (distance from
+   the front, in chapters; set per frame from scroll). The stage
+   keeps the dock's height clear so the docked bar and core sit
+   over empty ground, never over a slab's controls.
+   ============================================================ */
+.chapter-rail {
+  display: none;
+}
+.depth[data-depth="on"] {
+  --stage-h: calc(100svh - var(--topbar-h));
+  --slab-z: 900px;
+}
+.depth[data-depth="on"] .depth-track {
+  height: calc(var(--stage-h) + (var(--n) - 1) * 90svh);
+}
+.depth[data-depth="on"] .depth-stage {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 0;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(120px, 200px) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 48px);
+  height: var(--stage-h);
+  padding: 8px 0 calc(var(--dock-h) + 8px);
+  overflow: hidden;
+}
+.depth[data-depth="on"] .chapter-rail {
+  display: block;
+  align-self: center;
+}
+.chapter-rail ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--hairline);
+}
+.chapter-rail a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: -1px;
+  padding: 10px 0 10px 14px;
+  border-left: 1px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s, border-color 0.2s, opacity 0.3s;
+}
+.chapter-rail a:hover {
+  color: var(--text);
+}
+.chapter-rail a[aria-current] {
+  border-left-color: var(--text);
+  color: var(--text);
+}
+.chapter-rail a[data-dimmed] {
+  opacity: 0.35;
+}
+.chapter-rail-title {
+  font-size: 14px;
+  line-height: 1.25;
+}
+/* the vanishing point sits above the stage, so the next slab recedes up
+   into the free strip over the front one and its head peeks out there */
+.depth[data-depth="on"] .projects {
+  --peek: 64px;
+  position: relative;
+  display: block;
+  height: 100%;
+  perspective: 1200px;
+  perspective-origin: 50% -110px;
+}
+.depth[data-depth="on"] .project {
+  --d: 0;
+  --dim: 1;
+  position: absolute;
+  inset: var(--peek) 0 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 1px solid var(--hairline);
+  background: var(--ground);
+  transform: translateZ(calc(var(--d) * var(--slab-z)));
+  opacity: calc(clamp(0, min(1 - var(--d) * 2.2, 1 + var(--d) * 0.6), 1) * var(--dim));
+  transition: none;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+.depth[data-depth="on"] .project[data-dimmed] {
+  --dim: 0.28;
+}
+/* only the slab at the front takes the pointer */
+.depth[data-depth="on"] .project:not([data-depth-state="front"]) {
+  pointer-events: none;
+}
+.depth[data-depth="on"] .project-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-rows: minmax(0, 1fr);
+  padding-top: 20px;
+}
+/* the long description scrolls inside its column, never the page */
+.depth[data-depth="on"] .project-text {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 4px;
+}
+.depth[data-depth="on"] .gallery {
+  min-height: 0;
+}
+.depth[data-depth="on"] .gallery-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  aspect-ratio: auto;
+}
+@media (max-width: 1000px) {
+  .depth[data-depth="on"] .depth-stage {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+  .depth[data-depth="on"] .chapter-rail-title {
+    display: none;
+  }
+}
+
 /* gallery */
 .gallery {
   display: flex;

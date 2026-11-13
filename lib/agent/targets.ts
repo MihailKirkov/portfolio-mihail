@@ -51,8 +51,30 @@ export const HIGHLIGHT_TARGETS: string[] = [
 
 // ---- DOM ----------------------------------------------------------------------
 
+// The projects depth stage (components/projects/depth-stage.tsx) stacks its
+// chapters in one sticky stage, so a chapter's box is always on screen even
+// while it is faded out in the distance. While the stage is active each
+// chapter carries data-depth-state ("front", "near" or "far"), and the stage
+// registers how to scroll a chapter to the front.
+
+type DepthState = "front" | "near" | "far";
+
+function depthState(el: HTMLElement): DepthState | undefined {
+  return el.closest?.<HTMLElement>("[data-depth-state]")?.dataset.depthState as
+    | DepthState
+    | undefined;
+}
+
+let depthScrollY: ((el: HTMLElement) => number | null) | null = null;
+
+/** the depth stage's scroll mapping: element inside a chapter -> scrollY that brings it to the front */
+export function setDepthScroll(fn: ((el: HTMLElement) => number | null) | null) {
+  depthScrollY = fn;
+}
+
 /** at least partly inside the viewport */
 export function inViewport(el: HTMLElement) {
+  if (depthState(el) === "far") return false;
   const r = el.getBoundingClientRect();
   return (
     r.width > 0 &&
@@ -91,6 +113,8 @@ export function resolveFirst(ids: string[]): HTMLElement | null {
 
 /** fully visible, and not hidden under the sticky top bar or the dock */
 export function isComfortablyVisible(el: HTMLElement) {
+  const depth = depthState(el);
+  if (depth && depth !== "front") return false;
   const r = el.getBoundingClientRect();
   const top = 72;
   const bottom = window.innerHeight - 120;
@@ -120,11 +144,16 @@ export async function scrollToElement(
   el: HTMLElement,
   { instant, signal }: { instant: boolean; signal?: AbortSignal }
 ) {
-  const tall = el.getBoundingClientRect().height > window.innerHeight * 0.6;
-  el.scrollIntoView({
-    behavior: instant ? "instant" : "smooth",
-    block: tall ? "start" : "center",
-  });
+  const depthY = depthScrollY?.(el) ?? null;
+  if (depthY !== null) {
+    window.scrollTo({ top: depthY, behavior: instant ? "instant" : "smooth" });
+  } else {
+    const tall = el.getBoundingClientRect().height > window.innerHeight * 0.6;
+    el.scrollIntoView({
+      behavior: instant ? "instant" : "smooth",
+      block: tall ? "start" : "center",
+    });
+  }
   if (instant) return;
   // a cancel must also stop a smooth scroll already in flight, or the page
   // keeps gliding to the old target after the visitor took over
