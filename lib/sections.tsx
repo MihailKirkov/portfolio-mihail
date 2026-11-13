@@ -68,7 +68,7 @@ export function buildSections(content: Content): Section[] {
   const constellationProjects = ordered.map((p) => ({
     slug: p.slug,
     name: p.name,
-    thumb: p.gallery[0] ?? null,
+    blurb: p.shortDescription,
     stack: p.stack,
   }));
 

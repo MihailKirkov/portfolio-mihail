@@ -13,7 +13,7 @@ const Constellation = dynamic(
 
 // The stack section's stage. The server renders the tiered list (the
 // fallback: phones, reduced motion, low-end, no WebGL, no JS). Where the
-// core's gate passes on a wide viewport, the constellation is loaded once the
+// core's gate passes on a wide viewport (1024px+, room for the cards column), the constellation is loaded once the
 // section is within one screen and replaces the list.
 
 export function StackStage({
@@ -30,7 +30,7 @@ export function StackStage({
   const [able, setAble] = useState(false);
 
   useEffect(() => {
-    const wide = window.matchMedia("(min-width: 768px)");
+    const wide = window.matchMedia("(min-width: 1024px)");
     const update = () => setAble(wide.matches && canRunWebGL());
     update();
     wide.addEventListener("change", update);

@@ -1920,20 +1920,76 @@ html[data-intro] .intro-skip {
   }
 }
 
-/* stack constellation (components/stack/constellation.tsx); the tiered list
-   is its fallback and stays in the DOM, hidden, while it runs */
-.constel {
+/* stack constellation (components/stack/constellation.tsx; target
+   docs/design/stack-constellation.html); the tiered list is its fallback and
+   stays in the DOM, hidden, while it runs */
+/* the section title sits over the stage's upper left, beside the rings */
+#stack:has(.stack-stage[data-constellation]) .section-head {
   position: relative;
-  height: clamp(480px, 72vh, 700px);
+  z-index: 2;
+  margin-bottom: -56px;
+  pointer-events: none;
+}
+.constel {
+  --dim: #4b5059;
+  position: relative;
+  height: 660px;
   overflow: hidden;
 }
 .constel-core {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 132px;
-  height: 132px;
+  top: 52%;
+  left: 43.3%;
+  width: clamp(150px, 15vw, 190px);
+  height: clamp(150px, 15vw, 190px);
   transform: translate(-50%, -50%);
+}
+.constel-rings,
+.constel-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  fill: none;
+}
+.constel-rings ellipse[data-ring="0"] {
+  stroke: var(--accent);
+  stroke-opacity: 0.45;
+}
+.constel-rings ellipse[data-ring="1"] {
+  stroke: #2a2e35;
+}
+.constel-rings ellipse[data-ring="2"] {
+  stroke: #1c1f24;
+  stroke-dasharray: 2 6;
+}
+.constel-legend {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.constel-legend ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.constel-legend li::before {
+  content: "\25CF\00a0\00a0";
+}
+.constel-legend [data-tier="daily"] {
+  color: var(--accent);
+}
+.constel-legend [data-tier="shipped with"] {
+  color: var(--muted);
+}
+.constel-legend [data-tier="familiar"] {
+  color: var(--dim);
 }
 .constel-skills {
   margin: 0;
@@ -1944,32 +2000,36 @@ html[data-intro] .intro-skip {
   position: absolute;
   top: 0;
   left: 0;
-  will-change: transform, opacity;
+  will-change: transform;
 }
 .constel-skill > a,
 .constel-skill > button {
   display: block;
-  padding: 3px 9px;
-  border: 1px solid var(--hairline);
-  background: var(--ground);
+  padding: 3px 8px;
+  border: 0;
+  background: none;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 1.2;
   white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease;
 }
 .constel-skill[data-tier="daily"] > * {
-  border-color: var(--border);
   color: var(--text);
+  font-size: 14px;
 }
 .constel-skill[data-tier="familiar"] > * {
-  color: var(--border);
+  color: var(--dim);
+  font-size: 12px;
 }
+.constel-skill > *:hover,
 .constel-skill[data-active] > * {
-  border-color: var(--accent);
-  color: var(--text);
+  background: var(--accent);
+  color: var(--ground);
+  font-weight: 500;
 }
 .constel-skill > *:focus-visible {
   outline: 1px solid var(--accent);
@@ -1979,39 +2039,29 @@ html[data-intro] .intro-skip {
   position: absolute;
   top: 0;
   left: 0;
-  color: var(--border);
+  color: #2f343c;
   white-space: nowrap;
   pointer-events: none;
-  transition: opacity 0.3s ease;
 }
-.constel[data-has-active] .constel-group {
-  opacity: 0.4;
-}
-.constel-lines {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.constel-lines line {
+.constel-lines path {
   stroke: var(--accent);
-  stroke-width: 1;
+  stroke-width: 1.2;
   opacity: 0;
   transition: opacity 0.25s ease;
 }
-.constel-lines line[data-on] {
-  opacity: 0.7;
+.constel-lines path[data-on] {
+  opacity: 1;
 }
 .constel-card {
   position: absolute;
+  top: 0;
+  left: 0;
   display: grid;
-  gap: 6px;
-  width: 128px;
-  padding: 7px;
+  gap: 2px;
+  width: min(240px, 21%);
+  padding: 10px 14px;
   border: 1px solid var(--accent);
   background: var(--panel);
-  transform: translate(-50%, -50%);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
@@ -2019,12 +2069,18 @@ html[data-intro] .intro-skip {
 .constel-card[data-on] {
   opacity: 1;
 }
-.constel-card img {
-  display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 10;
-  object-fit: cover;
+.constel-card-name {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.constel-card-blurb {
+  overflow: hidden;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .stack-fallback[hidden] {
   display: none;
