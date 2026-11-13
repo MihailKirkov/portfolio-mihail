@@ -26,7 +26,11 @@ import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
 // is lost the still comes back and stays.
 //
 // Travel. One target: the hero box when the command bar is in the hero, the
-// dock's slot ([data-core-slot]) once the bar has docked. The stack - still
+// dock's slot ([data-core-slot="dock"]) once the bar has docked, or an
+// in-page spot (contact, the experience timeline) while its section claims
+// the core (coreSpot in the store; components/core/core-slot.tsx). An
+// in-page spot moves with the page, so at rest there the core tracks it on
+// every scroll instead of easing. The stack - still
 // or canvas, the same element - eases toward that target every frame, so a
 // reversal mid-flight only changes direction. While it flies it keeps its
 // layout size (the canvas render size) and moves and scales as a whole; the
@@ -141,6 +145,9 @@ export function Core({ children }: { children: ReactNode }) {
   const docked = useAgentState((s) => s.docked);
   const dockedRef = useRef(docked);
   dockedRef.current = docked;
+  const spot = useAgentState((s) => s.coreSpot);
+  const spotRef = useRef(spot);
+  spotRef.current = spot;
   const readyRef = useRef(ready);
   readyRef.current = ready;
   const retarget = useRef<() => void>(() => {});
@@ -252,7 +259,9 @@ export function Core({ children }: { children: ReactNode }) {
     const el = wrap.current;
     const home = el?.parentElement;
     if (!el || !home) return;
-    const slot = () => document.querySelector<HTMLElement>("[data-core-slot]");
+    const slot = () =>
+      document.querySelector<HTMLElement>(`[data-core-slot="${spotRef.current}"]`) ??
+      document.querySelector<HTMLElement>('[data-core-slot="dock"]');
     const target = (): Box | null => (dockedRef.current ? boxOf(slot()) : boxOf(home));
     const scroll = scrollSpeedTracker();
 
@@ -333,7 +342,17 @@ export function Core({ children }: { children: ReactNode }) {
         after = [120, 400, 800].map((ms) => window.setTimeout(resync, ms));
       };
       document.addEventListener("close", onDialogClose, true);
+      // an in-page spot scrolls with the page: track it exactly, no easing
+      const inPage = !slot()?.closest(".dock");
+      const track = () => {
+        const n = target();
+        if (!n || mode !== "docked") return;
+        cur = n;
+        apply();
+      };
+      if (inPage) window.addEventListener("scroll", track, { passive: true });
       followers = [
+        () => window.removeEventListener("scroll", track),
         () => document.removeEventListener("close", onDialogClose, true),
         () => after.forEach(clearTimeout),
         () => ro?.disconnect(),
@@ -448,10 +467,10 @@ export function Core({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!started.current) {
       started.current = true;
-      if (!docked) return;
+      if (!docked && spot === "dock") return;
     }
     retarget.current();
-  }, [docked]);
+  }, [docked, spot]);
 
   const gl = mod && !lost;
   return (

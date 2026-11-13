@@ -13,6 +13,8 @@ export interface Profile {
   email: string;
   phone: string | null;
   cv_url: string;
+  /** the large closing line in the contact section */
+  contact_headline: string;
   social: {
     github: string;
     linkedin: string;

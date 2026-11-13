@@ -81,7 +81,7 @@ function snapshot(): Snapshot {
     travel: stack?.dataset.travel ?? "",
     core: rect(stack),
     home: rect(document.querySelector(".hero-core")),
-    slot: rect(document.querySelector("[data-core-slot]")),
+    slot: rect(document.querySelector('[data-core-slot="dock"]')),
     canvas: canvas ? { w: canvas.width, h: canvas.height } : null,
     dpr: window.devicePixelRatio,
   };

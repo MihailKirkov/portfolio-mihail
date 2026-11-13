@@ -441,7 +441,7 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
         <div className="dock-inner">
           <div className="dock-head">
             {/* where the core lands when docked; the core itself overlays it */}
-            <span className="dock-core" data-core-slot="" aria-hidden="true" />
+            <span className="dock-core" data-core-slot="dock" aria-hidden="true" />
             <span className="label cmd-status" data-status={status}>
               {status}
             </span>

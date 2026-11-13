@@ -15,9 +15,22 @@ interface AgentState {
   filterTag: string | null;
   /** the command bar is docked (the hero panel has scrolled away); the core follows */
   docked: boolean;
+  /** where the core rests while docked: the dock's slot, or an in-page spot
+   *  (components/core/core-slot.tsx) claimed by the section in view */
+  coreSpot: CoreSpot;
 }
 
-let state: AgentState = { requesting: false, executing: false, filterTag: null, docked: false };
+export type CoreSpot = "dock" | "contact" | "timeline";
+
+const INITIAL: AgentState = {
+  requesting: false,
+  executing: false,
+  filterTag: null,
+  docked: false,
+  coreSpot: "dock",
+};
+
+let state: AgentState = INITIAL;
 const listeners = new Set<() => void>();
 
 export function setAgentState(patch: Partial<AgentState>) {
@@ -38,7 +51,7 @@ export function useAgentState<T>(select: (s: AgentState) => T): T {
   return useSyncExternalStore(
     subscribe,
     () => select(state),
-    () => select({ requesting: false, executing: false, filterTag: null, docked: false })
+    () => select(INITIAL)
   );
 }
 
