@@ -418,6 +418,10 @@ a {
 [data-core-ready] .core-still {
   opacity: 0;
 }
+/* dissolve / re-form (components/core/core.tsx): the still shrinks with it */
+.core-stack[data-phase] .core-still {
+  transform: scale(calc(1 - 0.7 * var(--core-morph, 0)));
+}
 /* during the boot intro nothing is visible yet: no crossfade, no repaint mid-flight */
 html[data-intro] [data-core-ready] .core-still {
   visibility: hidden;
@@ -1997,12 +2001,12 @@ html[data-intro] .intro-skip {
 .constel {
   --dim: #4b5059;
   position: relative;
-  height: 660px;
+  height: 540px;
   overflow: hidden;
 }
 .constel-core {
   position: absolute;
-  top: 52%;
+  top: 63.5%;
   left: 43.3%;
   width: clamp(150px, 15vw, 190px);
   height: clamp(150px, 15vw, 190px);

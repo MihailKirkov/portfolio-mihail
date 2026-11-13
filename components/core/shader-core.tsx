@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { coreMorph, CORE_DPR_MAX } from "@/lib/core/morph";
 import * as THREE from "three";
 import { getAgentState, type AgentStatus } from "@/lib/agent/store";
 import { ContextLoss, Loop, cssColor } from "@/components/core/r3f-shared";
@@ -335,6 +336,7 @@ interface SceneProps {
 function Scene({ statusRef, pointerRef, onReady }: SceneProps) {
   const group = useRef<THREE.Group>(null);
   const shell = useRef<THREE.Mesh>(null);
+  const rings = useRef<THREE.Group>(null);
   const readyRef = useRef(false);
   const lastStatus = useRef<AgentStatus>("idle");
   const sinceRef = useRef(0);
@@ -404,8 +406,18 @@ function Scene({ statusRef, pointerRef, onReady }: SceneProps) {
       g.scale.setScalar(breath * (1 + nearRef.current * 0.04));
     }
 
+    // dissolve / re-form (lib/core/morph.ts): the rings collapse inward
+    // first, the sphere shrinks after them
+    const mv = coreMorph.v;
+    const rg = rings.current;
+    if (rg) {
+      const r = Math.max(0.001, 1 - Math.min(1, mv * 1.6));
+      rg.scale.setScalar(r);
+      rg.visible = r > 0.01;
+    }
     const m = shell.current;
     if (m) {
+      m.scale.setScalar(Math.max(0.001, 1 - 0.75 * mv * mv));
       // idle: a slow turn; thinking: tumbling on two axes; executing: a steady fast spin
       spin.current.y += d * (0.12 * s.x + 0.9 * s.y + 1.6 * s.z);
       spin.current.x += d * (0.02 * s.x + 0.7 * s.y);
@@ -421,9 +433,11 @@ function Scene({ statusRef, pointerRef, onReady }: SceneProps) {
   return (
     <group ref={group}>
       <mesh ref={shell} geometry={geometry} material={material} />
-      {RINGS.map((spec, i) => (
-        <Ring key={i} spec={spec} shared={shared} pal={pal} />
-      ))}
+      <group ref={rings}>
+        {RINGS.map((spec, i) => (
+          <Ring key={i} spec={spec} shared={shared} pal={pal} />
+        ))}
+      </group>
     </group>
   );
 }
@@ -464,7 +478,8 @@ export function ShaderCore({ status, pointer, active, fps, onReady, onLost }: Sh
     <div className="core-gl" ref={wrap}>
       <Canvas
         frameloop="never"
-        dpr={[1, 2]}
+        // render at the displayed size times the device pixel ratio, capped
+        dpr={[1, CORE_DPR_MAX]}
         gl={{ alpha: true, antialias: true, powerPreference: "low-power", stencil: false }}
         camera={{ position: [0, 0, 6.4], fov: 30, near: 0.1, far: 20 }}
         // the layout size, not the bounding box: the gate moves and scales

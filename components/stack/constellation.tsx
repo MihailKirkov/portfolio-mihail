@@ -52,7 +52,9 @@ const RING_SWAY_W = [0.21, 0.17, 0.13];
 const RING_SCROLL = [0.00035, -0.00028, 0.0002];
 /** core centre as a share of the stage */
 const CX = 0.433;
-const CY = 0.52;
+// the stage ends just below the outer ring and the cards (no empty band
+// under the constellation); keep in step with .constel-core in globals.css
+const CY = 0.635;
 /** cards column: left edge as a share of the stage, card gap */
 const CARD_X = 0.787;
 const CARD_GAP = 22;

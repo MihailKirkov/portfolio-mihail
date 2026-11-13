@@ -24,6 +24,8 @@ const SHOW_MS = 4000;
 const IDLE_MS = 12000;
 const GAP = 14;
 const EDGE = 16;
+/** a section must hold the viewport's centre this long to be "entered" */
+const DWELL_MS = 250;
 
 /** inputs that count as activity for the idle timer (pointer movement does
  *  not: the woken core turns toward a resting pointer) */
@@ -35,6 +37,10 @@ function introRunning() {
 
 /** the element the core is drawn over right now */
 function coreAnchor(): HTMLElement | null {
+  // the core itself: it dissolves and re-forms between spots, and the bubble
+  // stays with what is drawn, not with where it is headed
+  const stack = document.querySelector<HTMLElement>(".core-stack");
+  if (stack && stack.getBoundingClientRect().width > 0) return stack;
   const s = getAgentState();
   if (!s.docked) return document.querySelector<HTMLElement>(".hero-core");
   return (
@@ -58,6 +64,10 @@ export function Narrator({ narration }: { narration: Narration }) {
     let raf = 0;
     let current: string | null = null;
     let pendingSection: string | null = null;
+    /** the section the bubble's line belongs to (null for the idle hint) */
+    let saidFor: string | null = null;
+    let dwellTimer = 0;
+    let scrollRaf = 0;
 
     const place = () => {
       const el = bubble.current;
@@ -92,8 +102,9 @@ export function Narrator({ narration }: { narration: Narration }) {
       if (getAgentState().awake) setAgentState({ awake: false });
     };
 
-    const say = (n: NarrationLine | undefined) => {
+    const say = (n: NarrationLine | undefined, section: string | null = null) => {
       if (!n?.line || stopped) return;
+      saidFor = section;
       clearTimeout(hideTimer);
       cancelAnimationFrame(raf);
       setText(n.line);
@@ -114,7 +125,35 @@ export function Narrator({ narration }: { narration: Narration }) {
         return;
       }
       seen.add(id);
-      say(narration.sections[id]);
+      say(narration.sections[id], id);
+    };
+
+    /** the section under the viewport's vertical centre: the one the visitor is in */
+    const sections = () => [...document.querySelectorAll<HTMLElement>("main > section[id]")];
+    const sectionAtCentre = () => {
+      const y = window.innerHeight / 2;
+      for (const s of sections()) {
+        const r = s.getBoundingClientRect();
+        if (r.top <= y && r.bottom > y) return s.id;
+      }
+      return null;
+    };
+    const check = () => {
+      scrollRaf = 0;
+      const id = sectionAtCentre();
+      if (id === current) return;
+      current = id;
+      // a line never outlives its section
+      if (saidFor && saidFor !== id) hide();
+      clearTimeout(dwellTimer);
+      if (!id) return;
+      // only once the visitor stays: a fast scroll past says nothing
+      dwellTimer = window.setTimeout(() => {
+        if (sectionAtCentre() === id) enter(id);
+      }, DWELL_MS);
+    };
+    const onScrollCheck = () => {
+      if (!scrollRaf) scrollRaf = requestAnimationFrame(check);
     };
 
     const stop = () => {
@@ -123,7 +162,10 @@ export function Narrator({ narration }: { narration: Narration }) {
       clearTimeout(idleTimer);
       hide();
       unsub();
-      io.disconnect();
+      window.removeEventListener("scroll", onScrollCheck);
+      window.removeEventListener("resize", onScrollCheck);
+      cancelAnimationFrame(scrollRaf);
+      clearTimeout(dwellTimer);
       mo.disconnect();
       INPUTS.forEach((e) => window.removeEventListener(e, onInput, true));
       document.removeEventListener("input", onType, true);
@@ -137,7 +179,7 @@ export function Narrator({ narration }: { narration: Narration }) {
         if (stopped || introRunning() || document.hidden) return armIdle();
         idleShown = true;
         if (!reduced) setAgentState({ awake: true });
-        say(narration.idle);
+        say(narration.idle, null);
       }, IDLE_MS);
     };
 
@@ -159,14 +201,11 @@ export function Narrator({ narration }: { narration: Narration }) {
       if (s.requesting || (s.executing && !s.ambient && !introRunning())) stop();
     });
 
-    // the section crossing the middle of the viewport is "entered"
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) if (e.isIntersecting) enter((e.target as HTMLElement).id);
-      },
-      { rootMargin: "-45% 0px -45% 0px" }
-    );
-    document.querySelectorAll<HTMLElement>("main > section[id]").forEach((s) => io.observe(s));
+    // the section holding the viewport's centre is "entered" (not merely one
+    // crossing a band around it: that let the next section speak early)
+    window.addEventListener("scroll", onScrollCheck, { passive: true });
+    window.addEventListener("resize", onScrollCheck);
+    check();
 
     // a section entered during the intro speaks once the intro has ended
     const mo = new MutationObserver(() => {

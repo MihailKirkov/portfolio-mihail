@@ -5,6 +5,7 @@ import type { ShaderCoreProps } from "@/components/core/shader-core";
 import { canRunWebGL } from "@/lib/core/gate";
 import { onScroll } from "@/lib/scroll";
 import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
+import { coreDpr, coreMorph } from "@/lib/core/morph";
 
 // The core's gate and its travel. `children` is the static still
 // (components/core/core-still.tsx), server-rendered: the placeholder and the
@@ -30,7 +31,18 @@ import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
 // in-page spot (contact, the experience timeline) while its section claims
 // the core (coreSpot in the store; components/core/core-slot.tsx). An
 // in-page spot moves with the page, so at rest there the core tracks it on
-// every scroll instead of easing. The stack - still
+// every scroll instead of easing.
+//
+// Only the hero <-> dock trip is a flight. Every other change of place
+// (dock <-> stack, contact, timeline, and between them) is a dissolve and
+// re-form: the core collapses where it is (rings inward, sphere shrinks and
+// fades, DISSOLVE_MS), is moved and resized out of sight, waits until the
+// canvas has rendered at its new size (render size = displayed size x
+// device pixel ratio, capped at 1.5: never a small render scaled up), then
+// re-forms at the new spot (REFORM_MS). A fast scroll skips both: hidden,
+// placed, shown once sharp. There is one stack, so one core, and it is never
+// visible mid-resize. The notes below about the flight apply to the
+// hero <-> dock trip only. The stack - still
 // or canvas, the same element - eases toward that target every frame, so a
 // reversal mid-flight only changes direction. While it flies it keeps its
 // layout size (the canvas render size) and moves and scales as a whole; the
@@ -59,6 +71,10 @@ const MIN_CLOSE_PX_S = 60;
 /** scrolling faster than this skips the flight for a crossfade */
 const FAST_SCROLL_PX_S = 4000;
 const CROSSFADE_MS = 160;
+const DISSOLVE_MS = 300;
+const REFORM_MS = 400;
+/** give up waiting for the canvas to take its new size after this */
+const RESIZE_WAIT_FRAMES = 20;
 
 function finePointer() {
   return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
@@ -130,6 +146,7 @@ function scrollSpeedTracker() {
 }
 
 type Mode = "home" | "flying" | "docked";
+type Phase = "out" | "wait" | "in" | null;
 
 export function Core({ children }: { children: ReactNode }) {
   const wrap = useRef<HTMLDivElement>(null);
@@ -141,6 +158,7 @@ export function Core({ children }: { children: ReactNode }) {
   const [introRunning, setIntroRunning] = useState(false);
   const [pointer, setPointer] = useState(false);
   const [forced, setForced] = useState<AgentStatus | null>(null);
+  const [morphing, setMorphing] = useState(false);
   const status = useAgentState(statusOf);
   const docked = useAgentState((s) => s.docked);
   const dockedRef = useRef(docked);
@@ -266,6 +284,11 @@ export function Core({ children }: { children: ReactNode }) {
     const scroll = scrollSpeedTracker();
 
     let mode: Mode = "home";
+    /** where the core rests (or is headed in flight): "home" or a slot's spot */
+    let at = "home";
+    /** dissolve / re-form in progress */
+    let phase: Phase = null;
+    let morphRaf = 0;
     /** where the stack is now, while flying or docked */
     let cur: Box | null = null;
     /** the layout size, which is the canvas render size */
@@ -298,6 +321,7 @@ export function Core({ children }: { children: ReactNode }) {
       stopLoop();
       unfollow();
       mode = "home";
+      at = "home";
       cur = null;
       el.style.width = el.style.height = el.style.transform = "";
       delete el.dataset.flying;
@@ -308,6 +332,7 @@ export function Core({ children }: { children: ReactNode }) {
       stopLoop();
       unfollow();
       mode = "docked";
+      at = slot()?.dataset.coreSlot ?? "dock";
       cur = t;
       // at rest in the slot: render at the slot's size
       setLayout(t.w);
@@ -318,7 +343,7 @@ export function Core({ children }: { children: ReactNode }) {
       // and the bar's own slide-in, which the observers do not see
       const resync = () => {
         const n = target();
-        if (!n || !cur || mode !== "docked") return;
+        if (!n || !cur || mode !== "docked" || phase) return;
         if (Math.abs(n.x - cur.x) + Math.abs(n.y - cur.y) + Math.abs(n.w - cur.w) > SETTLE_PX) fly();
       };
       const bar = slot()?.closest<HTMLElement>(".dock-inner") ?? slot();
@@ -343,9 +368,12 @@ export function Core({ children }: { children: ReactNode }) {
       };
       document.addEventListener("close", onDialogClose, true);
       // an in-page spot scrolls with the page: track it exactly, no easing
-      const inPage = !slot()?.closest(".dock");
+      // (the slot it rests on, not the latest target: while it dissolves
+      // after the target has changed, it stays where it is drawn)
+      const restEl = slot();
+      const inPage = !restEl?.closest(".dock");
       const track = () => {
-        const n = target();
+        const n = boxOf(restEl);
         if (!n || mode !== "docked") return;
         cur = n;
         apply();
@@ -406,17 +434,114 @@ export function Core({ children }: { children: ReactNode }) {
         if (h && h.w > 0) setLayout(h.w);
       }
       mode = "flying";
+      at = dockedRef.current ? "dock" : "home";
       el.dataset.flying = "";
       delete el.dataset.docked;
       apply();
       if (!raf) raf = requestAnimationFrame(tick);
     };
 
-    /** no flight: a short crossfade to the target */
+    /** the stack's layout size (the canvas element's size) */
+    const layoutPx = () => el.offsetWidth;
+    /**
+     * call `fn` once the canvas has taken the stack's current layout size and
+     * drawn a frame at it (at once for the still)
+     */
+    let waitRaf = 0;
+    const whenSharp = (fn: () => void) => {
+      cancelAnimationFrame(waitRaf);
+      let n = 0;
+      let ok = 0;
+      const check = () => {
+        const c = el.querySelector("canvas");
+        const want = Math.floor(layoutPx() * coreDpr());
+        const sized = !c || Math.abs(c.width - want) <= 2;
+        // one more frame after the resize: the draw at the new size
+        ok = sized ? ok + 1 : 0;
+        if (ok >= 2 || ++n > RESIZE_WAIT_FRAMES) return fn();
+        waitRaf = requestAnimationFrame(check);
+      };
+      waitRaf = requestAnimationFrame(check);
+    };
+
+    const setMorph = (v: number) => {
+      coreMorph.v = v;
+      // the still (no GL) shrinks with it; the GL scene reads coreMorph
+      el.style.setProperty("--core-morph", String(v));
+      el.style.opacity = String(Math.max(0, Math.min(1, 1 - v * v)));
+    };
+    const animateMorph = (to: number, ms: number, done: () => void) => {
+      cancelAnimationFrame(morphRaf);
+      const from = coreMorph.v;
+      const span = Math.abs(to - from) * ms;
+      if (span < 1) {
+        setMorph(to);
+        return done();
+      }
+      const t0 = performance.now();
+      const step = (now: number) => {
+        const k = Math.min(1, (now - t0) / span);
+        // out: ease in (starts gently, collapses fast); in: ease out
+        const e = to > from ? k * k : 1 - (1 - k) * (1 - k);
+        setMorph(from + (to - from) * e);
+        if (k < 1) morphRaf = requestAnimationFrame(step);
+        else done();
+      };
+      morphRaf = requestAnimationFrame(step);
+    };
+    const endMorph = () => {
+      cancelAnimationFrame(morphRaf);
+      cancelAnimationFrame(waitRaf);
+      phase = null;
+      delete el.dataset.phase;
+      coreMorph.v = 0;
+      el.style.removeProperty("--core-morph");
+      el.style.transition = "";
+      el.style.opacity = "";
+      setMorphing(false);
+    };
+    /** place the stack at the current target, at rest, out of sight */
+    const place = () => {
+      const t = target();
+      if (dockedRef.current && t) {
+        if (mode === "home") el.dataset.flying = "";
+        settleDock(t);
+      } else {
+        settleHome();
+      }
+    };
+
+    /** dissolve here, re-form at the target */
+    const dissolve = () => {
+      clearTimeout(fade);
+      stopLoop();
+      // a flight in progress stops where it is (and keeps its fixed place)
+      if (mode === "flying") mode = "docked";
+      setMorphing(true);
+      el.style.transition = "none";
+      phase = "out";
+      el.dataset.phase = "out";
+      // the in-page tracking keeps the core on its spot while it collapses
+      animateMorph(1, DISSOLVE_MS, () => {
+        phase = "wait";
+        el.dataset.phase = "wait";
+        place();
+        // the canvas re-measures now, while nothing is visible
+        whenSharp(() => {
+          phase = "in";
+          el.dataset.phase = "in";
+          animateMorph(0, REFORM_MS, endMorph);
+        });
+      });
+    };
+
+    /** no flight: hidden, placed, shown once sharp */
     const jump = () => {
       stopLoop();
       unfollow();
       clearTimeout(fade);
+      if (phase) endMorph();
+      el.style.transition = "none";
       el.style.opacity = "0";
       // going home: take the hero's render size now, out of sight, so the
       // re-measure is done before the fade-in
@@ -428,36 +553,47 @@ export function Core({ children }: { children: ReactNode }) {
         }
       }
       fade = window.setTimeout(() => {
-        const t = target();
-        if (dockedRef.current && t) {
-          if (mode === "home") el.dataset.flying = "";
-          settleDock(t);
-        } else {
-          settleHome();
-        }
-        el.style.opacity = "";
+        place();
+        whenSharp(() => {
+          el.style.transition = "";
+          el.style.opacity = "";
+        });
       }, CROSSFADE_MS);
     };
 
     retarget.current = () => {
-      clearTimeout(fade);
-      el.style.opacity = "";
       const h = boxOf(home);
       const s = boxOf(slot());
       const degenerate = !h || h.w < 1 || !s || s.w < 1;
       const speed = scroll.speed();
+      const to = dockedRef.current ? (slot()?.dataset.coreSlot ?? "dock") : "home";
+      // collapsing already: it re-forms wherever the target is by then
+      if (phase === "out") return;
+      if (phase === "wait") return;
       const crossfade = degenerate || speed > FAST_SCROLL_PX_S;
+      // the hero <-> dock trip (and a reversal mid-flight) is the one flight
+      const flight =
+        !phase &&
+        (to === "dock" || to === "home") &&
+        (mode === "flying" || at === "home" || at === "dock") &&
+        !(at === to && mode !== "flying");
       // how the last retarget travelled, and why (the browser checks read it)
-      el.dataset.travel = crossfade ? "fade" : "fly";
+      el.dataset.travel = crossfade ? "fade" : flight ? "fly" : "morph";
       el.dataset.travelSpeed = String(Math.round(speed));
-      if (crossfade) jump();
-      else fly();
+      if (crossfade) return jump();
+      clearTimeout(fade);
+      el.style.opacity = "";
+      if (flight) fly();
+      else dissolve();
     };
 
     return () => {
       stopLoop();
       unfollow();
       clearTimeout(fade);
+      cancelAnimationFrame(morphRaf);
+      cancelAnimationFrame(waitRaf);
+      coreMorph.v = 0;
       scroll.stop();
       retarget.current = () => {};
     };
@@ -488,7 +624,7 @@ export function Core({ children }: { children: ReactNode }) {
           status={forced ?? status}
           pointer={pointer}
           active={active}
-          fps={introRunning ? INTRO_FPS : docked ? DOCKED_FPS : 0}
+          fps={introRunning ? INTRO_FPS : docked && !morphing ? DOCKED_FPS : 0}
           onReady={() => setReady(true)}
           onLost={() => {
             setLost(true);
