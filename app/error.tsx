@@ -10,18 +10,22 @@ export default function Error({
 }) {
   return (
     <main className="status-screen">
-      <div className="status-card">
-        <p className="status-code">SYSTEM FAULT</p>
+      <div className="status-card" role="alert">
+        <div className="status-head">
+          <span className="label">ask-mihail</span>
+          <span className="label">error</span>
+        </div>
+        <h1 className="status-title">Something broke.</h1>
         <p className="status-msg">
-          Something tripped a breaker on board. The instrument panel hit an
-          unexpected error - a reload usually clears it.
+          The page hit an unexpected error. Trying again usually clears it; if
+          it does not, reload the site.
         </p>
         <div className="status-actions">
-          <button className="btn" onClick={() => reset()}>
-            ↻ reboot system
+          <button type="button" className="btn btn-primary" onClick={() => reset()}>
+            try again
           </button>
           <Link className="btn" href="/">
-            ← return to base
+            back to the site
           </Link>
         </div>
       </div>

@@ -4,16 +4,18 @@ export default function NotFound() {
   return (
     <main className="status-screen">
       <div className="status-card">
-        <p className="status-code">
-          SIGNAL LOST <span className="sep">{"//"}</span> 404
-        </p>
+        <div className="status-head">
+          <span className="label">ask-mihail</span>
+          <span className="label">404</span>
+        </div>
+        <h1 className="status-title">Nothing here.</h1>
         <p className="status-msg">
-          That coordinate isn&apos;t on the map. The page you were looking for
-          doesn&apos;t exist or has drifted out of range.
+          There is no page at this address. Head back to the site and ask the
+          agent for what you were looking for.
         </p>
         <div className="status-actions">
-          <Link className="btn" href="/">
-            ← return to base
+          <Link className="btn btn-primary" href="/">
+            back to the site
           </Link>
         </div>
       </div>
