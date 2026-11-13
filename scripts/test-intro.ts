@@ -293,7 +293,9 @@ async function record(
       const cs = getComputedStyle(el);
       if (cs.opacity !== "1") final.push(`${name} opacity ${cs.opacity}`);
       if (cs.clipPath !== "none") final.push(`${name} clipped`);
-      if (el.getAnimations().length) final.push(`${name} still animating`);
+      // the narrator's one-off pulse on its highlight (Round 2) is not an intro leftover
+      const anims = el.getAnimations().filter((a) => (a as CSSAnimation).animationName !== "agent-pulse");
+      if (anims.length) final.push(`${name} still animating (${anims.map((a) => (a as CSSAnimation).animationName ?? "?").join(",")})`);
     });
     if (document.querySelector("[data-intro-styled]")) final.push("data-intro-styled left over");
     const marks: Record<string, number> = {};
