@@ -29,8 +29,9 @@ import {
 // a grey wireframe.
 //   layout - drags the command panel's frame out from its corner, then sets
 //            its controls: the suggestion chips and the input field
-//   copy   - types the headline line by line, then the panel's greeting, the
-//            cursor gliding along each line as it types
+//   copy   - reads the headline line by line (it is on screen, grey, from the
+//            first frame: it is the LCP element), then types the panel's
+//            greeting, the cursor gliding along each line
 //   media  - drops the core in
 //   style  - gives the CV button its accent, then sweeps the hero from grey to
 //            its real colours: the headline stack (the headline sits grey for
@@ -334,10 +335,16 @@ function block(el: HTMLElement | null): Block | null {
  * copy types a block line by line: one linear glide per line, timed by its
  * share of the characters, with a linear carriage return between lines
  */
-function typeBlock(copy: Track, b: Block, charMs: number) {
+/**
+ * copy glides along each line of a block at typing pace. `reveal: false`
+ * (the headline) only reads it: the text is on screen from the first frame,
+ * so it is the page's first large paint (LCP), and copy passes over it grey
+ * for style to colour after
+ */
+function typeBlock(copy: Track, b: Block, charMs: number, reveal = true) {
   const { el, rect, lines } = b;
   if (!shown(rect) || !lines.length) {
-    copy.run((s) => fadeIn(el, 400, s));
+    if (reveal) copy.run((s) => fadeIn(el, 400, s));
     return;
   }
   const total = lines.reduce((n, l) => n + (l.right - l.left), 0) || 1;
@@ -349,7 +356,7 @@ function typeBlock(copy: Track, b: Block, charMs: number) {
     else copy.slide(el, start, dist(copy.at, onScreen(start)) / T.carriagePxPerMs);
     const chars = Math.max(1, Math.round((b.chars * (line.right - line.left)) / total));
     const ms = chars * charMs;
-    copy.glide(el, end, ms, (s) => typeLine(el, lines, i, chars, ms, s));
+    copy.glide(el, end, ms, (s) => (reveal ? typeLine(el, lines, i, chars, ms, s) : undefined));
   });
 }
 
@@ -475,7 +482,7 @@ function buildIntro(): { steps: Step[]; plannedMs: number; plannedSteps: number 
   // ---- copy: headline, then the greeting ------------------------------------
   const copy = new Track("copy");
   copy.run((s) => void fadeIn(label, 400, s));
-  if (headline) typeBlock(copy, headline, T.headlineChar);
+  if (headline) typeBlock(copy, headline, T.headlineChar, false);
   copy.give(headlineTyped, () => {
     mark("headline-typed");
     void fadeIn(sub, 400);

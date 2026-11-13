@@ -131,9 +131,9 @@ export function ProjectList({
                           href={p.live}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`${p.title} live site (opens in new tab)`}
+                          aria-label={`live: ${p.title} (opens in new tab)`}
                         >
-                          live ↗
+                          live <span aria-hidden="true">↗</span>
                         </a>
                       )}
                       {p.repo && (
@@ -142,9 +142,9 @@ export function ProjectList({
                           href={p.repo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`${p.title} source code (opens in new tab)`}
+                          aria-label={`repo: ${p.title} source code (opens in new tab)`}
                         >
-                          repo ↗
+                          repo <span aria-hidden="true">↗</span>
                         </a>
                       )}
                     </div>

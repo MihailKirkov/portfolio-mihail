@@ -89,9 +89,9 @@ export function ProjectLinks({ project, bare }: { project: StageProject; bare?: 
           href={project.live}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`${project.title} live site (opens in new tab)`}
+          aria-label={`live: ${project.title} (opens in new tab)`}
         >
-          live ↗
+          live <span aria-hidden="true">↗</span>
         </a>
       )}
       {project.repo && (
@@ -100,9 +100,9 @@ export function ProjectLinks({ project, bare }: { project: StageProject; bare?: 
           href={project.repo}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`${project.title} source code (opens in new tab)`}
+          aria-label={`repo: ${project.title} source code (opens in new tab)`}
         >
-          repo ↗
+          repo <span aria-hidden="true">↗</span>
         </a>
       )}
     </Wrap>

@@ -1442,8 +1442,9 @@ html:has(dialog[open]) {
    are the hero parts held in their "before" state; the intro
    animates each real element out of it. No attribute = no intro.
    ============================================================ */
-/* hidden until revealed (drawn, typed, dropped, faded) */
-html[data-intro] [data-intro-part],
+/* hidden until revealed (drawn, typed, dropped, faded). Not the headline:
+   it shows, grey, from the first frame - it is the page's LCP element */
+html[data-intro] [data-intro-part]:not([data-intro-part="headline"]),
 html[data-intro] [data-intro-type] {
   opacity: 0;
 }
