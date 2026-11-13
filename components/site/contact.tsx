@@ -14,7 +14,7 @@ import { agentId } from "@/lib/agent/targets";
 // (components/core/core-slot.tsx). offer_contact lands on the email.
 export function Contact({ profile }: { profile: Profile }) {
   return (
-    <Section id="contact" label="07 / contact" title="Contact">
+    <Section id="contact" title="Contact">
       <div className="contact">
         <div className="contact-main">
           <p className="contact-headline">{profile.contact_headline}</p>

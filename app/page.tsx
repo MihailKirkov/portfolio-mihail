@@ -21,11 +21,11 @@ export default async function Home() {
       <TopBar profile={content.profile} />
       <main>
         <Hero content={content} />
-        <Section id="projects" label="02 / projects" title="Projects">
+        <Section id="projects" title="Projects">
           <ProjectList projects={content.projects} skipTo={sections[0]?.key ?? "contact"} />
         </Section>
         {sections.map((s) => (
-          <Section key={s.key} id={s.key} label={s.label} title={s.title}>
+          <Section key={s.key} id={s.key} title={s.title}>
             {s.body}
           </Section>
         ))}

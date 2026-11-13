@@ -12,8 +12,6 @@ export type SectionKey = "stack" | "about" | "experience" | "credentials";
 
 export interface Section {
   key: SectionKey;
-  /** mono label shown above the heading */
-  label: string;
   title: string;
   body: ReactNode;
 }
@@ -72,7 +70,6 @@ export function buildSections(content: Content): Section[] {
   return [
     {
       key: "stack",
-      label: "03 / stack",
       title: "Stack",
       body: (
         <StackLinks>
@@ -120,7 +117,6 @@ export function buildSections(content: Content): Section[] {
     },
     {
       key: "about",
-      label: "04 / about",
       title: "About",
       body: (
         <div className="about">
@@ -142,7 +138,6 @@ export function buildSections(content: Content): Section[] {
     },
     {
       key: "experience",
-      label: "05 / experience",
       title: "Experience",
       body: (
         <>
@@ -184,7 +179,6 @@ export function buildSections(content: Content): Section[] {
     },
     {
       key: "credentials",
-      label: "06 / credentials",
       title: "Credentials",
       body: (
         <div className="grid-list">

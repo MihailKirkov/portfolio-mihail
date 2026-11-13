@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 import { agentId, type SectionId } from "@/lib/agent/targets";
 
-// Shared frame for every section below the hero: mono label, heading, body.
+// Shared frame for every section below the hero: heading, body. No section
+// numbers: the hero has no slot for one, and numbers shift whenever a
+// section is added or reordered.
 export function Section({
   id,
-  label,
   title,
   children,
 }: {
   id: SectionId;
-  label: string;
   title: string;
   children: ReactNode;
 }) {
@@ -21,7 +21,6 @@ export function Section({
       aria-labelledby={`${id}-title`}
     >
       <header className="section-head">
-        <p className="label">{label}</p>
         <h2 id={`${id}-title`} className="section-title" data-agent-aim>
           {title}
         </h2>
