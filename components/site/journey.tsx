@@ -22,6 +22,8 @@ import { onScroll, scrollToY } from "@/lib/scroll";
 
 export interface JourneyStep {
   id: string;
+  /** a certification: a small marker on the path, not a full gate */
+  kind?: "cert";
   /** the year shown behind the gate and on the rail */
   year: string;
   /** the gate's small label */
@@ -36,6 +38,8 @@ export interface JourneyStep {
   bullets?: string[];
   /** the About gate: photo + text */
   photo?: { src: string; alt: string };
+  /** the About gate: short labelled facts (competitive, languages, education) */
+  facts?: { label: string; lines: string[] }[];
 }
 
 /** vanishing point, as a share of the stage (reference: 950,438 at 1440x900) */
@@ -148,6 +152,7 @@ export function Journey({ steps, children }: { steps: JourneyStep[]; children: R
                 gates.current[i] = n;
               }}
               className="jr-gate"
+              data-kind={s.kind}
               style={{ width: `calc(${GATE_W}px * var(--k, 1))`, height: `calc(${GATE_H}px * var(--k, 1))` }}
             >
               <span className="jr-gate-label">
@@ -172,10 +177,23 @@ export function Journey({ steps, children }: { steps: JourneyStep[]; children: R
             // eslint-disable-next-line @next/next/no-img-element
             <img className="jr-photo" src={step.photo.src} alt={step.photo.alt} />
           )}
-          <p className="jr-date">{step.date}</p>
+          {step.kind === "cert" && <p className="jr-date">certification · {step.date}</p>}
+          {step.kind !== "cert" && step.date && <p className="jr-date">{step.date}</p>}
           <h3 className="jr-title">{step.title}</h3>
           {step.role && <p className="jr-role">{step.role}</p>}
           {step.text && <p className="jr-text">{step.text}</p>}
+          {step.facts && (
+            <dl className="jr-facts">
+              {step.facts.map((f) => (
+                <div key={f.label}>
+                  <dt>{f.label}</dt>
+                  {f.lines.map((l, i) => (
+                    <dd key={i}>{l}</dd>
+                  ))}
+                </div>
+              ))}
+            </dl>
+          )}
           {step.bullets && step.bullets.length > 0 && (
             <ul className="jr-bullets">
               {step.bullets.map((b, i) => (

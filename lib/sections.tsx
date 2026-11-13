@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import type { Content, Experience, TimelineEntry } from "@/lib/types";
+import type { Certification, Content, Experience, TimelineEntry } from "@/lib/types";
 import { agentId } from "@/lib/agent/targets";
 import { TimelineDraw } from "@/components/site/timeline-draw";
 import { Journey, type JourneyStep } from "@/components/site/journey";
@@ -11,7 +11,7 @@ import { projectsUsing, TIERS, uniqueSkills } from "@/lib/skills";
 // Renderers for the compact static sections below the projects. Every value
 // comes from seed.json; nothing here may add facts of its own.
 
-export type SectionKey = "stack" | "experience" | "credentials";
+export type SectionKey = "stack" | "experience";
 
 export interface Section {
   key: SectionKey;
@@ -33,19 +33,26 @@ function dateKey(d: string) {
 
 type TimelineNode =
   | { kind: "role"; e: Experience; key: number }
-  | { kind: "mark"; t: TimelineEntry; key: number };
+  | { kind: "mark"; t: TimelineEntry; key: number }
+  | { kind: "cert"; c: Certification; key: number };
 
-/** roles and milestones on one line, newest first; a milestone that marks
- *  the start of a role (same id) is that role's node, not a second date */
-function experienceTimeline(experiences: Experience[], timeline: TimelineEntry[]): TimelineNode[] {
+/** roles, milestones and certifications on one line, newest first; a
+ *  milestone that marks the start of a role (same id) is that role's node,
+ *  not a second date */
+function experienceTimeline(
+  experiences: Experience[],
+  timeline: TimelineEntry[],
+  certifications: Certification[]
+): TimelineNode[] {
   const roles = new Set(experiences.map((e) => e.id));
   const nodes: TimelineNode[] = [
     ...byOrder(experiences).map((e) => ({ kind: "role" as const, e, key: dateKey(e.start) })),
     ...byOrder(timeline)
       .filter((t) => !roles.has(t.id))
       .map((t) => ({ kind: "mark" as const, t, key: dateKey(t.date) })),
+    ...byOrder(certifications).map((c) => ({ kind: "cert" as const, c, key: dateKey(c.date) })),
   ];
-  // stable: equal dates keep roles before milestones
+  // stable: equal dates keep roles before milestones, milestones before certifications
   return nodes.sort((a, b) => b.key - a.key);
 }
 
@@ -73,6 +80,16 @@ export function buildSections(content: Content): Section[] {
     stack: p.stack,
   }));
 
+  // the About gate's short facts (also in the fallback about block)
+  const aboutFacts = [
+    { label: "competitive", lines: competitive.lines },
+    { label: "languages", lines: byOrder(languages).map((l) => `${l.name} / ${l.level}`) },
+    {
+      label: "education",
+      lines: byOrder(education).map((ed) => `${ed.institution} / ${ed.period} - ${ed.credential_line}`),
+    },
+  ];
+
   // the journey: About first, then every step oldest first, newest last
   const yearOf = (d: string) => d.match(/\d{4}/)?.[0] ?? "";
   const journeySteps: JourneyStep[] = [
@@ -80,13 +97,25 @@ export function buildSections(content: Content): Section[] {
       id: "about",
       year: "",
       label: "about",
-      date: "about",
+      date: "",
       title: "About",
       text: identity.about,
       photo: { src: "/me.jpg", alt: `Photo of ${profile.name}` },
+      facts: aboutFacts,
     },
-    ...[...experienceTimeline(experiences, timeline)].reverse().map((n): JourneyStep =>
-      n.kind === "role"
+    ...[...experienceTimeline(experiences, timeline, certifications)].reverse().map((n): JourneyStep =>
+      n.kind === "cert"
+        ? {
+            id: `cert-${n.c.id}`,
+            kind: "cert",
+            year: yearOf(n.c.date),
+            label: `${yearOf(n.c.date)} · cert`,
+            date: n.c.date,
+            title: n.c.name,
+            role: n.c.issuer,
+            text: n.c.note || undefined,
+          }
+        : n.kind === "role"
         ? {
             id: n.e.id,
             year: yearOf(n.e.start),
@@ -178,12 +207,29 @@ export function buildSections(content: Content): Section[] {
             <div className="about-text">
               <p>{identity.about}</p>
               <p className="muted">{identity.fun_fact}</p>
+              <dl className="about-facts">
+                {aboutFacts.map((f) => (
+                  <div key={f.label}>
+                    <dt className="label">{f.label}</dt>
+                    {f.lines.map((l, i) => (
+                      <dd key={i}>{l}</dd>
+                    ))}
+                  </div>
+                ))}
+              </dl>
             </div>
           </div>
           <TimelineDraw>
             <ol className="xp-list">
-              {experienceTimeline(experiences, timeline).map((n) =>
-                n.kind === "role" ? (
+              {experienceTimeline(experiences, timeline, certifications).map((n) =>
+                n.kind === "cert" ? (
+                  <li key={`cert-${n.c.id}`} className="xp-mark xp-cert" data-node="cert">
+                    <span className="label">{n.c.date} · cert</span>
+                    <span>
+                      {n.c.name} <span className="muted">/ {n.c.issuer}</span>
+                    </span>
+                  </li>
+                ) : n.kind === "role" ? (
                   <li
                     key={n.e.id}
                     className="xp-role"
@@ -214,60 +260,6 @@ export function buildSections(content: Content): Section[] {
             </ol>
           </TimelineDraw>
         </Journey>
-      ),
-    },
-    {
-      key: "credentials",
-      title: "Credentials",
-      body: (
-        <div className="grid-list">
-          <div className="grid-row">
-            <h3 className="label">certifications</h3>
-            <ul className="plain">
-              {byOrder(certifications).map((c) => (
-                <li key={c.id}>
-                  <span className="row-title">{c.name}</span>
-                  <span className="muted">
-                    {" "}
-                    / {c.issuer}, {c.date}
-                    {c.note ? ` - ${c.note}` : ""}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="grid-row">
-            <h3 className="label">education</h3>
-            <ul className="plain">
-              {byOrder(education).map((ed) => (
-                <li key={ed.id}>
-                  <span className="row-title">{ed.institution}</span>
-                  <span className="muted"> / {ed.period}</span>
-                  <br />
-                  {ed.focus}. <span className="muted">{ed.credential_line}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="grid-row">
-            <h3 className="label">competitive</h3>
-            <ul className="plain">
-              {competitive.lines.map((l, i) => (
-                <li key={i}>{l}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="grid-row">
-            <h3 className="label">languages</h3>
-            <ul className="plain">
-              {byOrder(languages).map((l) => (
-                <li key={l.id}>
-                  {l.name} <span className="muted">/ {l.level}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
       ),
     },
   ];

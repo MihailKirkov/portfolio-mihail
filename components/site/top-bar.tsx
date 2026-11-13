@@ -6,7 +6,7 @@ import { TopBarMenu } from "@/components/site/top-bar-menu";
 // Sticky across the whole page, so the agent can "click" a nav link or the CV
 // button from any section.
 
-const NAV: SectionId[] = ["projects", "stack", "experience", "credentials", "contact"];
+const NAV: SectionId[] = ["projects", "stack", "experience", "contact"];
 
 export function TopBar({ profile }: { profile: Profile }) {
   return (
