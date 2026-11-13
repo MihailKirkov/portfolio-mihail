@@ -1,75 +1,67 @@
-# Deploy guide
+# Launch checklist (v3)
 
-Production deploy is a manual import into [Vercel](https://vercel.com). The site
-is fully static (`/` is prerendered) and reads all content from
-`content/seed.json` — no database or external services are required to build or
-run. The only runtime dependency is the Anthropic API key powering the chat
-terminal.
+The site is static (`/` is prerendered from `content/seed.json`); the only
+runtime dependency is the Anthropic key behind `/api/chat`.
 
-## 1. Import the repo
+## 1. Environment variables (Vercel)
 
-1. In the Vercel dashboard: **Add New… → Project → Import Git Repository**.
-2. Select this repository. Vercel auto-detects Next.js — no build settings to
-   change (build `next build`, output `.next`, install `npm install`).
-3. Don't deploy yet — set the environment variables first (next step).
+Project -> Settings -> Environment Variables. Set for Production (and Preview
+if previews should have a working chat).
 
-## 2. Environment variables
-
-Set these under **Project → Settings → Environment Variables** (apply to
-Production, and Preview if you want previews to work too):
-
-| Variable | Scope | Value |
+| Variable | Value | Notes |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | **Server only** — do _not_ prefix with `NEXT_PUBLIC_` | Your Anthropic API key (`sk-ant-…`). Powers `/api/chat`. |
-| `NEXT_PUBLIC_SITE_URL` | Public | The site's canonical URL, e.g. `https://your-project.vercel.app` (no trailing slash). |
+| `ANTHROPIC_API_KEY` | `sk-ant-...` | Server only. Never prefix with `NEXT_PUBLIC_`. Without it, chips still work and typed questions get the failure message. |
+| `NEXT_PUBLIC_SITE_URL` | `https://portfolio-mihail.vercel.app` (or your domain), no trailing slash | Baked in at build: canonical, Open Graph URL, robots, sitemap. Falls back to `http://localhost:3000` if unset. Redeploy after changing it. |
 
-Notes:
-- `ANTHROPIC_API_KEY` must stay server-only. It is read exclusively in the
-  `/api/chat` route handler (Node runtime) and is never exposed to the client.
-- `NEXT_PUBLIC_SITE_URL` feeds `metadataBase`, the canonical tag, Open Graph
-  URL, `robots.txt`, and `sitemap.xml`. If unset it falls back to
-  `http://localhost:3000`, so set it before the first production deploy.
-- After the first deploy you'll know the real `*.vercel.app` URL (or a custom
-  domain). Set `NEXT_PUBLIC_SITE_URL` to it and **redeploy** so metadata,
-  canonical, and sitemap point at the live origin.
+## 2. Spend limit (Anthropic console)
 
-## 3. Deploy
+- In the Anthropic console, open the organisation's limits page
+  (Settings -> Limits) and set a **monthly spend limit** for the workspace the
+  key belongs to. Pick a number you are fine losing in a bad month.
+- Use a key made only for this site, so it can be revoked on its own.
+- The route already caps each request (500 input chars, 10 messages of
+  history, 450 output tokens, `claude-haiku-4-5`) and rate-limits 10 requests
+  per minute per IP. That limiter lives in memory per serverless instance,
+  so it is not a hard ceiling: the spend limit is.
 
-Click **Deploy**. Subsequent pushes to the production branch auto-deploy.
+## 3. Ship v3 to production
 
----
+Pick one:
 
-## Post-deploy test checklist
+- **Merge `v3` into `main`** (production keeps tracking `main`): open a PR
+  `v3 -> main`, check its preview deployment, merge. Vercel deploys `main`.
+- **Or switch the production branch** to `v3`: Vercel -> Project -> Settings
+  -> Environments -> Production -> Branch Tracking (older UI: Settings -> Git
+  -> Production Branch), set `v3`, then redeploy the latest `v3` commit.
 
-- [ ] **Live chat** — open the terminal, type a free-form question (e.g. "what's
-      your AI experience?") and confirm a streamed answer comes back. The three
-      suggestion chips return instantly (canned, no network); only typed
-      questions hit `/api/chat`. If chat returns a 503, `ANTHROPIC_API_KEY` is
-      missing/misscoped.
-- [ ] **CV download** — click **CV** (top-right) and the mobile **download CV**
-      button; confirm `Mihail-Kirkov-CV.pdf` downloads and opens.
-- [ ] **Socials** — GitHub and LinkedIn open the real profiles in a new tab;
-      the email icon and "book a call" open a `mailto:` to
-      `mihailkirkov04@gmail.com`.
-- [ ] **OG preview** — paste the live URL into
-      [opengraph.xyz](https://www.opengraph.xyz/) and/or the
-      [LinkedIn Post Inspector](https://www.linkedin.com/post-inspector/);
-      confirm the cold-blue HUD card with "MIHAIL KIRKOV" renders and the title
-      and description are correct. (LinkedIn caches — re-inspect to refresh.)
-- [ ] **Favicon** — the MK monogram shows in the browser tab.
-- [ ] **Mobile** — open on a phone (or DevTools device mode): the mobile layout
-      renders, nodes open modals, CV/book-a-call work, terminal works.
-- [ ] **Mode switcher** — Visor / Flight deck / Reactor morph and persist across
-      reloads (localStorage); arrow keys cycle the tabs.
-- [ ] **Lighthouse** (Chrome DevTools → Lighthouse, **desktop**) — confirm
-      **Accessibility ≥ 90** and **Performance ≥ 90**. Run against the
-      production URL, not localhost.
-- [ ] **404 / error** — visit a nonexistent path (e.g. `/nope`) and confirm the
-      "SIGNAL LOST // 404" HUD page with a link home.
-- [ ] **robots / sitemap** — `…/robots.txt` and `…/sitemap.xml` resolve and
-      reference the live `NEXT_PUBLIC_SITE_URL`.
+Merging is the cleaner long-term option; switching is faster and easy to
+revert.
+
+## 4. Check the live URL
+
+- [ ] **Intro**: in a fresh private window, the boot intro plays once and
+      ends in the hero; a reload in the same tab skips it.
+- [ ] **Chips**: all three answer instantly and the cursor runs their actions.
+- [ ] **Typed question**: a free question streams an answer and moves the
+      page. A 503 means `ANTHROPIC_API_KEY` is missing; a 429 is the rate
+      limit.
+- [ ] **Projects**: depth stage on desktop (rail, details, gallery viewer);
+      plain cards on a phone.
+- [ ] **Phone**: menu reaches every section, the docked bar stays above the
+      keyboard, the core sits in its slot.
+- [ ] **CV** downloads; GitHub, LinkedIn and email links are correct.
+- [ ] **Reduced motion** (OS setting): no intro, no flights; actions still
+      happen.
+- [ ] **Share image**: paste the URL into opengraph.xyz or LinkedIn Post
+      Inspector; the new card shows with the right title and description.
+- [ ] **404**: `/nope` shows the v3 "Nothing here." page.
+- [ ] **robots.txt / sitemap.xml** point at the live URL, not localhost.
+- [ ] **Lighthouse** on the live URL (mobile): performance 90+, CLS under
+      0.1. Expect simulated LCP to vary; the headline paints in the first
+      frame.
+- [ ] **Anthropic console usage** after the first day: spend looks sane.
 
 ## Updating content
 
-Edit `content/seed.json` and push. Everything (page content + the chatbot's
-grounding) rebuilds from that single file.
+Edit `content/seed.json` and push. The page, the agent's action enums and its
+system prompt all rebuild from it.
