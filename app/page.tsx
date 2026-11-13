@@ -1,5 +1,6 @@
 import { getContent } from "@/lib/content";
 import { buildSections } from "@/lib/sections";
+import { uniqueSkills } from "@/lib/skills";
 import { TopBar } from "@/components/site/top-bar";
 import { Hero } from "@/components/site/hero";
 import { Section } from "@/components/site/section";
@@ -30,7 +31,13 @@ export default async function Home() {
             {s.body}
           </Section>
         ))}
-        <Contact profile={content.profile} />
+        <Contact
+          profile={content.profile}
+          images={content.projects
+            .filter((p) => p.gallery[0])
+            .map((p) => ({ slug: p.slug, src: p.gallery[0] }))}
+          skills={uniqueSkills(content.skill_groups).slice(0, 6).map((s) => s.name)}
+        />
       </main>
       <CursorLayer />
       <BootIntro />

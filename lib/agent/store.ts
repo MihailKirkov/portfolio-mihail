@@ -21,6 +21,11 @@ interface AgentState {
   /** the narrator woke the core after the visitor went idle: it turns
    *  toward the pointer and its rings speed up (components/site/narrator.tsx) */
   awake: boolean;
+  /** the contact finale has taken over: the docked bar hides */
+  finale: boolean;
+  /** the cursor is running an ambient move (the finale parking on the
+   *  email), not a reply: narration and the like ignore it */
+  ambient: boolean;
 }
 
 export type CoreSpot = "dock" | "contact" | "timeline" | "stack";
@@ -32,6 +37,8 @@ const INITIAL: AgentState = {
   docked: false,
   coreSpot: "dock",
   awake: false,
+  finale: false,
+  ambient: false,
 };
 
 let state: AgentState = INITIAL;

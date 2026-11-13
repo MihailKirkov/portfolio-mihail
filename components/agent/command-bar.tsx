@@ -73,6 +73,8 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
   const executing = useAgentState((s) => s.executing);
   const status = useAgentState(statusOf);
   const requesting = useAgentState((s) => s.requesting);
+  // the contact finale hides the docked bar (components/site/finale-orbit.tsx)
+  const finale = useAgentState((s) => s.finale);
   const panelRef = useRef<HTMLDivElement>(null);
   const dockRef = useRef<HTMLDivElement>(null);
   const blurTimer = useRef(0);
@@ -362,14 +364,15 @@ export function CommandBar({ config }: { config: TerminalConfig }) {
         className="dock"
         ref={dockRef}
         data-docked={docked}
+        data-finale={finale || undefined}
         data-has-answer={question !== null}
         data-expanded={question !== null && expanded}
         data-focus={focused}
         // desktop: the body and chips only show while the agent is answering
         // (or the input is focused), or while "Show me" is on offer
         data-active={pending || requesting || executing || !!showMeButton}
-        inert={!docked}
-        aria-hidden={!docked}
+        inert={!docked || finale}
+        aria-hidden={!docked || finale}
       >
         <div className="dock-inner">
           <div className="dock-head">

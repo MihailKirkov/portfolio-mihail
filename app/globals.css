@@ -1571,27 +1571,45 @@ html:has(dialog[open]) {
    Contact
    ============================================================ */
 .contact {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(24px, 5vw, 64px);
+  justify-content: center;
+  gap: clamp(20px, 3.5vh, 40px);
+  text-align: center;
+}
+/* the finale needs a full screen to settle in, core centred */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .contact {
+    min-height: calc(100svh - 160px);
+  }
+}
+.contact-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
 }
 .contact-main {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 24px;
   min-width: 0;
+  position: relative;
+  z-index: 3;
 }
 .contact-headline {
-  max-width: 18ch;
-  font-size: clamp(36px, 6vw, 80px);
+  max-width: 22ch;
+  font-size: clamp(32px, 4.6vw, 64px);
   font-weight: 500;
   line-height: 1;
   letter-spacing: -0.035em;
 }
 .contact-email {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 12px 16px;
 }
@@ -1600,7 +1618,7 @@ html:has(dialog[open]) {
   overflow-wrap: anywhere;
   padding-bottom: 4px;
   border-bottom: 1px solid var(--border);
-  font-size: clamp(22px, 3.4vw, 44px);
+  font-size: clamp(26px, 4.4vw, 60px);
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--text);
@@ -1612,28 +1630,104 @@ html:has(dialog[open]) {
   border-color: var(--accent);
   color: var(--accent);
 }
-.contact-copy {
-  font-family: var(--font-mono);
-  font-size: 12px;
+.contact-copied {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 8px;
+  transform: translateX(-50%);
+  color: var(--accent);
 }
 .contact-links {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 8px;
 }
-/* where the core comes to rest; an empty box the travelling core lands on */
+/* where the core comes to rest, large; an empty box the travelling core lands on */
 .contact-core {
   display: block;
-  width: clamp(140px, 18vw, 240px);
+  width: clamp(150px, 24vh, 280px);
   aspect-ratio: 1;
 }
-@media (max-width: 767px) {
-  .contact {
-    grid-template-columns: minmax(0, 1fr);
-  }
+/* the static large core: only where the travelling core does not come here */
+.contact-still {
+  display: none;
+}
+@media (max-width: 767px), (prefers-reduced-motion: reduce) {
   .contact-core {
     display: none;
   }
+  .contact-still {
+    position: relative;
+    display: block;
+    width: clamp(160px, 46vw, 300px);
+    aspect-ratio: 1;
+  }
+  .contact-still .core-still {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* the finale orbit (components/site/finale-orbit.tsx) */
+.finale-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  visibility: hidden;
+}
+.finale-layer[data-near] {
+  visibility: visible;
+}
+.finale-img,
+.finale-skill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  will-change: transform, opacity;
+}
+.finale-img {
+  width: 176px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+}
+.finale-img img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+.finale-skill {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.finale-copy-hint {
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  margin-left: 28px;
+  padding: 2px 8px;
+  border: 1px solid var(--accent);
+  background: var(--ground);
+  color: var(--accent);
+  opacity: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.finale-copy-hint[data-on] {
+  opacity: 1;
+}
+.dock[data-finale] {
+  opacity: 0;
+  translate: 0 24px;
+  pointer-events: none;
 }
 
 /* ============================================================

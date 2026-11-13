@@ -156,7 +156,7 @@ export function Narrator({ narration }: { narration: Narration }) {
     // `executing` (the boot intro runs on the same engine: not an agent run)
     const unsub = subscribeAgentState(() => {
       const s = getAgentState();
-      if (s.requesting || (s.executing && !introRunning())) stop();
+      if (s.requesting || (s.executing && !s.ambient && !introRunning())) stop();
     });
 
     // the section crossing the middle of the viewport is "entered"
