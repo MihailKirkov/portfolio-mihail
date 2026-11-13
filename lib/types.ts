@@ -62,10 +62,18 @@ export interface Project {
   sort_order: number;
 }
 
+/** how close a skill is to daily work; the stack section groups by it */
+export type SkillTier = "daily" | "shipped with" | "familiar";
+
+export interface SkillItem {
+  name: string;
+  tier: SkillTier;
+}
+
 export interface SkillGroup {
   id: string;
   label: string;
-  items: string[];
+  items: SkillItem[];
   sort_order: number;
 }
 

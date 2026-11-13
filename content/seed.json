@@ -153,31 +153,64 @@
     {
       "id": "frontend",
       "label": "Frontend",
-      "items": ["React", "Next.js", "TypeScript", "JavaScript", "Tailwind CSS", "Three.js"],
+      "items": [
+        { "name": "React", "tier": "shipped with" },
+        { "name": "Next.js", "tier": "shipped with" },
+        { "name": "TypeScript", "tier": "shipped with" },
+        { "name": "JavaScript", "tier": "shipped with" },
+        { "name": "Tailwind CSS", "tier": "shipped with" },
+        { "name": "Three.js", "tier": "shipped with" }
+      ],
       "sort_order": 1
     },
     {
       "id": "backend",
       "label": "Backend",
-      "items": ["Node.js", "Express.js", "PHP", "Python", "REST APIs", "Supabase"],
+      "items": [
+        { "name": "Node.js", "tier": "shipped with" },
+        { "name": "Express.js", "tier": "shipped with" },
+        { "name": "PHP", "tier": "shipped with" },
+        { "name": "Python", "tier": "shipped with" },
+        { "name": "REST APIs", "tier": "shipped with" },
+        { "name": "Supabase", "tier": "shipped with" }
+      ],
       "sort_order": 2
     },
     {
       "id": "databases",
       "label": "Databases",
-      "items": ["PostgreSQL", "MySQL", "Prisma ORM", "Supabase", "MariaDB"],
+      "items": [
+        { "name": "PostgreSQL", "tier": "shipped with" },
+        { "name": "MySQL", "tier": "shipped with" },
+        { "name": "Prisma ORM", "tier": "shipped with" },
+        { "name": "Supabase", "tier": "shipped with" },
+        { "name": "MariaDB", "tier": "shipped with" }
+      ],
       "sort_order": 3
     },
     {
       "id": "ai",
       "label": "AI integration",
-      "items": ["Claude API", "RAG", "MCP", "tool use", "agents", "prompt engineering"],
+      "items": [
+        { "name": "Claude API", "tier": "shipped with" },
+        { "name": "RAG", "tier": "shipped with" },
+        { "name": "MCP", "tier": "shipped with" },
+        { "name": "tool use", "tier": "shipped with" },
+        { "name": "agents", "tier": "shipped with" },
+        { "name": "prompt engineering", "tier": "shipped with" }
+      ],
       "sort_order": 4
     },
     {
       "id": "devops",
       "label": "DevOps & tools",
-      "items": ["Docker", "CI/CD", "Git", "GitHub", "Linux"],
+      "items": [
+        { "name": "Docker", "tier": "shipped with" },
+        { "name": "CI/CD", "tier": "shipped with" },
+        { "name": "Git", "tier": "shipped with" },
+        { "name": "GitHub", "tier": "shipped with" },
+        { "name": "Linux", "tier": "shipped with" }
+      ],
       "sort_order": 5
     }
   ],

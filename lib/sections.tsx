@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
-import type { Content, Experience, TimelineEntry } from "@/lib/types";
+import type { Content, Experience, SkillTier, TimelineEntry } from "@/lib/types";
 import { agentId } from "@/lib/agent/targets";
 import { TimelineDraw } from "@/components/site/timeline-draw";
+import { StackLinks } from "@/components/site/stack-links";
 
 // Renderers for the compact static sections below the projects. Every value
 // comes from seed.json; nothing here may add facts of its own.
@@ -47,9 +48,12 @@ function experienceTimeline(experiences: Experience[], timeline: TimelineEntry[]
   return nodes.sort((a, b) => b.key - a.key);
 }
 
+const TIERS: SkillTier[] = ["daily", "shipped with", "familiar"];
+
 export function buildSections(content: Content): Section[] {
   const {
     profile,
+    projects,
     identity,
     experiences,
     skill_groups,
@@ -60,28 +64,58 @@ export function buildSections(content: Content): Section[] {
     languages,
   } = content;
 
+  // a skill that appears in a project's stack links to the first such project
+  const projectFor = new Map<string, string>();
+  for (const p of byOrder(projects))
+    for (const t of p.stack) if (!projectFor.has(t.toLowerCase())) projectFor.set(t.toLowerCase(), p.slug);
+
   return [
     {
       key: "stack",
       label: "03 / stack",
       title: "Stack",
       body: (
-        <dl className="grid-list">
-          {byOrder(skill_groups).map((g) => (
-            <div key={g.id} className="grid-row" data-agent-id={agentId.stack(g.id)}>
-              <dt className="label">{g.label}</dt>
-              <dd>
-                <ul className="tags">
-                  {g.items.map((s) => (
-                    <li key={s} className="tag">
-                      {s}
-                    </li>
-                  ))}
-                </ul>
-              </dd>
+        <StackLinks>
+          <dl className="grid-list stack">
+            <div className="grid-row stack-head" aria-hidden="true">
+              <span />
+              {TIERS.map((t) => (
+                <span key={t} className="label">
+                  {t}
+                </span>
+              ))}
             </div>
-          ))}
-        </dl>
+            {byOrder(skill_groups).map((g) => (
+              <div key={g.id} className="grid-row stack-row" data-agent-id={agentId.stack(g.id)}>
+                <dt className="label">{g.label}</dt>
+                {TIERS.map((tier) => {
+                  const items = g.items.filter((i) => i.tier === tier);
+                  return (
+                    <dd key={tier} className="stack-tier" data-empty={items.length === 0 || undefined}>
+                      <span className="label stack-tier-label">{tier}</span>
+                      <ul className="tags" aria-label={`${g.label}, ${tier}`}>
+                        {items.map((i) => {
+                          const slug = projectFor.get(i.name.toLowerCase());
+                          return (
+                            <li key={i.name} className="tag">
+                              {slug ? (
+                                <a href={`#project-${slug}`} data-project={slug} className="tag-link">
+                                  {i.name}
+                                </a>
+                              ) : (
+                                i.name
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </dd>
+                  );
+                })}
+              </div>
+            ))}
+          </dl>
+        </StackLinks>
       ),
     },
     {

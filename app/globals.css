@@ -163,6 +163,49 @@ a {
   color: var(--muted);
 }
 
+/* a tag that links to a project using it */
+.tag:has(.tag-link) {
+  border-color: var(--border);
+}
+.tag-link {
+  color: var(--text);
+  text-decoration: none;
+}
+.tag-link:hover,
+.tag-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* stack: category rows (the agent's targets) x three tier columns */
+.stack .grid-row {
+  grid-template-columns: 200px repeat(3, minmax(0, 1fr));
+}
+.stack-head {
+  padding: 12px 0;
+}
+.stack-tier {
+  margin: 0;
+}
+.stack-tier-label {
+  display: none;
+}
+@media (max-width: 767px) {
+  .stack .grid-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .stack .stack-head,
+  .stack-tier[data-empty] {
+    display: none;
+  }
+  .stack-tier-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--border);
+  }
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;

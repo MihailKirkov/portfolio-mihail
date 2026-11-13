@@ -25,7 +25,7 @@ export function buildSystemPrompt(content: Content = seedContent): string {
     .join("\n");
 
   const skills = skill_groups
-    .map((g) => `- ${g.label}: ${g.items.join(", ")}`)
+    .map((g) => `- ${g.label}: ${g.items.map((i) => i.name).join(", ")}`)
     .join("\n");
 
   const certs = certifications
