@@ -66,6 +66,10 @@ function fakeElement(top: number) {
 async function main() {
   const { choreo, RESUME_AFTER_MS, MAX_PAUSE_MS } = await import("@/lib/agent/choreo");
   const { runActions, remainingCalls, replayRemaining } = await import("@/lib/agent/runner");
+  const { emitScroll } = await import("@/lib/scroll");
+  // the page scroll moving, as the scroll module reports it (Lenis or native):
+  // the visitor's scroll, since the test starts no scroll through the module
+  const pageScroll = () => emitScroll(fakeWindow.scrollY, 0);
 
   // records every flight; a flight takes its full duration unless aborted
   const moves: { cursor: string; to: Point; ms: number; straight: boolean; aborted: boolean }[] = [];
@@ -145,7 +149,7 @@ async function main() {
     fire("touchmove");
     el.top = 500; // the visitor scrolled: same element, new place in the viewport
     await sleep(300);
-    fire("scroll"); // momentum after the gesture still counts while paused
+    pageScroll(); // the scroll moving on after the gesture still counts while paused
     const lastEvent = performance.now();
     await sleep(RESUME_AFTER_MS - 150);
     assert.equal(moves.length, 1, "each scroll event pushes the resume back");
@@ -197,11 +201,11 @@ async function main() {
     rendered.delete("stack:ai");
   });
 
-  await test("a scroll event outside a pause is ignored (the agent's own scrolling)", async () => {
+  await test("a page scroll outside a pause is ignored (only wheel and touch input pause)", async () => {
     const el = fakeElement(300);
     const run = start([{ kind: "moveTo", target: el as unknown as HTMLElement }]);
     await sleep(100);
-    fire("scroll");
+    pageScroll();
     assert.equal(moves[0].aborted, false);
     assert.equal(await run.done, true);
     assert.equal(moves.length, 1);

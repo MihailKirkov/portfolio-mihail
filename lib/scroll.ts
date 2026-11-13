@@ -49,7 +49,11 @@ export function onScroll(cb: (s: ScrollInfo) => void) {
   };
 }
 
-function emit(y: number, v: number) {
+/**
+ * a scroll happened: notify every listener. Lenis and the native fallback
+ * call this; the cursor engine's tests drive the module through it
+ */
+export function emitScroll(y: number, v: number) {
   lastVel = v;
   lastAt = performance.now();
   const info = { y, velocity: v, user: programmatic === 0 };
@@ -147,29 +151,56 @@ export function initScroll(): () => void {
   const html = document.documentElement;
   let nativeY = window.scrollY;
   let mo: MutationObserver | null = null;
+  let introMo: MutationObserver | null = null;
+  let raf = 0;
 
   const onNative = () => {
     const y = window.scrollY;
-    emit(y, y - nativeY);
+    emitScroll(y, y - nativeY);
     nativeY = y;
   };
 
   if (!prefersReducedMotion() && finePointer()) {
     lenis = new Lenis({
-      autoRaf: true,
+      // our own frame loop, below: none while the boot intro holds the page
+      autoRaf: false,
       lerp: 0.1,
       // the boot intro owns wheel input while it holds the page
       virtualScroll: () => !html.hasAttribute("data-intro"),
       // dialogs (detail overlay, gallery viewer) scroll their own content
       prevent: (node) => node.nodeName === "DIALOG",
     });
-    lenis.on("scroll", (l: Lenis) => emit(l.animatedScroll, l.velocity));
+    lenis.on("scroll", (l: Lenis) => emitScroll(l.animatedScroll, l.velocity));
     // stopped while a dialog is open
     const syncDialogs = () => {
       if (!lenis) return;
       if (document.querySelector("dialog[open]")) lenis.stop();
       else lenis.start();
     };
+    // Lenis has no job while the boot intro holds the page (<html
+    // data-intro>, which the head script removes however the intro ends:
+    // finished, skipped or fast-forwarded), so its frame loop does not run
+    // then and costs the intro no frame time
+    const l = lenis;
+    const tick = (t: number) => {
+      raf = requestAnimationFrame(tick);
+      l.raf(t);
+    };
+    const syncLoop = () => {
+      const held = html.hasAttribute("data-intro");
+      if (held && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      } else if (!held && !raf) {
+        // pick up wherever the page is now; time restarts so nothing jumps
+        l.time = 0;
+        l.resize();
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    introMo = new MutationObserver(syncLoop);
+    introMo.observe(html, { attributes: true, attributeFilter: ["data-intro"] });
+    syncLoop();
     mo = new MutationObserver(syncDialogs);
     mo.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["open"] });
     syncDialogs();
@@ -180,6 +211,8 @@ export function initScroll(): () => void {
 
   return () => {
     mo?.disconnect();
+    introMo?.disconnect();
+    cancelAnimationFrame(raf);
     lenis?.destroy();
     lenis = null;
     window.removeEventListener("scroll", onNative);
