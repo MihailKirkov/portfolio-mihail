@@ -158,18 +158,13 @@ export function Core({ children }: { children: ReactNode }) {
     let disposed = false;
     let undo = () => {};
     const shown = () => el.getBoundingClientRect().width > 0;
-    // progress marks (core:load, core:chunk, core:mount, core:ready) for the
-    // browser checks, which read them against the intro's own marks
     const load = () => {
       el.dataset.core = "loading";
-      performance.mark("core:load");
       void import("@/components/core/shader-core").then((m) => {
         if (disposed) return;
-        performance.mark("core:chunk");
         if (document.documentElement.dataset.intro === "running") el.dataset.core = "deferred";
         undo = outsideIntro(["running"], () => {
           if (disposed) return;
-          performance.mark("core:mount");
           setMod(m);
         });
       });
@@ -473,10 +468,7 @@ export function Core({ children }: { children: ReactNode }) {
           pointer={pointer}
           active={active}
           fps={introRunning ? INTRO_FPS : docked ? DOCKED_FPS : 0}
-          onReady={() => {
-            performance.mark("core:ready");
-            setReady(true);
-          }}
+          onReady={() => setReady(true)}
           onLost={() => {
             setLost(true);
             setReady(false);
