@@ -911,13 +911,40 @@ html {
   list-style: none;
 }
 
+/* about: a replaceable photo beside a short paragraph, a compact section */
+#about.section {
+  padding-block: clamp(48px, 7vw, 88px);
+}
 .about {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 68ch);
+  align-items: start;
+  gap: clamp(20px, 4vw, 48px);
+}
+.about-photo {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+.about-text {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 68ch;
-  margin-bottom: 40px;
   font-size: 18px;
+}
+@media (max-width: 767px) {
+  .about {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .about-photo {
+    width: 96px;
+  }
+  .about-text {
+    font-size: 16px;
+  }
 }
 
 /* experience: roles and milestones as nodes on one vertical line. Static,

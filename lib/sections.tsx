@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import type { Content, Experience, TimelineEntry } from "@/lib/types";
 import { agentId } from "@/lib/agent/targets";
 import { TimelineDraw } from "@/components/site/timeline-draw";
@@ -6,7 +7,7 @@ import { TimelineDraw } from "@/components/site/timeline-draw";
 // Renderers for the compact static sections below the projects. Every value
 // comes from seed.json; nothing here may add facts of its own.
 
-export type SectionKey = "stack" | "experience" | "credentials";
+export type SectionKey = "stack" | "about" | "experience" | "credentials";
 
 export interface Section {
   key: SectionKey;
@@ -48,6 +49,7 @@ function experienceTimeline(experiences: Experience[], timeline: TimelineEntry[]
 
 export function buildSections(content: Content): Section[] {
   const {
+    profile,
     identity,
     experiences,
     skill_groups,
@@ -83,15 +85,33 @@ export function buildSections(content: Content): Section[] {
       ),
     },
     {
-      key: "experience",
-      label: "04 / experience",
-      title: "Experience",
+      key: "about",
+      label: "04 / about",
+      title: "About",
       body: (
-        <>
-          <div className="about">
+        <div className="about">
+          {/* public/me.jpg: a replaceable photo slot (3:4) */}
+          <Image
+            className="about-photo"
+            src="/me.jpg"
+            alt={`Photo of ${profile.name}`}
+            width={240}
+            height={320}
+            sizes="(max-width: 767px) 96px, 180px"
+          />
+          <div className="about-text">
             <p>{identity.about}</p>
             <p className="muted">{identity.fun_fact}</p>
           </div>
+        </div>
+      ),
+    },
+    {
+      key: "experience",
+      label: "05 / experience",
+      title: "Experience",
+      body: (
+        <>
           <TimelineDraw>
             <ol className="xp-list">
               {experienceTimeline(experiences, timeline).map((n) =>
@@ -130,7 +150,7 @@ export function buildSections(content: Content): Section[] {
     },
     {
       key: "credentials",
-      label: "05 / credentials",
+      label: "06 / credentials",
       title: "Credentials",
       body: (
         <div className="grid-list">
