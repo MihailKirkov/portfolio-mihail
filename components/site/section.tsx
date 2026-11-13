@@ -8,10 +8,14 @@ export function Section({
   id,
   title,
   children,
+  hideTitle = false,
 }: {
   id: SectionId;
   title: string;
   children: ReactNode;
+  /** keep the heading for screen readers only; the section then marks its
+   *  own data-agent-aim */
+  hideTitle?: boolean;
 }) {
   return (
     <section
@@ -20,11 +24,17 @@ export function Section({
       data-agent-id={agentId.section(id)}
       aria-labelledby={`${id}-title`}
     >
-      <header className="section-head">
-        <h2 id={`${id}-title`} className="section-title" data-agent-aim>
+      {hideTitle ? (
+        <h2 id={`${id}-title`} className="sr-only">
           {title}
         </h2>
-      </header>
+      ) : (
+        <header className="section-head">
+          <h2 id={`${id}-title`} className="section-title" data-agent-aim>
+            {title}
+          </h2>
+        </header>
+      )}
       <div>{children}</div>
     </section>
   );

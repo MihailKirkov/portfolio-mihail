@@ -1571,20 +1571,35 @@ html:has(dialog[open]) {
    Contact
    ============================================================ */
 .contact {
+  /* the core's resting box; the rays and halo are drawn in its units */
+  --core: clamp(180px, 30vh, 280px);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(20px, 3.5vh, 40px);
+  gap: clamp(20px, 3.5vh, 36px);
   text-align: center;
+}
+#contact.section {
+  overflow: clip;
+}
+/* the dock hides for the finale: no room kept for it below contact */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  main:has(> #contact:last-child) {
+    padding-bottom: 0;
+  }
 }
 /* the finale needs a full screen to settle in, core centred */
 @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
   #contact.section {
-    padding-bottom: 24px;
+    padding-bottom: 40px;
   }
   .contact {
     min-height: calc(100svh - var(--topbar-h) - 25px);
+  }
+  /* room for the halo above the core */
+  .contact-stage {
+    margin-top: calc(var(--core) * 0.4);
   }
 }
 .contact-stage {
@@ -1592,19 +1607,58 @@ html:has(dialog[open]) {
   display: grid;
   place-items: center;
 }
+.contact-rays {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--core) * 7.4);
+  height: calc(var(--core) * 7.4);
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  fill: none;
+  pointer-events: none;
+}
+.contact-rays-lines line {
+  stroke: #1c1f24;
+  stroke-width: 1.4;
+}
+.contact-halo-wide {
+  stroke: var(--accent);
+  stroke-opacity: 0.08;
+  stroke-width: 30;
+}
+.contact-halo {
+  stroke: var(--accent);
+  stroke-opacity: 0.25;
+}
+.contact-orbit-a {
+  stroke: var(--accent);
+  stroke-opacity: 0.6;
+}
+.contact-orbit-b {
+  stroke: var(--text);
+  stroke-opacity: 0.25;
+}
+@media (max-width: 767px) {
+  .contact-rays-lines {
+    display: none;
+  }
+}
 .contact-main {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 24px;
+  gap: 22px;
   min-width: 0;
   position: relative;
   z-index: 3;
+  /* clear of the core's halo */
+  margin-top: calc(var(--core) * 0.3);
 }
 .contact-headline {
   max-width: 22ch;
   font-size: clamp(32px, 4.6vw, 64px);
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.035em;
 }
@@ -1620,8 +1674,8 @@ html:has(dialog[open]) {
   min-width: 0;
   overflow-wrap: anywhere;
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--border);
-  font-size: clamp(26px, 4.4vw, 60px);
+  border-bottom: 2px solid var(--accent);
+  font-size: clamp(24px, 2.8vw, 40px);
   font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--text);
@@ -1630,8 +1684,14 @@ html:has(dialog[open]) {
 }
 .contact-email-link:hover,
 .contact-email-link:focus-visible {
-  border-color: var(--accent);
   color: var(--accent);
+}
+.contact-links {
+  margin-top: 6px;
+}
+.contact-links .btn {
+  min-height: 44px;
+  padding: 0 18px;
 }
 .contact-copied {
   position: absolute;
@@ -1650,7 +1710,7 @@ html:has(dialog[open]) {
 /* where the core comes to rest, large; an empty box the travelling core lands on */
 .contact-core {
   display: block;
-  width: clamp(150px, 24vh, 280px);
+  width: var(--core);
   aspect-ratio: 1;
 }
 /* the static large core: only where the travelling core does not come here */
@@ -1693,10 +1753,14 @@ html:has(dialog[open]) {
   will-change: transform, opacity;
 }
 .finale-img {
-  width: 176px;
-  padding: 4px;
-  border: 1px solid var(--border);
-  background: var(--panel);
+  /* width set per slot by finale-orbit.tsx */
+  width: 100px;
+  padding: 3px;
+  border: 1px solid #2a2e35;
+  background: #15171b;
+}
+.finale-img img {
+  opacity: 0.55;
 }
 .finale-img img {
   display: block;
