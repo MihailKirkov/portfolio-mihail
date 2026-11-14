@@ -39,6 +39,8 @@ Reference sketches: the "Portfolio v3 directions" canvas (A Operator, B Swarm, C
   Load with `next/font`.
 - Square corners, 1px lines, no glow stacks, no gradient washes, no particle
   field. The old blue HUD chrome, mode tabs and three layouts are removed.
+  The one exception is the lime stream (below), a deliberately faint
+  background.
 
 ## Page structure (one scrolling page)
 
@@ -313,3 +315,23 @@ Four parts, built in order, one commit per part. Rules for all of them:
 - Hero: the command panel is sized to its content; the hero narration line
   is printed in the panel under the greeting (until the first question)
   instead of a bubble over it. The narrator still plays the hero pulse.
+
+## Lime stream (site-wide background)
+
+- Target `docs/design/lime-stream.html` at intensity 0.15. One fixed canvas
+  2D layer (`components/site/lime-stream.tsx`, lazy chunk) behind all
+  content: blurred low-res haze, silk fibres, star dust; creamy core, lime
+  body, blue edges.
+- Canvas 2D, not WebGL: a shader was cheaper per frame (about 3-4ms vs 7ms)
+  but would be a fourth live WebGL context. 30fps at rest and on phones,
+  full rate only while scrolling or morphing; fewer fibres on phones.
+- Shape keyframes per section (hero, projects, stack, experience, contact),
+  blended from the Lenis scroll value; Lenis velocity drives turbulence. In
+  the contact finale it is mirrored and converges into the core.
+- Behind the projects stage (its GL background is 80% opaque), the
+  constellation and the journey (stage background transparent). Dimmer in
+  the journey and behind the stack's plain list.
+- Frosted glass (`--glass` + backdrop blur) on the hero command panel, the
+  dock, the projects info panel and the journey panel.
+- Reduced motion: one static frame per section. Paused on a hidden tab and
+  while the boot intro holds the page.

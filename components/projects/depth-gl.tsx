@@ -153,6 +153,8 @@ void main() {
 `;
 
 const BG_FRAG = /* glsl */ `
+// 0.8: the stream behind shows at a fifth, never over the images
+const float BG_ALPHA = 0.8;
 uniform vec3 uBg;
 uniform vec3 uBlob1;
 uniform vec3 uBlob2;
@@ -190,7 +192,8 @@ void main() {
   color = mix(uGround, color, edge);
   // film grain
   color += (random(gl_FragCoord.xy + floor(uTime * 24.0) * vec2(17.0, 31.0)) - 0.5) * 0.02;
-  gl_FragColor = vec4(color, 1.0);
+  // a little see-through, premultiplied: the lime stream reads faintly behind
+  gl_FragColor = vec4(color * BG_ALPHA, BG_ALPHA);
 }
 `;
 
@@ -582,7 +585,7 @@ export function DepthGL({ images, driver, slot, active, pointer, onReady, onLost
     <Canvas
       frameloop="never"
       dpr={[1, 1.5]}
-      gl={{ alpha: false, antialias: true, powerPreference: "high-performance", stencil: false }}
+      gl={{ alpha: true, antialias: true, powerPreference: "high-performance", stencil: false }}
       camera={{ position: [0, 0, REST], fov: FOV, near: 0.05, far: 40 }}
       resize={{ offsetSize: true, scroll: false, debounce: { scroll: 50, resize: 0 } }}
     >
