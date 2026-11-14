@@ -1392,6 +1392,31 @@ html {
 .depth[data-depth="on"] .depth-panel {
   min-width: 0;
 }
+/* every project's panel sits in the same cell; only the front one shows.
+   The switch is instant (no exit fade), the new one fades in */
+.depth[data-depth="on"] .depth-panel {
+  display: grid;
+}
+.depth[data-depth="on"] .depth-panel-inner {
+  grid-area: 1 / 1;
+}
+.depth-panel-inner:not([data-active]) {
+  visibility: hidden;
+  opacity: 0;
+}
+.depth-panel-inner[data-active] {
+  animation: depth-panel-in 0.16s ease-out;
+}
+@keyframes depth-panel-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .depth-panel-inner[data-active] {
+    animation: none;
+  }
+}
 .depth-panel-inner {
   display: flex;
   flex-direction: column;

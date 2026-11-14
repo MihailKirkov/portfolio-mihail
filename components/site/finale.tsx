@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { canRunWebGL } from "@/lib/core/gate";
+import { canRunWebGL, onDowngrade, startFrameProbe } from "@/lib/core/gate";
 import type { FinaleItem } from "@/components/site/finale-orbit";
 
 const FinaleOrbit = dynamic(
@@ -27,8 +27,15 @@ export function Finale({ images, skills }: { images: FinaleItem[]; skills: strin
       { rootMargin: "100% 0px" }
     );
     io.observe(el);
-    return () => io.disconnect();
+    const off = onDowngrade(() => setOn(false));
+    return () => {
+      off();
+      io.disconnect();
+    };
   }, []);
+  useEffect(() => {
+    if (on) startFrameProbe();
+  }, [on]);
   return (
     <span ref={ref} className="finale-anchor" aria-hidden="true">
       {on && <FinaleOrbit images={images} skills={skills} />}

@@ -112,9 +112,11 @@ function rendered(el: HTMLElement) {
  * hero and docked command bars), the one on screen wins, then any rendered one.
  */
 export function resolveTarget(id: string): HTMLElement | null {
+  // an inert element is hidden on purpose (the depth stage's panels for the
+  // projects not at the front): never a target
   const all = Array.from(
     document.querySelectorAll<HTMLElement>(`[data-agent-id="${CSS.escape(id)}"]`)
-  );
+  ).filter((n) => !n.closest?.("[inert]"));
   return all.find(inViewport) ?? all.find(rendered) ?? null;
 }
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ShaderCoreProps } from "@/components/core/shader-core";
-import { canRunWebGL } from "@/lib/core/gate";
+import { canRunWebGL, onDowngrade, startFrameProbe } from "@/lib/core/gate";
 import { onScroll } from "@/lib/scroll";
 import { statusOf, useAgentState, type AgentStatus } from "@/lib/agent/store";
 import { coreDpr, coreMorph } from "@/lib/core/morph";
@@ -11,8 +11,9 @@ import { coreDpr, coreMorph } from "@/lib/core/morph";
 // (components/core/core-still.tsx), server-rendered: the placeholder and the
 // permanent fallback. On the client the gate loads the shader core (three in
 // its own chunk) only when it will run well:
-//   - not under reduced motion, not with hardwareConcurrency <= 4, not with
-//     data saver on, not without a hardware-backed WebGL2 context
+//   - lib/core/gate.ts: no reduced motion, no data saver, a hardware WebGL2
+//     context (no software renderer), more than 2 cores; and once drawing,
+//     a frame-time probe that drops back to the still if the page runs slow
 //   - not while the core is hidden (phones): nothing is fetched until it shows
 // The chunk is fetched right after hydration. If it lands before the
 // boot intro starts, the live core mounts hidden and the intro waits for its
@@ -607,6 +608,19 @@ export function Core({ children }: { children: ReactNode }) {
     }
     retarget.current();
   }, [docked, spot]);
+
+  // the frame probe starts with the first drawn frame; a slow page drops
+  // back to the still, like a lost context
+  useEffect(() => {
+    if (!mod) return;
+    return onDowngrade(() => {
+      setLost(true);
+      setReady(false);
+    });
+  }, [mod]);
+  useEffect(() => {
+    if (ready) startFrameProbe();
+  }, [ready]);
 
   const gl = mod && !lost;
   return (

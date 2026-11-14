@@ -120,6 +120,7 @@ npm run test:intro    # boot intro timing and behaviour
 npm run test:core     # core travel and docking
 npm run test:dock     # docked bar on 320-390px phones
 npm run test:finale   # contact finale: images, skills, dock hides and returns
+npm run test:projects # projects: panel, rail and front image always show the same project
 ```
 
 Content: edit `content/seed.json`. The page, the agent's enums and its system

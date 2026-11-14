@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { ContextLoss, Loop, cssColor } from "@/components/core/r3f-shared";
-import { velocity as scrollVelocity } from "@/lib/scroll";
+import { onScroll, velocity as scrollVelocity } from "@/lib/scroll";
 
 // The projects depth scene: one R3F canvas behind the depth stage's DOM (rail,
 // info panel, invisible slab hit boxes). It loads in its own chunk behind
@@ -32,6 +32,10 @@ import { velocity as scrollVelocity } from "@/lib/scroll";
 export interface DepthDriver {
   /** camera position in project units, with the stage's hold at each stop */
   cam: number;
+  /** the stage's front project (the panel and the rail show it) */
+  front: number;
+  /** the front index the scene last drew with (set by the scene) */
+  drawn?: number;
   /** filter_projects: the chapter is dimmed */
   dimmed: boolean[];
 }
@@ -467,7 +471,10 @@ function Scene({
     );
     camera.updateMatrixWorld();
 
-    // the planes
+    // the planes; the nearest drawn one is the front, reported on the canvas
+    // for npm run test:projects (it must match the stage's panel and rail)
+    let nearest = -1;
+    let nearestDist = Infinity;
     for (let i = 0; i < n; i++) {
       const mesh = meshes.current[i];
       if (!mesh) continue;
@@ -491,8 +498,17 @@ function Scene({
       s.tint[i] = damp(s.tint[i] ?? 0, d.dimmed[i] ? 0.75 : 0, 6, dt);
       u.uOpacity.value = opacity;
       u.uTint.value = Math.max(tint, s.tint[i]);
-      mesh.visible = opacity > 0.004 && dist > 0.05;
+      // drawn by the stage's own front index, the one the panel and the rail
+      // use: planes already passed are gone, the front one stays drawn until
+      // the stage switches (its fade is near zero just before: without this
+      // it would vanish a hair early, at u ~0.49 instead of 0.5)
+      mesh.visible =
+        i >= d.front && dist > 0.05 && (i === d.front || opacity > 0.004);
       if (!mesh.visible) continue;
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearest = i;
+      }
 
       // tutorial motion: parallax (pointer), drift (scroll direction), breath (speed)
       const influence = opacity * (1 + i * 0.05);
@@ -519,6 +535,10 @@ function Scene({
       (u.uCover.value as THREE.Vector2).set(ia > pa ? pa / ia : 1, ia > pa ? 1 : ia / pa);
       (u.uPx.value as THREE.Vector2).set(1 / L.w, 1 / L.h);
     }
+
+    d.drawn = d.front;
+    const canvas = state.gl.domElement;
+    if (canvas.dataset.front !== String(nearest)) canvas.dataset.front = String(nearest);
 
     // the mood: current palette toward the next, by depth
     const moods = loaded?.moods;
@@ -561,6 +581,32 @@ function Scene({
   );
 }
 
+/**
+ * The scene draws on its own frame loop, which can run before the page's
+ * scroll handler in a frame: it would then show the previous front project
+ * for a frame after the panel and the rail have switched. When the stage's
+ * front index changes, draw again at once, in the same frame (after every
+ * scroll listener, so the stage has updated the driver). Also while the loop
+ * is paused: a jump back into the section would otherwise show the last
+ * frame drawn, from wherever the stage was left, until the loop resumes.
+ */
+function FrontSync({ driver }: { driver: RefObject<DepthDriver> }) {
+  const advance = useThree((s) => s.advance);
+  useEffect(() => {
+    let queued = false;
+    return onScroll(() => {
+      if (queued) return;
+      queued = true;
+      queueMicrotask(() => {
+        queued = false;
+        const d = driver.current;
+        if (d && d.drawn !== d.front) advance(performance.now() / 1000);
+      });
+    });
+  }, [advance, driver]);
+  return null;
+}
+
 export function DepthGL({ images, driver, slot, active, pointer, onReady, onLost }: DepthGLProps) {
   const pointerRef = useRef({ x: 0, y: 0 });
 
@@ -590,6 +636,7 @@ export function DepthGL({ images, driver, slot, active, pointer, onReady, onLost
       resize={{ offsetSize: true, scroll: false, debounce: { scroll: 50, resize: 0 } }}
     >
       <Loop active={active} fps={0} />
+      <FrontSync driver={driver} />
       <ContextLoss onLost={onLost} />
       <Scene images={images} driver={driver} slot={slot} pointerRef={pointerRef} onReady={onReady} />
     </Canvas>

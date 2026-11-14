@@ -9,10 +9,9 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { agentId, setDepthStage } from "@/lib/agent/targets";
 import { onScroll, position, scrollToY } from "@/lib/scroll";
-import { canRunWebGL } from "@/lib/core/gate";
+import { canRunWebGL, onDowngrade, startFrameProbe } from "@/lib/core/gate";
 import { ProjectLinks, ProjectOverlay } from "@/components/projects/project-overlay";
 import type { DepthDriver, DepthGLProps } from "@/components/projects/depth-gl";
 
@@ -30,17 +29,22 @@ import type { DepthDriver, DepthGLProps } from "@/components/projects/depth-gl";
 // no second smoothing layer and no snapping. Each project holds still for a
 // share of the scroll at its stop. Within a transition (u, 0..1) the
 // outgoing slab is gone at its midpoint, u = 0.5, and that is exactly where the
-// rail and the panel switch to the incoming project.
+// rail and the panel switch to the incoming project. One index (frontIdx in
+// render) drives all three in the same call: the slab's data-depth-state,
+// the rail's aria-current and the panel's data-active. Every project's panel
+// is rendered and only the active one shows, so the panel never waits on a
+// React render or an exit animation (npm run test:projects checks it).
 //
-// WebGL. Where the core's gate passes (lib/core/gate.ts: no reduced motion,
-// > 4 cores, no data saver, hardware WebGL2), the scene in
+// WebGL. Where the shared gate passes (lib/core/gate.ts: no reduced motion,
+// no data saver, hardware WebGL2, not a slow page), the scene in
 // components/projects/depth-gl.tsx is fetched once the section is within a
 // screen of the viewport (three is already in the core's shared chunk) and
 // drawn behind the stage. The same progress drives it through a driver ref.
 // Until its textures are in and its first frame is drawn the CSS slabs stay;
 // then data-depth-gl is set, the slabs go invisible but stay in place at the
 // front position as hit boxes and agent targets, and the canvas fades in.
-// A lost context drops back to the CSS slabs for good. The canvas renders only
+// A lost context, or the gate's frame probe finding the page slow, drops
+// back to the CSS slabs for good. The canvas renders only
 // while the section is on screen and the tab is visible.
 
 type GLModule = { DepthGL: (p: DepthGLProps) => React.JSX.Element };
@@ -109,7 +113,6 @@ export function DepthStage({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [on, setOn] = useState(false);
-  const [front, setFront] = useState(0);
   const [overlay, setOverlay] = useState<{ slug: string; gallery: boolean } | null>(null);
   const n = projects.length;
   const [glMod, setGlMod] = useState<GLModule | null>(null);
@@ -121,7 +124,7 @@ export function DepthStage({
   const glOn = gl && glReady;
   const glOnRef = useRef(glOn);
   glOnRef.current = glOn;
-  const driver = useRef<DepthDriver>({ cam: 0, dimmed: projects.map(() => false) });
+  const driver = useRef<DepthDriver>({ cam: 0, front: 0, dimmed: projects.map(() => false) });
   const glImages = useMemo(() => projects.map((x) => x.gallery[0] ?? null), [projects]);
   // every chapter shares the front slab's layout box; the first one stands for it
   const glSlot = useCallback(
@@ -201,7 +204,15 @@ export function DepthStage({
       if (i === frontIdx) a.setAttribute("aria-current", "step");
       else a.removeAttribute("aria-current");
     });
-    setFront((f) => (f === frontIdx ? f : frontIdx));
+    root.querySelectorAll<HTMLElement>("[data-depth-panel]").forEach((el, i) => {
+      const active = i === frontIdx;
+      if (active === el.hasAttribute("data-active")) return;
+      el.toggleAttribute("data-active", active);
+      el.toggleAttribute("inert", !active);
+      el.setAttribute("aria-hidden", String(!active));
+    });
+    root.dataset.depthFront = String(frontIdx);
+    driver.current.front = frontIdx;
   };
 
   useEffect(() => {
@@ -217,6 +228,7 @@ export function DepthStage({
         delete el.dataset.depthState;
       });
       root.querySelectorAll("[data-chapter-link]").forEach((a) => a.removeAttribute("aria-current"));
+      delete root.dataset.depthFront;
       setOverlay(null);
       return;
     }
@@ -350,6 +362,16 @@ export function DepthStage({
     return () => mo.disconnect();
   }, [gl]);
 
+  // the gate's frame probe: starts once the scene draws; a slow page drops
+  // back to the CSS slabs, like a lost context
+  useEffect(() => {
+    if (!gl) return;
+    return onDowngrade(onGlLost);
+  }, [gl, onGlLost]);
+  useEffect(() => {
+    if (glOn) startFrameProbe();
+  }, [glOn]);
+
   // hand-off between the CSS slabs and the scene, both ways
   useEffect(() => {
     if (on) render(read());
@@ -357,7 +379,6 @@ export function DepthStage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [glOn]);
 
-  const p = projects[Math.min(front, n - 1)];
   const open = overlay ? projects.find((x) => x.slug === overlay.slug) : undefined;
 
   return (
@@ -385,16 +406,17 @@ export function DepthStage({
           {/* server elements sit alone in their slots, never in a sibling list */}
           <div className="depth-rail">{rail}</div>
           <div className="depth-slabs">{children}</div>
-          {on && p && (
+          {on && (
             <aside className="depth-panel" aria-label="Project">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
+              {/* one panel per project; render() marks the front one active */}
+              {projects.map((p, i) => (
+                <div
                   key={p.slug}
                   className="depth-panel-inner"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.16, ease: "easeOut" }}
+                  data-depth-panel={p.slug}
+                  data-active={i === 0 ? "" : undefined}
+                  inert={i !== 0}
+                  aria-hidden={i !== 0}
                 >
                   <p className="label">
                     {p.number} / {String(n).padStart(2, "0")}
@@ -422,8 +444,8 @@ export function DepthStage({
                     </button>
                     <ProjectLinks project={p} bare />
                   </div>
-                </motion.div>
-              </AnimatePresence>
+                </div>
+              ))}
             </aside>
           )}
         </div>

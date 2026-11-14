@@ -135,7 +135,9 @@ One engine, two users (agent actions and the boot intro).
 - WebGLRenderer only. No WebGPU/TSL in this version.
 - `next/dynamic` with `ssr:false`; the existing CSS core
   (`reactor-core.tsx`, restyled) is the SSR placeholder and the fallback for
-  reduced motion, no WebGL, or `navigator.hardwareConcurrency <= 4`.
+  reduced motion, data saver, no WebGL2 or a software renderer, 2 or fewer
+  cores (a hint only: Brave randomises it), or a first-frames probe that
+  averages over 33ms. One gate for every scene: `lib/core/gate.ts`.
 - One `uState` uniform driven by agent state: idle, thinking (request in
   flight), executing (cursor queue non-empty). Pointer tilt stays.
 - Pause rendering when the hero is off-screen or the tab is hidden.

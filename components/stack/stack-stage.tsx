@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { canRunWebGL } from "@/lib/core/gate";
+import { canRunWebGL, onDowngrade, startFrameProbe } from "@/lib/core/gate";
 import type { SkillNode } from "@/lib/skills";
 import type { ConstellationProject } from "@/components/stack/constellation";
 
@@ -34,7 +34,11 @@ export function StackStage({
     const update = () => setAble(wide.matches && canRunWebGL());
     update();
     wide.addEventListener("change", update);
-    return () => wide.removeEventListener("change", update);
+    const off = onDowngrade(update);
+    return () => {
+      off();
+      wide.removeEventListener("change", update);
+    };
   }, []);
 
   useEffect(() => {
@@ -51,6 +55,9 @@ export function StackStage({
   }, [able, near]);
 
   const on = able && near;
+  useEffect(() => {
+    if (on) startFrameProbe();
+  }, [on]);
   return (
     <div ref={ref} className="stack-stage" data-constellation={on || undefined}>
       {on && <Constellation skills={skills} projects={projects} />}
