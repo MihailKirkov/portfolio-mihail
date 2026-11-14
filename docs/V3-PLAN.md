@@ -318,7 +318,8 @@ Four parts, built in order, one commit per part. Rules for all of them:
 
 ## Lime stream (site-wide background)
 
-- Target `docs/design/lime-stream.html` at intensity 0.15. One fixed canvas
+- Target `docs/design/lime-stream.html`, at intensity 0.07 (half its lowest
+  setting). One fixed canvas
   2D layer (`components/site/lime-stream.tsx`, lazy chunk) behind all
   content: blurred low-res haze, silk fibres, star dust; creamy core, lime
   body, blue edges.
@@ -335,3 +336,11 @@ Four parts, built in order, one commit per part. Rules for all of them:
   dock, the projects info panel and the journey panel.
 - Reduced motion: one static frame per section. Paused on a hidden tab and
   while the boot intro holds the page.
+- It never visibly ends: past both spine ends the band runs straight on
+  along the end tangent until its full width (twist, wave, haze halo
+  included) is off screen, then fades over ~13% of its length. Computed per
+  frame from the blended shape. The only on-screen end is the finale's, in
+  the core (the contact spine follows the core's live position; on phones
+  the static core). `node _r2/stream.mjs check [w h]` samples every 50px.
+- Text stays readable: the stream is cut back to ~18% behind headings,
+  paragraphs and list text in the page flow.
